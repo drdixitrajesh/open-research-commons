@@ -288,6 +288,17 @@ function catalogScope(params) {
   const dial = dialNumber(params.get('dial')) || dialNumber(query);
   return dial ? state.countries.filter(c=>c.callingCodes.includes(dial)).map(c=>c.iso).sort().join(',') : '';
 }
+function subjectMenu(selected) {
+  const option = (subject) => [subject.code, subjectLabel(subject) + ' (' + subject.code + ')'];
+  const divisions = state.subjects.filter(subject=>subject.parent===null);
+  const groups = divisions.map(division=>{
+    const subjects = [division,...state.subjects.filter(subject=>subject.parent===division.code)];
+    // Preserve a specific field selected from the full subject directory.
+    if (selected?.code.length===6 && selected.code.startsWith(division.code)) subjects.push(selected);
+    return `<optgroup label="${esc(subjectLabel(division))}">${options(subjects.map(option),selected?.code)}</optgroup>`;
+  }).join('');
+  return `<label class="field">${t('topic')}<select name="subject">${options([['',txt('allSubjects')]],selected?.code || '')}${groups}</select></label>`;
+}
 function recordList(page, params, scope) {
   const scoped = state.countryPages.get(scope);
   const all = scoped ? mergeCatalog(scoped.records) : activeRecords();
@@ -336,7 +347,7 @@ function recordList(page, params, scope) {
   const selectedSubject = state.index.get(params.get('subject'));
   const controls = `<form data-filter="${page}"><div class="filter-grid">
     ${menu('recordType','kind',kinds)}${menu('country','country',countries)}
-    <label class="field">${t('dialingCode')}<input name="dial" type="search" inputmode="tel" dir="ltr" placeholder="+91" value="${esc(params.get('dial') || '')}"></label>
+    ${type==='event' ? subjectMenu(selectedSubject) : `<label class="field">${t('dialingCode')}<input name="dial" type="search" inputmode="tel" dir="ltr" placeholder="+91" value="${esc(params.get('dial') || '')}"></label>`}
     ${type==='event' || !type ? menu('eventLanguage','el',languagesInRecords) : ''}
     ${type!=='event' ? menu('documentLanguage','dl',languagesInRecords) : ''}
     ${menu('metadataLanguage','ml',languagesInRecords)}
@@ -551,11 +562,17 @@ document.addEventListener('input',(e)=>{
 document.addEventListener('submit',(e)=>{
   const form = e.target;
   const inputs = new FormData(form);
-  if (form.dataset.search) { e.preventDefault(); go(url('search',Object.fromEntries(inputs))); }
+  if (form.dataset.search) {
+    e.preventDefault();
+    const query = Object.fromEntries(inputs);
+    if (query.type==='event') query.subject = current().params.get('subject');
+    go(url('search',query));
+  }
   if (form.dataset.filter) {
     e.preventDefault();
     const existing=Object.fromEntries(current().params);
     delete existing.view; delete existing.lang;
+    if (inputs.has('subject')) delete existing.dial;
     go(url(form.dataset.filter,{...existing,...Object.fromEntries(inputs)}));
   }
   if (form.hasAttribute('data-institution')) { e.preventDefault(); go(url('institutions',Object.fromEntries(inputs))); }
