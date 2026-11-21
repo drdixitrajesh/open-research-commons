@@ -48,6 +48,7 @@ export const esc = (value = '') => String(value ?? '').replace(/[&<>"']/g, (c) =
 }[c]));
 export const t = (key) => esc(txt(key));
 export const subjectLabel = (s) => s?.translations?.[lang] ?? s?.label ?? '';
+export const codedSubjectLabel = (subject) => subject.code+' '+subjectLabel(subject);
 export const languageName = (code) => {
   if (!code) return '';
   if (locales[code]?.name) return locales[code].name;
@@ -232,7 +233,7 @@ function itemRow(r, deadline=false) {
   </article>`;
 }
 function subjectMini(codes) {
-  return `<ul class="subject-list">${codes.map(code=>state.index.get(code)).filter(Boolean).map(s=>`<li><a href="${esc(url('subjects',{subject:s.code}))}"><bdi class="code">${s.code}</bdi>${esc(subjectLabel(s))}</a></li>`).join('')}</ul>`;
+  return `<ul class="subject-list">${codes.map(code=>state.index.get(code)).filter(Boolean).map(s=>`<li><a href="${esc(url('subjects',{subject:s.code}))}"><bdi class="code">${s.code}</bdi> ${esc(subjectLabel(s))}</a></li>`).join('')}</ul>`;
 }
 function heading(title,page,params) {
   return `<div class="section-heading"><h2>${t(title)}</h2>${link(page,'viewAll','class="text-link"',params)}</div>`;
@@ -314,7 +315,7 @@ function catalogScope(params) {
   const dial = dialNumber(params.get('dial')) || searchDial(query);
   return dial ? state.countries.filter(c=>c.callingCodes.includes(dial)).map(c=>c.iso).sort().join(',') : '';
 }
-const subjectOption = subject => [subject.code,subject.code+' '+subjectLabel(subject)];
+const subjectOption = subject => [subject.code,codedSubjectLabel(subject)];
 function subSubjectOptions(parent, selected='') {
   const fields = state.subjects.filter(subject=>subject.parent===parent && subject.code.length===6);
   return options([['',txt('allSubSubjects')],...fields.map(subjectOption)],selected);
@@ -389,7 +390,7 @@ function recordList(page, params, scope, loadFailed) {
     ${type==='event' || !type ? menu('format','mode',['online','inPerson','hybrid'].map(v=>[v,txt(v)])) : ''}
     ${type==='event' ? `<label class="field">${t('startDate')}<input name="from" type="date" value="${esc(params.get('from') || '')}"></label><label class="field">${t('endDate')}<input name="to" type="date" value="${esc(params.get('to') || '')}"></label>` : ''}
     </div><div class="form-actions"><button class="button secondary">${t('filter')}</button>${link(page,'clear','class="text-link"',{type:page==='search'?type:'',q:query})}
-    ${selectedSubject ? `<a class="tag" href="${esc(url('subjects',{subject:selectedSubject.code}))}">${esc(subjectLabel(selectedSubject))}</a>` : ''}
+    ${selectedSubject ? `<a class="tag" href="${esc(url('subjects',{subject:selectedSubject.code}))}">${esc(codedSubjectLabel(selectedSubject))}</a>` : ''}
   </div><output class="form-feedback" role="alert"></output></form>`;
   const title = fixed ? txt(page) : txt('browseRecords');
   return layout(title, searchbox(page,query,type) + tabs + controls + `<div class="section">
@@ -402,11 +403,12 @@ function recordList(page, params, scope, loadFailed) {
 }
 function subjectsPage(params) {
   const item = state.index.get(params.get('subject'));
+  const parent = state.index.get(item?.parent);
   const title = item ? subjectLabel(item) : txt('subjects');
   const children = state.subjects.filter(s=>s.parent === (item?.code || null));
   return layout(title, `${item ? `<p><bdi class="code">${item.code}</bdi> ${t('classification')}${item.translations?.[lang] ? `<br>${t('officialLabel')} · <span lang="en">${esc(item.label)}</span> · ${t('platformTranslation')}` : ''}</p>
   <nav class="tabs">${[['events','upcoming',{period:'upcoming'}],['events','past',{period:'past'}],['proceedings','proceedings',{}],['theses','theses',{}]].map(([p,k,v])=>link(p,k,'class="tab"',{subject:item.code,...v})).join('')}</nav>
-  ${item.parent ? `<p><a class="text-link" href="${esc(url('subjects',{subject:item.parent}))}">${esc(subjectLabel(state.index.get(item.parent)))}</a></p>` : ''}` : `<p><a class="text-link" href="/data/subjects-license.txt" target="_blank" rel="noopener">${t('classification')}</a></p>`}
+  ${parent ? `<p><a class="text-link" href="${esc(url('subjects',{subject:parent.code}))}">${esc(codedSubjectLabel(parent))}</a></p>` : ''}` : `<p><a class="text-link" href="/data/subjects-license.txt" target="_blank" rel="noopener">${t('classification')}</a></p>`}
   <label class="field subject-filter">${t('subjectSearch')}<input id="subject-query" type="search" autocomplete="off"></label>
   <div id="subject-results">${subjectTree(children)}</div>`, item ? '' : txt('browseText'));
 }

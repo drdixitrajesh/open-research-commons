@@ -218,8 +218,6 @@ sampleContent|The example material on this website is illustrative.|इस व�
 primarySubject|Primary subject|मुख्य विषय|Disciplina principal|Discipline principale|التخصص الرئيسي|Área principal|主学科|Основная дисциплина
 additionalSubjects|Additional subjects|अतिरिक्त विषय|Disciplinas adicionales|Disciplines complémentaires|تخصصات إضافية|Áreas adicionais|其他学科|Дополнительные дисциплины
 subjectDivision|Division|विषय विभाग|División|Division|القسم|Divisão|学科大类|Раздел
-subjectGroup|Group|विषय समूह|Grupo|Groupe|المجموعة|Grupo|学科组|Группа
-subjectField|Field|विशिष्ट विषय|Campo|Domaine|المجال|Campo|具体学科|Область
 addSubject|Add subject|विषय जोड़ें|Añadir disciplina|Ajouter une discipline|إضافة تخصص|Adicionar área|添加学科|Добавить дисциплину
 delivery|Delivery|आयोजन का प्रारूप|Modalidad|Modalité|نمط الانعقاد|Modalidade|举办形式|Формат
 example|Example|उदाहरण|Ejemplo|Exemple|مثال|Exemplo|示例|Пример

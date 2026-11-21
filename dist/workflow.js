@@ -1,5 +1,5 @@
 import {
-  activeRecords, announce, api, countryCodes, countryName, esc, go, icon, lang, languageOptions, layout,
+  activeRecords, announce, api, codedSubjectLabel, countryCodes, countryName, esc, go, icon, lang, languageOptions, layout,
   link, normalize, options, recordUrl, refresh, showPreview, signIn, sortedCountries, state, subjectLabel,
   subjectMatches, t, txt, types, url
 } from './app.js';
@@ -138,7 +138,7 @@ function selectedSubjects(codes) {
 }
 function subjectChoices(parent) {
   const entries = state.subjects.filter(subject=>subject.parent===parent)
-    .map(subject=>[subject.code,subjectLabel(subject)+' ('+subject.code+')']);
+    .map(subject=>[subject.code,codedSubjectLabel(subject)]);
   return options([['',txt('choose')],...entries],'');
 }
 function subjectPicker(r) {
@@ -146,8 +146,8 @@ function subjectPicker(r) {
     <p class="subject-summary">${t('primarySubject')} * · ${t('additionalSubjects')}</p>
     <div class="subject-browse">
       <label class="field">${t('subjectDivision')}<select id="subject-division">${subjectChoices(null)}</select></label>
-      <label class="field">${t('subjectGroup')}<select id="subject-group" disabled>${subjectChoices('')}</select></label>
-      <label class="field">${t('subjectField')}<select id="subject-field" disabled>${subjectChoices('')}</select></label>
+      <label class="field">${t('topic')}<select id="subject-group" disabled>${subjectChoices('')}</select></label>
+      <label class="field">${t('subSubject')}<select id="subject-field" disabled>${subjectChoices('')}</select></label>
     </div>
     <button class="button secondary subject-add" type="button" id="subject-add" disabled>${t('addSubject')}</button>
     <label for="subject-picker-input" class="field">${t('subjectSearch')}
