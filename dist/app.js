@@ -67,7 +67,7 @@ export function countryCodes(country) {
 }
 export const sortedCountries = () => [...state.countries].sort((a,b)=>countryName(a).localeCompare(countryName(b),lang));
 export const countryOptions = () => sortedCountries().map(country => [
-  country.iso, [country.iso, countryName(country), countryCodes(country)].filter(Boolean).join(' · '),
+  country.iso, country.iso + ' · ' + countryName(country),
 ]);
 function countryFor(record) {
   if (record.countryCode) return state.countryIndex.get(record.countryCode);
