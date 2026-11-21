@@ -183,6 +183,23 @@ held|Held|आयोजित|Realizado|Terminé|أُقيمت|Realizado|已举办
 scheduled|Scheduled|निर्धारित|Programado|Programmé|مجدولة|Agendado|已排期|Запланировано
 eventStatus|Event status|आयोजन की स्थिति|Estado del evento|Statut de l’événement|حالة الفعالية|Status do evento|活动状态|Статус мероприятия
 choose|Choose an option|एक विकल्प चुनें|Elige una opción|Choisissez une option|اختر أحد الخيارات|Escolha uma opção|请选择|Выберите вариант
+otherChoice|Other|अन्य|Otro|Autre|أخرى|Outra|其他|Другое
+specifyOther|Specify another value|अन्य मान लिखें|Especifica otro valor|Précisez une autre valeur|حدّد قيمة أخرى|Informe outro valor|填写其他值|Укажите другое значение
+addEventLanguage|Add another event language|आयोजन की एक और भाषा जोड़ें|Añadir otro idioma del evento|Ajouter une autre langue de l’événement|أضف لغة أخرى للفعالية|Adicionar outro idioma do evento|添加另一种活动语言|Добавить другой язык мероприятия
+feeFree|Free|निःशुल्क|Gratuito|Gratuit|مجاني|Gratuito|免费|Бесплатно
+feePaid|Paid|सशुल्क|De pago|Payant|مدفوع|Pago|收费|Платно
+notAnnounced|Not announced|अभी घोषित नहीं|Sin anunciar|Non annoncé|لم يُعلن بعد|Não anunciado|尚未公布|Не объявлено
+roleOrganizer|Organizer|आयोजक|Organizador|Organisateur|المنظّم|Organizador|主办方|Организатор
+roleAuthor|Author|लेखक|Autor|Auteur|المؤلف|Autor|作者|Автор
+roleEditor|Editor|संपादक|Editor|Éditeur|المحرّر|Editor|编辑|Редактор
+rolePresenter|Presenter|प्रस्तुतकर्ता|Ponente|Intervenant|المقدّم|Apresentador|报告人|Докладчик
+roleSupervisor|Supervisor|मार्गदर्शक|Director de tesis|Directeur de recherche|المشرف|Orientador|导师|Научный руководитель
+roleContributor|Contributor|योगदानकर्ता|Colaborador|Contributeur|المساهم|Colaborador|贡献者|Участник
+academicInProgress|In progress|प्रगति पर|En curso|En cours|قيد العمل|Em andamento|进行中|В процессе
+academicApproved|Approved|स्वीकृत|Aprobado|Approuvé|مُعتمد|Aprovado|已批准|Одобрено
+academicAwarded|Degree awarded|उपाधि प्रदान की गई|Título concedido|Diplôme délivré|مُنحت الدرجة|Diploma concedido|已授予学位|Степень присуждена
+rightsReserved|All rights reserved|सर्वाधिकार सुरक्षित|Todos los derechos reservados|Tous droits réservés|جميع الحقوق محفوظة|Todos os direitos reservados|保留所有权利|Все права защищены
+relatedOther|Event ID or URL|आयोजन की आईडी या लिंक|ID o URL del evento|Identifiant ou lien de l’événement|معرّف الفعالية أو رابطها|ID ou URL do evento|活动编号或链接|Идентификатор или ссылка мероприятия
 noRelated|No related records yet.|अभी कोई संबंधित प्रविष्टि नहीं है।|Aún no hay registros relacionados.|Aucune notice associée pour le moment.|لا توجد سجلات ذات صلة بعد.|Ainda não há registros relacionados.|暂无相关记录。|Связанных записей пока нет.
 browseRecords|Browse records|प्रविष्टियाँ देखें|Explorar registros|Parcourir les notices|تصفّح السجلات|Explorar registros|浏览记录|Просмотреть записи
 materialsHelp|Deposit proceedings, papers, presentations, or other outputs from an academic event.|किसी अकादमिक आयोजन की सम्मेलन कार्यवाही, शोधपत्र, प्रस्तुतियाँ या अन्य सामग्री जमा करें।|Deposita actas, ponencias, presentaciones u otros resultados de un evento académico.|Déposez des actes, articles, présentations ou autres productions issues d’un événement scientifique.|أودع وقائع المؤتمرات أو الأوراق البحثية أو العروض التقديمية أو غيرها من مخرجات فعالية أكاديمية.|Deposite anais, artigos, apresentações ou outros resultados de um evento acadêmico.|存档学术活动的论文集、论文、演示文稿或其他成果。|Разместите сборник, статьи, презентации или другие материалы научного мероприятия.
@@ -196,6 +213,9 @@ name|Name|नाम|Nombre|Nom|الاسم|Nome|名称|Имя
 sampleContent|The example material on this website is illustrative.|इस वेबसाइट की उदाहरण सामग्री केवल समझाने के लिए है।|El material de ejemplo de este sitio web es ilustrativo.|Le contenu d’exemple de ce site est fourni à titre d’illustration.|المواد المعروضة كمثال في هذا الموقع توضيحية.|O material de exemplo deste site é ilustrativo.|本网站的示例材料仅用于演示。|Примеры на этом сайте приведены для иллюстрации.
 primarySubject|Primary subject|मुख्य विषय|Disciplina principal|Discipline principale|التخصص الرئيسي|Área principal|主学科|Основная дисциплина
 additionalSubjects|Additional subjects|अतिरिक्त विषय|Disciplinas adicionales|Disciplines complémentaires|تخصصات إضافية|Áreas adicionais|其他学科|Дополнительные дисциплины
+subjectDivision|Division|विषय विभाग|División|Division|القسم|Divisão|学科大类|Раздел
+subjectGroup|Group|विषय समूह|Grupo|Groupe|المجموعة|Grupo|学科组|Группа
+subjectField|Field|विशिष्ट विषय|Campo|Domaine|المجال|Campo|具体学科|Область
 addSubject|Add subject|विषय जोड़ें|Añadir disciplina|Ajouter une discipline|إضافة تخصص|Adicionar área|添加学科|Добавить дисциплину
 delivery|Delivery|आयोजन का प्रारूप|Modalidad|Modalité|نمط الانعقاد|Modalidade|举办形式|Формат
 example|Example|उदाहरण|Ejemplo|Exemple|مثال|Exemplo|示例|Пример

@@ -141,6 +141,11 @@ label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 7
 .form-feedback { display: block; margin-block: .6rem; color: #8a2933; }
 .form-feedback:empty { display: none; }
 .subject-picker { position: relative; }
+.subject-summary { font-weight: 700; margin-bottom: .7rem; }
+.subject-browse { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem .85rem; }
+.subject-add { margin-block: .7rem .95rem; }
+.subject-picker .pills { margin-block: .75rem 0; }
+.subject-picker .pills:empty { display: none; }
 .subject-options, .tree { padding: .38rem; margin: .3rem 0; border: 1px solid var(--line); background: var(--white); border-radius: 5px; list-style: none; }
 .subject-options:empty { display: none; }
 .subject-options button { border: 0; display: flex; text-align: start; padding: .33rem; background: none; width: 100%; }
@@ -185,6 +190,9 @@ label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 7
   .section { padding-block: 2.45rem; }
   .filter-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .section-heading { align-items: start; }
+}
+@media (max-width: 600px) {
+  .subject-browse { grid-template-columns: 1fr; }
 }
 @media (max-width: 410px) {
   .masthead { gap: .5rem; }

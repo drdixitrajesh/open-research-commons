@@ -11,21 +11,69 @@ const fields = new Map([
 ]);
 const eventStates = ['scheduled','held','postponed','cancelled'];
 const uploadErrors = new Set(['file_too_large','unsupported_file','invalid_upload']);
+const otherChoice = '__custom__';
+const isoLanguages = ('aa ab ae af ak am an ar as av ay az ba be bg bh bi bm bn bo br bs ca ce ch co cr cs cu cv cy da de dv dz ee el en eo es et eu fa ff fi fj fo fr fy ga gd gl gn gu gv ha he hi ho hr ht hu hy hz ia id ie ig ii ik io is it iu ja jv ka kg ki kj kk kl km kn ko kr ks ku kv kw ky la lb lg li ln lo lt lu lv mg mh mi mk ml mn mr ms mt my na nb nd ne ng nl nn no nr nv ny oc oj om or os pa pi pl ps pt qu rm rn ro ru rw sa sc sd se sg si sk sl sm sn so sq sr ss st su sv sw ta te tg th ti tk tl tn to tr ts tt tw ty ug uk ur uz ve vi vo wa wo xh yi yo za zh zu').split(' ');
+const languageOptionCache = new Map();
+const fallbackZones = ['Africa/Cairo','Africa/Johannesburg','America/Chicago','America/Los_Angeles','America/New_York','America/Sao_Paulo','Asia/Dubai','Asia/Shanghai','Asia/Singapore','Asia/Tokyo','Australia/Sydney','Europe/London','Europe/Paris','Pacific/Auckland'];
+const zones = ['UTC',...new Set(['Asia/Kolkata',...(Intl.supportedValuesOf?.('timeZone') || fallbackZones)].sort())];
+const roleChoices = { Organizer:'roleOrganizer', Author:'roleAuthor', Editor:'roleEditor', Presenter:'rolePresenter',
+  Supervisor:'roleSupervisor', Contributor:'roleContributor' };
+const feeChoices = { Free:'feeFree', Paid:'feePaid', 'Not announced':'notAnnounced' };
+const academicChoices = { 'In progress':'academicInProgress', Submitted:'submitted', Approved:'academicApproved',
+  Awarded:'academicAwarded', Published:'published' };
+const standardLicenses = ['CC0 1.0','CC BY 4.0','CC BY-SA 4.0','CC BY-ND 4.0','CC BY-NC 4.0','CC BY-NC-SA 4.0','CC BY-NC-ND 4.0'];
+const commonDegrees = ['PhD','DPhil','EdD','EngD','MA','MSc','MPhil','MRes','MBA','MEng'];
 let draft;
 let pendingFiles = 0;
 const editing = (params) => (params.get('id') || params.get('type') || '');
 const keyOptions = (names) => names.map(key=>[key,txt(key)]);
+const labeledOptions = (labels) => Object.entries(labels).map(([value,key])=>[value,txt(key)]);
 const val = (record,name) => Array.isArray(record[name]) ? record[name].join(', ') : record[name] ?? '';
 const typeHeading = (type) => ({event:'eventForm',material:'materialsForm',thesis:'thesisForm'})[type];
+const languageList = (value='') => value.split(/[,\n;]+/).map(tag=>tag.trim()).filter(Boolean);
 
-function field(record,name,{label=name,kind='text',required=false,wide=false,help,choices,placeholder, list}={}) {
+function field(record,name,{label=name,kind='text',required=false,wide=false,help,choices,placeholder}={}) {
   const value = val(record,name);
   const common = `name="${name}" id="field-${name}"${required ? ' required' : ''}${help ? ` aria-describedby="help-${name}"` : ''}`;
   let html;
   if (choices) html=`<select ${common}>${options([['',txt('choose')],...choices],String(value))}</select>`;
   else if (kind==='textarea') html=`<textarea ${common} maxlength="8000" dir="auto">${esc(value)}</textarea>`;
-  else html=`<input type="${kind}" ${common} value="${esc(value)}"${list ? ` list="${list}"` : ''}${placeholder ? ` placeholder="${esc(placeholder)}"` : ''}${kind==='number' ? ' min="1000" max="2999"' : ''} dir="auto">`;
+  else html=`<input type="${kind}" ${common} value="${esc(value)}"${placeholder ? ` placeholder="${esc(placeholder)}"` : ''}${kind==='number' ? ' min="1000" max="2999"' : ''} dir="auto">`;
   return `<label class="field${wide?' full':''}" for="field-${name}"><span>${t(label)}${required?' *':''}</span>${html}${help ? `<small id="help-${name}">${t(help)}</small>` : ''}</label>`;
+}
+function formLanguageOptions() {
+  if (!languageOptionCache.has(lang)) {
+    const display = typeof Intl.DisplayNames==='function' ? new Intl.DisplayNames([lang],{type:'language'}) : null;
+    const entries = isoLanguages.map(code=>[code,(display?.of(code) || code)+' ('+code+')']);
+    languageOptionCache.set(lang,entries.sort((a,b)=>a[1].localeCompare(b[1],lang)));
+  }
+  return languageOptionCache.get(lang);
+}
+function choiceField(record,name,{label=name,required=false,wide=false,help,choices,otherLabel='specifyOther',placeholder='',translation=false}) {
+  const value = String(val(record,name));
+  const custom = value!=='' && !choices.some(([code])=>code===value);
+  const selectAttrs = translation ? ' data-meta="lang"' : ` name="${name}" id="field-${name}"`;
+  return `<div data-choice-field${wide?' class="full"':''}>
+    <label class="field"><span>${t(label)}${required?' *':''}</span>
+      <select data-choice-select${selectAttrs}${required?' required':''}${help?` aria-describedby="help-${name}"`:''}>
+        ${options([['',txt('choose')],...choices,[otherChoice,txt('otherChoice')]],custom?otherChoice:value)}
+      </select>${help?`<small id="help-${name}">${t(help)}</small>`:''}
+    </label>
+    <div data-custom-choice${custom?'':' hidden'}><label class="field"><span>${t(otherLabel)}</span>
+      <input type="text" data-custom-value value="${esc(custom?value:'')}"${placeholder?` placeholder="${esc(placeholder)}"`:''}${custom?' required':' disabled'} dir="auto">
+    </label></div>
+  </div>`;
+}
+function languageField(record,name,config={}) {
+  return choiceField(record,name,{choices:formLanguageOptions(),otherLabel:'languageTag',placeholder:'en',...config});
+}
+function extraLanguages(record) {
+  return `<label class="field">${t('addEventLanguage')}<select data-extra-language>
+    ${options([['',txt('choose')],...formLanguageOptions()],'')}
+  </select></label>` + field(record,'languages',{label:'eventExtraLanguages',placeholder:'hi, en'});
+}
+function choiceValue(select) {
+  return (select.value===otherChoice ? select.closest('[data-choice-field]').querySelector('[data-custom-value]').value : select.value).trim();
 }
 function section(key,content) {
   return `<fieldset class="form-section"><legend>${t(key)}</legend><div class="form-grid">${content}</div></fieldset>`;
@@ -33,15 +81,15 @@ function section(key,content) {
 function links(type,record) {
   if (type==='event') return field(record,'sourceUrl',{kind:'url'}) + field(record,'registrationUrl',{kind:'url'})
     + field(record,'programmeUrl',{kind:'url'}) + field(record,'verificationNotes',{kind:'textarea',wide:true});
-  return field(record,'sourceUrl',{kind:'url',wide:true}) + field(record,'license',{required:true}) + field(record,'rightsHolder')
+  const licenses = [...standardLicenses.map(value=>[value,value]),['All rights reserved',txt('rightsReserved')]];
+  return field(record,'sourceUrl',{kind:'url',wide:true}) + choiceField(record,'license',{choices:licenses,required:true}) + field(record,'rightsHolder')
     + field(record,'access',{choices:keyOptions(['open','embargoed','external']),required:true}) + field(record,'embargoUntil',{kind:'date'});
 }
 function metadataFields(type,record) {
   return field(record,'title',{required:true,wide:true}) + field(record,'description',{kind:'textarea',required:true,wide:true})
     + field(record,'keywords',{wide:true})
-    + field(record,'language',{label:type==='event'?'eventLanguage':'documentLanguage',required:true,list:'language-codes',placeholder:'en'})
-    + field(record,'metadataLanguage',{label:'originalLanguage',list:'language-codes',placeholder:'en'})
-    + `<datalist id="language-codes">${languageOptions.map(([code,name])=>`<option value="${esc(code)}">${esc(name)}</option>`).join('')}</datalist>`;
+    + languageField(record,'language',{label:type==='event'?'eventLanguage':'documentLanguage',required:true})
+    + languageField(record,'metadataLanguage',{label:'originalLanguage'});
 }
 function countryField(r, required) {
   const rows = sortedCountries().map(country=>[country.iso,[countryName(country),countryCodes(country)].filter(Boolean).join(' · ')]);
@@ -53,48 +101,66 @@ const associated = (value) => {
   try { return new URL(raw,location.origin).searchParams.get('record') || raw; } catch { return raw; }
 };
 function typeFields(type,r) {
+  const roles = labeledOptions(roleChoices);
   if (type==='event') return field(r,'eventType',{label:'eventForm',required:true,choices:keyOptions(types.event)})
     + field(r,'eventStatus',{choices:keyOptions(eventStates),required:true})
     + field(r,'institution',{required:true}) + field(r,'mode',{label:'format',choices:keyOptions(['online','inPerson','hybrid']),required:true})
     + field(r,'startDate',{kind:'date',required:true}) + field(r,'endDate',{kind:'date',required:true})
     + field(r,'startTime',{kind:'time'}) + field(r,'endTime',{kind:'time'})
-    + field(r,'timezone',{placeholder:'Asia/Kolkata'}) + field(r,'languages',{label:'eventExtraLanguages',placeholder:'hi, en'})
+    + choiceField(r,'timezone',{choices:zones.map(zone=>[zone,zone.replaceAll('_',' ')]),placeholder:'Asia/Kolkata'})
+    + extraLanguages(r)
     + field(r,'city') + countryField(r,false) + field(r,'venue',{wide:true})
     + field(r,'deadline',{kind:'date'}) + field(r,'paperDeadline',{kind:'date'}) + field(r,'registrationDeadline',{kind:'date'})
-    + field(r,'attendanceFee') + field(r,'publicContact') + field(r,'contributorRole')
+    + choiceField(r,'attendanceFee',{choices:labeledOptions(feeChoices)}) + field(r,'publicContact')
+    + choiceField(r,'contributorRole',{choices:roles})
     + field(r,'speakers',{kind:'textarea',wide:true}) + field(r,'programme',{kind:'textarea',wide:true});
-  const shared = field(r,'authors',{required:true,wide:true}) + field(r,'contributorRole')
+  const shared = field(r,'authors',{required:true,wide:true}) + choiceField(r,'contributorRole',{choices:roles})
     + field(r,'institution',{required:type==='thesis'}) + countryField(r,type==='thesis')
     + field(r,'year',{kind:'number',required:type==='thesis'}) + field(r,'releaseDate',{kind:'date'});
   if (type==='material') {
     const events = activeRecords().filter(r=>r.type==='event'&&!r.example&&!r.directory);
+    const related = events.length
+      ? choiceField(r,'relatedId',{choices:events.map(event=>[event.id,event.title]),help:'relatedHelp',wide:true,otherLabel:'relatedOther'})
+      : field(r,'relatedId',{help:'relatedHelp',wide:true});
     return field(r,'materialType',{label:'recordType',choices:keyOptions(types.material),required:true,wide:true})
-      + field(r,'relatedId',{help:'relatedHelp',wide:true,list:'event-records'})
-      + `<datalist id="event-records">${events.map(event=>`<option value="${esc(event.id)}">${esc(event.title)}</option>`).join('')}</datalist>`
-      + field(r,'relatedEventTitle',{wide:true}) + shared + field(r,'publisher');
+      + related + field(r,'relatedEventTitle',{wide:true}) + shared + field(r,'publisher');
   }
-  return field(r,'thesisType',{label:'recordType',choices:keyOptions(types.thesis),required:true,wide:true}) + field(r,'degree',{required:true})
-    + shared + field(r,'department') + field(r,'supervisors') + field(r,'academicStatus');
+  return field(r,'thesisType',{label:'recordType',choices:keyOptions(types.thesis),required:true,wide:true})
+    + choiceField(r,'degree',{required:true,choices:commonDegrees.map(value=>[value,value])})
+    + shared + field(r,'department') + field(r,'supervisors')
+    + choiceField(r,'academicStatus',{choices:labeledOptions(academicChoices)});
 }
 function selectedSubjects(codes) {
-  return (codes || []).map(code=>{
+  return (codes || []).map((code,index)=>{
     const item = state.index.get(code);
-    return `<button type="button" class="tag" data-drop-subject="${esc(code)}" title="${t('remove')}"><bdi>${esc(code)}</bdi> ${esc(subjectLabel(item))} ×</button>`;
+    return `<button type="button" class="tag" data-drop-subject="${esc(code)}" title="${t('remove')}">${index===0?t('primarySubject')+' · ':''}<bdi>${esc(code)}</bdi> ${esc(subjectLabel(item))} ×</button>`;
   }).join('');
+}
+function subjectChoices(parent) {
+  const entries = state.subjects.filter(subject=>subject.parent===parent)
+    .map(subject=>[subject.code,subjectLabel(subject)+' ('+subject.code+')']);
+  return options([['',txt('choose')],...entries],'');
 }
 function subjectPicker(r) {
   return `<div class="full subject-picker">
-    <label for="subject-picker-input" class="field"><span>${t('primarySubject')} * · ${t('additionalSubjects')}</span>
-    <input type="search" id="subject-picker-input" placeholder="${t('subjectSearch')}" autocomplete="off"></label>
-    <div id="picked-subjects" class="pills">${selectedSubjects(r.subjectCodes)}</div>
+    <p class="subject-summary">${t('primarySubject')} * · ${t('additionalSubjects')}</p>
+    <div class="subject-browse">
+      <label class="field">${t('subjectDivision')}<select id="subject-division">${subjectChoices(null)}</select></label>
+      <label class="field">${t('subjectGroup')}<select id="subject-group" disabled>${subjectChoices('')}</select></label>
+      <label class="field">${t('subjectField')}<select id="subject-field" disabled>${subjectChoices('')}</select></label>
+    </div>
+    <button class="button secondary subject-add" type="button" id="subject-add" disabled>${t('addSubject')}</button>
+    <label for="subject-picker-input" class="field">${t('subjectSearch')}
+      <input type="search" id="subject-picker-input" autocomplete="off"></label>
     <div id="subject-options" class="subject-options"></div>
+    <div id="picked-subjects" class="pills" aria-live="polite">${selectedSubjects(r.subjectCodes)}</div>
   </div>`;
 }
 function translationRows(metadata={}) {
   return Object.entries(metadata).map(([code,m],i)=>`<fieldset class="form-section full" data-translation>
     <legend>${t('translations')} ${i+1}</legend>
     <div class="form-grid">
-      <label class="field">${t('metadataLanguage')}<input data-meta="lang" list="language-codes" value="${esc(code)}" placeholder="fr" required></label>
+      ${languageField({lang:code},'lang',{label:'metadataLanguage',required:true,translation:true})}
       <label class="field">${t('translationStatus')}<select data-meta="status">${options(keyOptions(['authorTranslation','machineTranslation']),m.status || 'authorTranslation')}</select></label>
       <label class="field full">${t('translatedTitle')}<input data-meta="title" value="${esc(m.title)}" dir="auto"></label>
       <label class="field full">${t('translatedDescription')}<textarea data-meta="description" dir="auto">${esc(m.description)}</textarea></label>
@@ -161,13 +227,16 @@ function collect(form) {
   const {record:previous} = draft;
   const data = Object.fromEntries(new FormData(form));
   delete data.action;
+  for (const select of form.querySelectorAll('[data-choice-select][name]')) data[select.name] = choiceValue(select);
   data.authority = form.elements.namedItem('authority').checked;
   data.country = state.countryIndex.get(data.countryCode)?.name || '';
-  data.languages = (data.languages || '').split(/[,\n;]+/).map(value=>value.trim()).filter(Boolean);
+  data.languages = languageList(data.languages);
   data.relatedId = associated(data.relatedId);
   data.translationOf = associated(data.translationOf);
   const entries = [...form.querySelectorAll('[data-translation]')].map(row=>{
-    const parts = Object.fromEntries([...row.querySelectorAll('[data-meta]')].map(input=>[input.dataset.meta,input.value.trim()]));
+    const parts = Object.fromEntries([...row.querySelectorAll('[data-meta]')].map(input=>[
+      input.dataset.meta,input.hasAttribute('data-choice-select') ? choiceValue(input) : input.value.trim()
+    ]));
     const {lang,...metadata} = parts;
     return [lang,metadata];
   });
@@ -186,27 +255,88 @@ function errors(error) {
 function feedback(form,message) {
   form.querySelector('.form-feedback').textContent = message;
 }
+function bindChoiceFields(form) {
+  form.addEventListener('change',event=>{
+    const select = event.target;
+    if (select.matches('[data-extra-language]') && select.value) {
+      const input = form.elements.namedItem('languages');
+      input.value = [...new Set([...languageList(input.value),select.value])].join(', ');
+      select.value = '';
+      draft.record=collect(form);
+      return;
+    }
+    if (!select.matches('[data-choice-select]')) return;
+    const custom = select.closest('[data-choice-field]').querySelector('[data-custom-choice]');
+    const input = custom.querySelector('[data-custom-value]');
+    const show = select.value===otherChoice;
+    custom.hidden = !show;
+    input.disabled = !show;
+    input.required = show;
+    draft.record=collect(form);
+    if (show) input.focus();
+  });
+}
 function bindSubmission() {
   const form = document.getElementById('submission-form');
   if (!form || !draft) return;
+  bindChoiceFields(form);
   const pick = form.querySelector('#subject-picker-input');
   const picked = form.querySelector('#picked-subjects');
   const candidates = form.querySelector('#subject-options');
+  const division = form.querySelector('#subject-division');
+  const group = form.querySelector('#subject-group');
+  const field = form.querySelector('#subject-field');
+  const add = form.querySelector('#subject-add');
   const uploads = form.querySelector('#attachment');
   const attachments = form.querySelector('#attachment-list');
-  function reselect() { picked.innerHTML=selectedSubjects(draft.record.subjectCodes); }
-  form.addEventListener('input', ()=>{ draft.record=collect(form); });
-  pick.addEventListener('input', ()=>{
+  const selection = () => [field,group,division].find(control=>control.value);
+  const canAdd = (code) => state.index.has(code) && draft.record.subjectCodes.length<8 && !draft.record.subjectCodes.includes(code);
+  function updateAdd() { add.disabled=!canAdd(selection()?.value); }
+  function refreshChoices(control,parent) {
+    control.innerHTML=subjectChoices(parent);
+    control.disabled=control.options.length===1;
+  }
+  function renderMatches() {
     const word=normalize(pick.value.trim());
-    candidates.innerHTML = word ? state.subjects.filter(s=>subjectMatches(s,word) && !draft.record.subjectCodes.includes(s.code)).slice(0,18)
+    candidates.innerHTML = word && draft.record.subjectCodes.length<8 ? state.subjects.filter(s=>subjectMatches(s,word) && !draft.record.subjectCodes.includes(s.code)).slice(0,18)
       .map(s=>`<button type="button" data-pick-subject="${s.code}"><bdi class="code">${s.code}</bdi> ${esc(subjectLabel(s))}</button>`).join('') : '';
+  }
+  function reselect() {
+    picked.innerHTML=selectedSubjects(draft.record.subjectCodes);
+    updateAdd();
+    renderMatches();
+  }
+  function addSubject(code) {
+    if (!canAdd(code)) return false;
+    draft.record.subjectCodes.push(code);
+    reselect();
+    return true;
+  }
+  form.addEventListener('input', ()=>{ draft.record=collect(form); });
+  division.addEventListener('change',()=>{
+    refreshChoices(group,division.value);
+    refreshChoices(field,'');
+    updateAdd();
   });
+  group.addEventListener('change',()=>{
+    refreshChoices(field,group.value);
+    updateAdd();
+  });
+  field.addEventListener('change',updateAdd);
+  add.addEventListener('click',()=>{
+    const selected=selection();
+    if (addSubject(selected?.value)) selected.focus();
+  });
+  pick.addEventListener('input',renderMatches);
   form.addEventListener('click',(e)=>{
     const button=e.target.closest('button');
     if (!button) return;
     if (button.dataset.pickSubject) {
-      if (draft.record.subjectCodes.length<8) draft.record.subjectCodes.push(button.dataset.pickSubject);
-      reselect(); pick.value=''; candidates.innerHTML=''; pick.focus();
+      if (addSubject(button.dataset.pickSubject)) {
+        pick.value='';
+        renderMatches();
+        pick.focus();
+      }
     }
     if (button.dataset.dropSubject) {
       draft.record.subjectCodes=draft.record.subjectCodes.filter(code=>code!==button.dataset.dropSubject); reselect(); pick.focus();
@@ -216,7 +346,7 @@ function bindSubmission() {
       const list = form.querySelector('#translation-list');
       list.insertAdjacentHTML('beforeend',translationRows({[next]:{}}));
       draft.record=collect(form);
-      list.lastElementChild.querySelector('input').focus();
+      list.lastElementChild.querySelector('[data-meta="lang"]').focus();
     }
     if (button.hasAttribute('data-drop-translation')) {
       button.closest('[data-translation]').remove();
@@ -261,7 +391,7 @@ function bindSubmission() {
     const action=e.submitter?.value || 'draft';
     if (action==='submit' && (!form.checkValidity() || !draft.record.subjectCodes.length)) {
       feedback(form,txt('required'));
-      (form.querySelector(':invalid') || pick).focus();
+      (form.querySelector(':invalid') || division).focus();
       return;
     }
     const buttons = form.querySelectorAll('button[name=action]');
@@ -279,8 +409,10 @@ function bindSubmission() {
       page?.insertAdjacentHTML('afterend',`<p class="notice" role="status">${t(key)}</p>`);
     } catch (error) {
       feedback(form,errors(error));
-      const field = error.field==='subjectCodes' ? pick : form.elements.namedItem(error.field);
-      field?.focus?.();
+      const invalidInput = error.field==='subjectCodes' ? division : form.elements.namedItem(error.field);
+      const target = invalidInput?.matches?.('[data-choice-select]') && invalidInput.value===otherChoice
+        ? invalidInput.closest('[data-choice-field]').querySelector('[data-custom-value]') : invalidInput;
+      target?.focus?.();
     } finally { buttons.forEach(b=>b.disabled=false); }
   });
 }
