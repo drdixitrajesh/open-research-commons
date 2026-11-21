@@ -386,12 +386,13 @@ function recordList(page, params, scope, loadFailed) {
   if (exactSubject) matches.sort((a,b)=>Number(b.subjectCodes.includes(exactSubject))-Number(a.subjectCodes.includes(exactSubject)));
 
   const menu = (label, name, entries) => `<label class="field">${esc(label)}<select name="${name}">${options([['',txt('all')],...entries],params.get(name) || '')}</select></label>`;
+  const kindLabel = page === 'proceedings' ? txt('proceedings') : catalogKindLabel(type);
   const kinds = kindsFor(type).map(k=>[k,txt(k)]);
   const languagesInRecords = [...new Set([...Object.keys(locales),...all.flatMap(r=>[r.language,r.metadataLanguage,...(r.languages || []),...Object.keys(r.metadata || {})])].filter(Boolean))].map(code=>[code,languageName(code)]);
   const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${['upcoming','ongoing','past','deadlines'].map(p=>link(page,p,'class="tab"'+(p===period?' aria-current="page"':''),{...Object.fromEntries(params),period:p,lang:lang==='en'?'':lang,view:''})).join('')}</nav>` : '';
   const selectedSubject = state.index.get(params.get('subject'));
   const controls = `<form data-filter="${page}"><div class="filter-grid">
-    ${menu(catalogKindLabel(type),'kind',kinds)}${subjectMenus(selectedSubject)}${menu(txt('country'),'country',countryOptions())}
+    ${menu(kindLabel,'kind',kinds)}${subjectMenus(selectedSubject)}${menu(txt('country'),'country',countryOptions())}
     ${type==='event' || !type ? menu(txt('eventLanguage'),'el',languagesInRecords) : ''}
     ${type!=='event' ? menu(txt('documentLanguage'),'dl',languagesInRecords) : ''}
     ${menu(txt('metadataLanguage'),'ml',languagesInRecords)}
