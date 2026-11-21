@@ -79,6 +79,8 @@ browseText|Find related events and research through the official Fields of Resea
 subjectSearch|Search by subject name or code|विषय का नाम या कोड खोजें|Busca por disciplina o código|Rechercher par nom ou code de discipline|ابحث باسم التخصص أو رمزه|Pesquise por nome ou código da área|按学科名称或代码搜索|Поиск по названию дисциплины или коду
 featuredSubjects|Explore subjects|विषय खोजें|Explorar disciplinas|Explorer les disciplines|استكشف التخصصات|Explore as áreas de pesquisa|探索学科|Обзор дисциплин
 allSubjects|All subjects|सभी विषय|Todas las disciplinas|Toutes les disciplines|كل التخصصات|Todas as áreas de pesquisa|全部学科|Все дисциплины
+subSubject|Sub-subject|उपविषय|Subdisciplina|Sous-discipline|التخصص الفرعي|Subárea|细分学科|Поддисциплина
+allSubSubjects|All sub-subjects|सभी उपविषय|Todas las subdisciplinas|Toutes les sous-disciplines|كل التخصصات الفرعية|Todas as subáreas|全部细分学科|Все поддисциплины
 officialLabel|Official English label|आधिकारिक अंग्रेज़ी नाम|Nombre oficial en inglés|Libellé officiel en anglais|التسمية الرسمية بالإنجليزية|Nome oficial em inglês|官方英文名称|Официальное название на английском языке
 platformTranslation|Platform translation|मंच द्वारा अनुवाद|Traducción de la plataforma|Traduction de la plateforme|ترجمة المنصة|Tradução da plataforma|平台译名|Перевод платформы
 expanded|Show more|और देखें|Mostrar más|Afficher plus|عرض المزيد|Mostrar mais|显示更多|Показать больше

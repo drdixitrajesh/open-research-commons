@@ -314,16 +314,23 @@ function catalogScope(params) {
   const dial = dialNumber(params.get('dial')) || searchDial(query);
   return dial ? state.countries.filter(c=>c.callingCodes.includes(dial)).map(c=>c.iso).sort().join(',') : '';
 }
-function subjectMenu(selected) {
-  const option = (subject) => [subject.code, subjectLabel(subject) + ' (' + subject.code + ')'];
+const subjectOption = subject => [subject.code,subject.code+' '+subjectLabel(subject)];
+function subSubjectOptions(parent, selected='') {
+  const fields = state.subjects.filter(subject=>subject.parent===parent && subject.code.length===6);
+  return options([['',txt('allSubSubjects')],...fields.map(subjectOption)],selected);
+}
+function subjectMenus(selected) {
+  const group = selected?.code.length===6 ? selected.parent : selected?.code;
   const divisions = state.subjects.filter(subject=>subject.parent===null);
   const groups = divisions.map(division=>{
-    const subjects = [division,...state.subjects.filter(subject=>subject.parent===division.code)];
-    // Preserve a specific field selected from the full subject directory.
-    if (selected?.code.length===6 && selected.code.startsWith(division.code)) subjects.push(selected);
-    return `<optgroup label="${esc(subjectLabel(division))}">${options(subjects.map(option),selected?.code)}</optgroup>`;
+    const subjects = state.subjects.filter(subject=>subject.parent===division.code);
+    // Older links from Browse subjects can still select an entire division.
+    if (selected?.code===division.code) subjects.unshift(division);
+    const [,name] = subjectOption(division);
+    return `<optgroup label="${esc(name)}">${options(subjects.map(subjectOption),group)}</optgroup>`;
   }).join('');
-  return `<label class="field">${t('topic')}<select name="subject">${options([['',txt('allSubjects')]],selected?.code || '')}${groups}</select></label>`;
+  return `<label class="field">${t('topic')}<select name="subject">${options([['',txt('allSubjects')]],group || '')}${groups}</select></label>
+    <label class="field">${t('subSubject')}<select name="subsubject"${group?.length===4?'':' disabled'}>${subSubjectOptions(group,selected?.code)}</select></label>`;
 }
 function recordList(page, params, scope, loadFailed) {
   const scoped = state.countryPages.get(scope);
@@ -375,7 +382,7 @@ function recordList(page, params, scope, loadFailed) {
   const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${['upcoming','ongoing','past','deadlines'].map(p=>link(page,p,'class="tab"'+(p===period?' aria-current="page"':''),{...Object.fromEntries(params),period:p,lang:lang==='en'?'':lang,view:''})).join('')}</nav>` : '';
   const selectedSubject = state.index.get(params.get('subject'));
   const controls = `<form data-filter="${page}"><div class="filter-grid">
-    ${menu('recordType','kind',kinds)}${menu('country','country',countries)}${subjectMenu(selectedSubject)}
+    ${menu('recordType','kind',kinds)}${subjectMenus(selectedSubject)}${menu('country','country',countries)}
     ${type==='event' || !type ? menu('eventLanguage','el',languagesInRecords) : ''}
     ${type!=='event' ? menu('documentLanguage','dl',languagesInRecords) : ''}
     ${menu('metadataLanguage','ml',languagesInRecords)}
@@ -585,6 +592,12 @@ document.addEventListener('click',async (e)=>{
   await go(destination);
 });
 document.addEventListener('change',(e)=>{
+  if (e.target.matches('form[data-filter] select[name=subject]')) {
+    const subSubject = e.target.form.elements.namedItem('subsubject');
+    subSubject.innerHTML=subSubjectOptions(e.target.value);
+    subSubject.disabled=subSubject.options.length===1;
+    return;
+  }
   if (e.target.id!=='interface-language') return;
   const destination=new URL(location.href);
   preference(keyLanguage,e.target.value);
@@ -614,6 +627,8 @@ document.addEventListener('submit',(e)=>{
     const filters = document.querySelector('form[data-filter]');
     const chosen = filters ? Object.fromEntries(new FormData(filters)) : {};
     const values = {...Object.fromEntries(current().params),...chosen};
+    if (filters) values.subject = chosen.subsubject || chosen.subject;
+    delete values.subsubject;
     values.q = el('query')?.value.trim() || '';
     if (page==='search') values.type = el('search-type').value;
     if (searching) delete values.period;
