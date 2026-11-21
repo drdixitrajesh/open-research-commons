@@ -7,6 +7,7 @@ const primary = 'https://open-research-commons.softinator.chatgpt.site';
 const assets = new Map([
   ['/index.html','text/html; charset=utf-8'], ['/styles.css','text/css; charset=utf-8'],
   ['/app.js','text/javascript; charset=utf-8'], ['/workflow.js','text/javascript; charset=utf-8'],
+  ['/catalog-search.js','text/javascript; charset=utf-8'],
   ['/i18n.js','text/javascript; charset=utf-8'], ['/examples.js','text/javascript; charset=utf-8'],
   ['/mark.svg','image/svg+xml'], ['/images/field-notes.jpg','image/jpeg'],
   ['/data/subjects.json','application/json; charset=utf-8'], ['/data/subjects-license.txt','text/plain; charset=utf-8'],

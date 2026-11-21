@@ -72,6 +72,7 @@ p { max-inline-size: 72ch; }
 .searchbox select { padding: .63rem .6rem; max-inline-size: 31%; border: 0; border-inline-start: 1px solid var(--line); background: var(--white); font-size: .9rem; }
 .searchbox .button { min-width: 7rem; }
 .section { padding-block: 3.4rem; }
+#catalog-results { scroll-margin-block-start: 1rem; }
 .section + .section { border-top: 1px solid var(--line); }
 .section-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; margin-bottom: 1rem; }
 .section-heading h2 { margin: 0; }

@@ -1,4 +1,5 @@
 import { locales, messages } from './i18n.js';
+import { buildCatalogIndex } from './catalog-search.js';
 import { examples } from './examples.js';
 import { submissionPage, dashboardPage, bindWorkflow } from './workflow.js';
 
@@ -73,6 +74,11 @@ function dialNumber(value) {
   const input=String(value || '').trim().replace(/[\s()-]/g,'');
   if (!/^(?:\+|00)?\d{1,5}$/.test(input)) return '';
   return input.replace(/^(?:\+|00)/,'');
+}
+function searchDial(query) {
+  const number = dialNumber(query);
+  if (!number || state.index.has(query) || /^(?:19|20)\d{2}$/.test(query)) return '';
+  return /^(?:\+|00)/.test(query) || state.countries.some(country=>country.callingCodes.includes(number)) ? number : '';
 }
 export const normalize = (value) => String(value ?? '').normalize('NFD').toLowerCase()
   .replace(/(\p{Script=Latin})\p{M}+/gu,'$1').normalize('NFC');
@@ -266,7 +272,12 @@ function homePage() {
 export function subjectMatches(s, query) {
   return [s.code,s.label,...Object.values(s.translations || {})].some(v=>normalize(v).includes(query));
 }
-function tokenizeSearch(r) {
+const catalogTypes = {events:'event',proceedings:'material',theses:'thesis'};
+const kindsFor = (type) => types[type] || (type==='research' ? [...types.material,...types.thesis] : Object.values(types).flat());
+const subjectIncludes = (record,code) => (record.subjectCodes || []).some(subject=>subject.startsWith(code));
+const catalogFilterKeys = ['q','type','subject','kind','country','dial','el','dl','ml','mode','from','to','inst'];
+let indexedCatalog;
+function describeRecord(r) {
   const country = countryFor(r);
   const subjects = (r.subjectCodes || []).flatMap((code)=>{
     const names = [];
@@ -276,16 +287,31 @@ function tokenizeSearch(r) {
     }
     return names;
   });
-  return normalize([r.title,r.description,r.keywords,r.doi,r.authors,r.institution,r.country,r.city,
-    country?.iso,countryName(country),country?.name,countryCodes(country),...subjects,
-    ...Object.values(r.metadata || {}).flatMap(m=>[m?.title,m?.description,m?.keywords])].filter(Boolean).join(' '));
+  const translations = Object.values(r.metadata || {});
+  return {
+    titles: [r.title,...translations.map(m=>m?.title)],
+    subjects,
+    keywords: [r.keywords,...translations.map(m=>m?.keywords)].flat(),
+    contributors: [r.authors,r.institution].flat(),
+    details: [r.description,r.country,r.city,r.startDate,r.endDate,r.year,r.releaseDate,recordKind(r),txt(recordKind(r)),
+      country?.iso,countryName(country),country?.name,countryCodes(country),...translations.map(m=>m?.description)],
+    identifiers: [r.doi]
+  };
+}
+function catalogIndex(records) {
+  const cached = indexedCatalog;
+  if (cached?.lang===lang && cached.records.length===records.length && records.every((r,i)=>r===cached.records[i])) {
+    return cached.index;
+  }
+  const index = buildCatalogIndex(records,describeRecord);
+  indexedCatalog = {lang,records,index};
+  return index;
 }
 function catalogScope(params) {
   const country = params.get('country') || '';
   if (state.countryIndex.has(country)) return country;
   const query = (params.get('q') || '').trim();
-  if (/^[A-Z]{2}$/.test(query) && state.countryIndex.has(query)) return query;
-  const dial = dialNumber(params.get('dial')) || dialNumber(query);
+  const dial = dialNumber(params.get('dial')) || searchDial(query);
   return dial ? state.countries.filter(c=>c.callingCodes.includes(dial)).map(c=>c.iso).sort().join(',') : '';
 }
 function subjectMenu(selected) {
@@ -299,49 +325,52 @@ function subjectMenu(selected) {
   }).join('');
   return `<label class="field">${t('topic')}<select name="subject">${options([['',txt('allSubjects')]],selected?.code || '')}${groups}</select></label>`;
 }
-function recordList(page, params, scope) {
+function recordList(page, params, scope, loadFailed) {
   const scoped = state.countryPages.get(scope);
   const all = scoped ? mergeCatalog(scoped.records) : activeRecords();
-  const fixed = {events:'event',proceedings:'material',theses:'thesis'}[page];
+  const fixed = catalogTypes[page];
   const type = fixed || params.get('type') || '';
   const period = params.get('period') || 'upcoming';
-  const query = params.get('q') || '';
+  const query = params.get('q')?.trim() || '';
   const filters = params;
-  const group = (r) => (r.subjectCodes || []).some(code=>code.startsWith(filters.get('subject')));
-  const normalizedQuery = normalize(query.trim());
-  const dial = dialNumber(normalizedQuery);
+  const subject = filters.get('subject');
+  const exactSubject = state.index.has(query) ? query : '';
+  const dial = searchDial(query);
   const dialFilter = dialNumber(filters.get('dial'));
-  const exactCountry = /^[A-Z]{2}$/.test(query.trim()) && state.countryIndex.has(query.trim()) ? query.trim() : '';
-  const words = dial || exactCountry ? [] : normalizedQuery.split(/\s+/).filter(Boolean);
-  const hasLanguage = (r) => [r.language,...(r.languages || [])].includes(filters.get('el'));
+  const scores = query && !dial && !exactSubject ? catalogIndex(all).search(query) : null;
+  const eventLanguage = filters.get('el');
+  const documentLanguage = filters.get('dl');
+  const metadataLanguage = filters.get('ml');
+  const from = filters.get('from'), to = filters.get('to');
   const matches = all.filter(r => {
     if (type && (type==='research' ? r.type==='event' : type!==r.type)) return false;
     if (page==='events' && (period==='deadlines' ? !r.deadline || r.deadline < new Date().toISOString().slice(0,10) : dateBucket(r)!==period)) return false;
-    if (filters.get('subject') && !group(r)) return false;
-    if (filters.get('el') && (r.type!=='event' || !hasLanguage(r))) return false;
-    if (filters.get('dl') && (r.type==='event' || r.language!==filters.get('dl'))) return false;
-    if (filters.get('ml') && (r.metadataLanguage !== filters.get('ml') && !r.metadata?.[filters.get('ml')])) return false;
+    if (subject && !subjectIncludes(r,subject)) return false;
+    if (exactSubject && !subjectIncludes(r,exactSubject)) return false;
+    if (eventLanguage || documentLanguage) {
+      if (r.type==='event' ? !(eventLanguage && [r.language,...(r.languages || [])].includes(eventLanguage))
+        : !(documentLanguage && r.language===documentLanguage)) return false;
+    }
+    if (metadataLanguage && (r.metadataLanguage || r.language)!==metadataLanguage && !r.metadata?.[metadataLanguage]) return false;
     const country = countryFor(r);
     if (filters.get('country') && (country?.iso || r.country) !== filters.get('country')) return false;
-    if (exactCountry && country?.iso !== exactCountry) return false;
     if (dial && !country?.callingCodes.includes(dial)) return false;
     if (dialFilter && !country?.callingCodes.includes(dialFilter)) return false;
     for (const [param,field] of Object.entries({mode:'mode',kind:null,inst:'institution'})) {
       if (filters.get(param) && filters.get(param) !== (field ? r[field] : recordKind(r))) return false;
     }
-    if (filters.get('from') && (r.startDate || String(r.year || '') + '-01-01') < filters.get('from')) return false;
-    if (filters.get('to') && (r.startDate || String(r.year || '') + '-01-01') > filters.get('to')) return false;
-    if (words.length) {
-      const haystack = tokenizeSearch(r);
-      if (!words.every(word=>haystack.includes(word))) return false;
-    }
+    if (from && (!r.startDate || (r.endDate || r.startDate).slice(0,10)<from)) return false;
+    if (to && (!r.startDate || r.startDate.slice(0,10)>to)) return false;
+    if (scores && !scores.has(r)) return false;
     return true;
   });
   if (page==='events') matches.sort(period==='past' ? (a,b)=>sortDates(b,a) : sortDates);
+  if (scores) matches.sort((a,b)=>scores.get(b)-scores.get(a));
+  if (exactSubject) matches.sort((a,b)=>Number(b.subjectCodes.includes(exactSubject))-Number(a.subjectCodes.includes(exactSubject)));
 
   const menu = (key, name, entries) => `<label class="field">${t(key)}<select name="${name}">${options([['',txt('all')],...entries],params.get(name) || '')}</select></label>`;
   const countries = sortedCountries().map(country=>[country.iso,[countryName(country),countryCodes(country)].filter(Boolean).join(' · ')]);
-  const kinds = (types[type] || Object.values(types).flat()).map(k=>[k,txt(k)]);
+  const kinds = kindsFor(type).map(k=>[k,txt(k)]);
   const languagesInRecords = [...new Set([...Object.keys(locales),...all.flatMap(r=>[r.language,r.metadataLanguage,...(r.languages || []),...Object.keys(r.metadata || {})])].filter(Boolean))].map(code=>[code,languageName(code)]);
   const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${['upcoming','ongoing','past','deadlines'].map(p=>link(page,p,'class="tab"'+(p===period?' aria-current="page"':''),{...Object.fromEntries(params),period:p,lang:lang==='en'?'':lang,view:''})).join('')}</nav>` : '';
   const selectedSubject = state.index.get(params.get('subject'));
@@ -354,13 +383,13 @@ function recordList(page, params, scope) {
     ${type==='event' ? `<label class="field">${t('startDate')}<input name="from" type="date" value="${esc(params.get('from') || '')}"></label><label class="field">${t('endDate')}<input name="to" type="date" value="${esc(params.get('to') || '')}"></label>` : ''}
     </div><div class="form-actions"><button class="button secondary">${t('filter')}</button>${link(page,'clear','class="text-link"',{type:page==='search'?type:'',q:query})}
     ${selectedSubject ? `<a class="tag" href="${esc(url('subjects',{subject:selectedSubject.code}))}">${esc(subjectLabel(selectedSubject))}</a>` : ''}
-  </div></form>`;
+  </div><output class="form-feedback" role="alert"></output></form>`;
   const title = fixed ? txt(page) : txt('browseRecords');
   return layout(title, searchbox(page,query,type) + tabs + controls + `<div class="section">
-    <p class="muted">${new Intl.NumberFormat(lang).format(matches.length)} ${t('results')}</p>
+    <p id="catalog-results" class="muted" tabindex="-1">${new Intl.NumberFormat(lang).format(matches.length)} ${t('results')}</p>
     ${matches.some(event=>event.directory) ? `<p class="page-description">${t('organizerDirectory')}</p>` : ''}
-    ${withExamples(matches)}${state.failed ? empty('serviceUnavailable') : ''}
-    ${matches.length ? matches.map(r=>itemRow(r,period==='deadlines')).join('') : empty()}
+    ${withExamples(matches)}${loadFailed ? empty('partialResults') : ''}
+    ${matches.length ? matches.map(r=>itemRow(r,period==='deadlines')).join('') : loadFailed ? '' : empty()}
     ${(scoped ? scoped.next : state.next) ? `<button class="button secondary" type="button" data-next data-scope="${esc(scope)}">${t('next')}</button>` : ''}
   </div>`);
 }
@@ -489,10 +518,26 @@ async function render(focus=false) {
   else if (page === 'institutions') html = institutionsPage(params);
   else if (['events','proceedings','theses','search'].includes(page)) {
     const scope = catalogScope(params);
-    if (scope && !state.countryPages.has(scope)) {
-      try { await fetchCatalog(scope); } catch { /* The current page remains available on a network error. */ }
+    const comprehensive = catalogFilterKeys.some(key=>params.get(key));
+    const loadPending = scope && !state.countryPages.has(scope) ||
+      comprehensive && (scope ? state.countryPages.get(scope)?.next : state.next || state.failed);
+    let loadFailed = state.failed && !scope;
+    if (loadPending) {
+      const results = el('catalog-results');
+      if (results) {
+        results.textContent = txt('loadingResults');
+        results.setAttribute('aria-busy','true');
+      }
+      announce('loadingResults');
+      try {
+        await prepareCatalog(scope,comprehensive,()=>seq===state.nav);
+        loadFailed=state.failed && !scope;
+      }
+      catch { loadFailed=true; }
+      if (seq!==state.nav) return;
+      el('announcement').textContent='';
     }
-    html = recordList(page,params,scope);
+    html = recordList(page,params,scope,loadFailed);
   }
   else if (page === 'submit') html = await submissionPage(params);
   else if (page === 'account' || page === 'review') html = await dashboardPage(page);
@@ -501,8 +546,10 @@ async function render(focus=false) {
   el('main').innerHTML = html;
   bindWorkflow(page,params);
   if (focus) {
-    window.scrollTo(0,0);
-    el('main').focus({preventScroll:true});
+    const results = focus==='results' ? el('catalog-results') : null;
+    if (results) results.scrollIntoView({block:'start'});
+    else window.scrollTo(0,0);
+    (results || el('main')).focus({preventScroll:true});
   }
 }
 document.addEventListener('click',async (e)=>{
@@ -560,32 +607,77 @@ document.addEventListener('input',(e)=>{
 });
 document.addEventListener('submit',(e)=>{
   const form = e.target;
-  const inputs = new FormData(form);
-  if (form.dataset.search) {
+  if (form.dataset.search || form.dataset.filter) {
     e.preventDefault();
-    go(url('search',{...Object.fromEntries(inputs),subject:current().params.get('subject')}));
+    const searching = Boolean(form.dataset.search);
+    const page = searching ? 'search' : form.dataset.filter;
+    const filters = document.querySelector('form[data-filter]');
+    const chosen = filters ? Object.fromEntries(new FormData(filters)) : {};
+    const values = {...Object.fromEntries(current().params),...chosen};
+    values.q = el('query')?.value.trim() || '';
+    if (page==='search') values.type = el('search-type').value;
+    if (searching) delete values.period;
+    delete values.view; delete values.lang; delete values.dial;
+    const type = catalogTypes[page] || values.type || '';
+    if (type==='event') delete values.dl;
+    if (type && type!=='event') { delete values.el; delete values.mode; }
+    if (type!=='event') { delete values.from; delete values.to; }
+    if (values.kind && !kindsFor(type).includes(values.kind)) delete values.kind;
+    if (filters && values.from && values.to && values.to<values.from) {
+      filters.querySelector('output').textContent=txt('invalidDates');
+      filters.elements.namedItem('to').focus();
+      return;
+    }
+    go(url(page,values),'results');
+    return;
   }
-  if (form.dataset.filter) {
-    e.preventDefault();
-    const existing=Object.fromEntries(current().params);
-    delete existing.view; delete existing.lang;
-    delete existing.dial;
-    go(url(form.dataset.filter,{...existing,...Object.fromEntries(inputs)}));
-  }
-  if (form.hasAttribute('data-institution')) { e.preventDefault(); go(url('institutions',Object.fromEntries(inputs))); }
+  if (form.hasAttribute('data-institution')) { e.preventDefault(); go(url('institutions',Object.fromEntries(new FormData(form)))); }
 });
 window.addEventListener('popstate',()=>render());
-async function fetchRecords(cursor) {
-  const data = await api('records' + (cursor ? '?cursor=' + encodeURIComponent(cursor) : ''));
-  const records = data.records || [];
-  state.records = cursor ? [...state.records,...records] : records;
-  state.next = data.next || null;
-}
-async function fetchCatalog(scope,cursor) {
-  const params = new URLSearchParams({country:scope});
+const catalogRequests = new Map();
+function fetchCatalogPage(scope,cursor) {
+  const params = new URLSearchParams();
+  if (scope) params.set('country',scope);
   if (cursor) params.set('cursor',cursor);
-  const data = await api('records?' + params);
-  state.countryPages.set(scope,{records:[...(cursor?state.countryPages.get(scope).records:[]),...(data.records || [])],next:data.next || null});
+  const path = 'records' + (params.size ? '?' + params : '');
+  if (catalogRequests.has(path)) return catalogRequests.get(path);
+
+  const request = api(path).then(data=>{
+    const previous = scope ? state.countryPages.get(scope) : state;
+    // A newer request may already have moved this cursor forward.
+    if (cursor && previous?.next!==cursor) return;
+    const next = data.next || null;
+    if (!Array.isArray(data.records) || (next && (typeof next!=='string' || next===cursor))) {
+      throw new Error('Invalid catalog page');
+    }
+    const records = new Map((cursor ? previous.records : []).map(record=>[record.id,record]));
+    for (const record of data.records) records.set(record.id,record);
+    const page = {records:[...records.values()],next};
+    if (scope) state.countryPages.set(scope,page);
+    else Object.assign(state,page);
+  }).finally(()=>catalogRequests.delete(path));
+  catalogRequests.set(path,request);
+  return request;
+}
+function fetchRecords(cursor) { return fetchCatalogPage('',cursor); }
+function fetchCatalog(scope,cursor) { return fetchCatalogPage(scope,cursor); }
+async function prepareCatalog(scope,full,stillCurrent=()=>true) {
+  if (!stillCurrent()) return;
+  const load = (cursor) => scope ? fetchCatalog(scope,cursor) : fetchRecords(cursor);
+  if (scope ? !state.countryPages.has(scope) : state.failed) {
+    await load();
+    if (!scope) state.failed = false;
+  }
+  if (!full) return;
+
+  const seen = new Set();
+  while (stillCurrent()) {
+    const cursor = scope ? state.countryPages.get(scope)?.next : state.next;
+    if (!cursor) return;
+    if (seen.has(cursor)) throw new Error('Repeated catalog cursor');
+    seen.add(cursor);
+    await load(cursor);
+  }
 }
 async function fetchDirectory() {
   const results = await Promise.allSettled(['events-directory','events-feed'].map(name=>fetch('/data/'+name+'.json').then(response=>{

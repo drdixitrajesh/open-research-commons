@@ -62,6 +62,8 @@ dissertation|Postgraduate dissertation|स्नातकोत्तर शो�
 free|Free to read and contribute|पढ़ना और योगदान करना निःशुल्क है|Consulta y depósito gratuitos|Consultation et dépôt gratuits|القراءة والمساهمة مجانًا|Leitura e depósito gratuitos|免费阅读和提交|Чтение и размещение бесплатны
 details|Details|विवरण|Detalles|Détails|التفاصيل|Detalhes|详情|Подробнее
 results|Results|परिणाम|Resultados|Résultats|النتائج|Resultados|搜索结果|Результаты
+loadingResults|Searching records…|रिकॉर्ड खोज रहे हैं…|Buscando registros…|Recherche de notices…|جارٍ البحث في السجلات…|Pesquisando registros…|正在搜索记录…|Поиск записей…
+partialResults|Some records could not be loaded. Results may be incomplete.|कुछ रिकॉर्ड लोड नहीं हो सके। परिणाम अधूरे हो सकते हैं।|No se pudieron cargar algunos registros. Los resultados pueden estar incompletos.|Certaines notices n’ont pas pu être chargées. Les résultats peuvent être incomplets.|تعذّر تحميل بعض السجلات. قد تكون النتائج غير مكتملة.|Alguns registros não puderam ser carregados. Os resultados podem estar incompletos.|部分记录加载失败，结果可能不完整。|Часть записей не удалось загрузить. Результаты могут быть неполными.
 noResults|No results found|कोई परिणाम नहीं मिला|No se encontraron resultados|Aucun résultat|لم يُعثر على نتائج|Nenhum resultado encontrado|未找到结果|Ничего не найдено
 filter|Filter|फ़िल्टर|Filtrar|Filtrer|تصفية|Filtrar|筛选|Фильтры
 clear|Clear filters|फ़िल्टर हटाएँ|Borrar filtros|Effacer les filtres|امسح عوامل التصفية|Limpar filtros|清除筛选条件|Сбросить фильтры
