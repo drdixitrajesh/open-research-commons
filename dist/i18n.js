@@ -110,6 +110,7 @@ const submissions = `
 startSubmission|Start a submission|प्रविष्टि शुरू करें|Iniciar un envío|Commencer un dépôt|ابدأ إرسالًا جديدًا|Iniciar um envio|开始提交|Создать заявку
 submissionIntro|Choose the type of record you would like to share.|जिस प्रकार की प्रविष्टि साझा करना चाहते हैं, उसे चुनें।|Elige el tipo de registro que quieres compartir.|Choisissez le type de notice à partager.|اختر نوع السجل الذي تريد مشاركته.|Escolha o tipo de registro que deseja compartilhar.|选择要分享的记录类型。|Выберите тип записи, которой хотите поделиться.
 eventForm|Event listing|आयोजन की प्रविष्टि|Anuncio de evento|Annonce d’événement|إعلان فعالية|Divulgação de evento|活动登记|Анонс мероприятия
+eventSubmitHeading|{event} Submit|{event} जमा करें|Enviar {event}|Soumettre {event}|إرسال {event}|Enviar {event}|提交{event}|Отправить {event}
 materialsForm|Event materials|आयोजन की सामग्री|Materiales de un evento|Ressources d’un événement|مواد الفعالية|Materiais de evento|活动资料|Материалы мероприятия
 thesisForm|Thesis or dissertation|थीसिस या शोधप्रबंध|Tesis o trabajo de posgrado|Thèse ou mémoire|أطروحة أو رسالة جامعية|Tese ou dissertação|学位论文|Диссертация или выпускная работа
 draft|Draft|मसौदा|Borrador|Brouillon|مسودة|Rascunho|草稿|Черновик

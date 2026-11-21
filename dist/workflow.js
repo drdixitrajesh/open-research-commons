@@ -206,7 +206,9 @@ export async function submissionPage(params) {
   note = draft.note;
   const canWrite = state.session.user && state.session.persistent;
   const canSave = canWrite && !draft.uploading;
-  return layout(txt(typeHeading(r.type)),`<div class="form-panel">
+  const title = txt(typeHeading(r.type));
+  const heading = r.type==='event' ? txt('eventSubmitHeading').replace('{event}',catalogKindLabel(r.type)) : title;
+  return layout(title,`<div class="form-panel">
     ${state.session.user && !canWrite ? `<p class="empty">${t('serviceUnavailable')}</p>` : ''}
     ${note ? `<div class="notice"><span>${t('reviewNote')} · <bdi>${esc(note)}</bdi></span></div>` : ''}
     <form id="submission-form" novalidate>
@@ -222,7 +224,7 @@ export async function submissionPage(params) {
     <div class="form-actions"><button class="button secondary" name="action" value="draft"${canSave?'':' disabled'}>${t('saveDraft')}</button>
       <button class="button secondary" type="button" data-preview${draft.uploading?' disabled':''}>${t('preview')}</button>
       <button class="button" name="action" value="submit"${canSave?'':' disabled'}>${t('sendForReview')}</button>
-    </div></form></div>`);
+    </div></form></div>`, '', heading);
 }
 function collect(form) {
   const {record:previous} = draft;
