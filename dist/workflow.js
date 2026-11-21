@@ -24,7 +24,6 @@ const academicChoices = { 'In progress':'academicInProgress', Submitted:'submitt
 const standardLicenses = ['CC0 1.0','CC BY 4.0','CC BY-SA 4.0','CC BY-ND 4.0','CC BY-NC 4.0','CC BY-NC-SA 4.0','CC BY-NC-ND 4.0'];
 const commonDegrees = ['PhD','DPhil','EdD','EngD','MA','MSc','MPhil','MRes','MBA','MEng'];
 let draft;
-let pendingFiles = 0;
 const editing = (params) => (params.get('id') || params.get('type') || '');
 const keyOptions = (names) => names.map(key=>[key,txt(key)]);
 const labeledOptions = (labels) => Object.entries(labels).map(([value,key])=>[value,txt(key)]);
@@ -123,7 +122,7 @@ function typeFields(type,r) {
     + field(r,'speakers',{kind:'textarea',wide:true}) + field(r,'programme',{kind:'textarea',wide:true});
   const shared = field(r,'authors',{required:true,wide:true}) + choiceField(r,'contributorRole',{choices:roles})
     + field(r,'institution',{required:type==='thesis'})
-    + field(r,'year',{kind:'number',required:type==='thesis'}) + field(r,'releaseDate',{kind:'date'});
+    + field(r,'year',{kind:'number',help:'yearOrReleaseDate'}) + field(r,'releaseDate',{kind:'date'});
   if (type==='material') {
     const events = activeRecords().filter(r=>r.type==='event'&&!r.example&&!r.directory);
     const related = events.length
@@ -155,9 +154,9 @@ function subjectPicker(r) {
     <div id="picked-subjects" class="pills" aria-live="polite">${selectedSubjects(r.subjectCodes)}</div>
   </div>`;
 }
-function translationRows(metadata={}) {
-  return Object.entries(metadata).map(([code,m],i)=>`<fieldset class="form-section full" data-translation>
-    <legend>${t('translations')} ${i+1}</legend>
+function translationRows(entries, offset=0) {
+  return entries.map(([code,m],i)=>`<fieldset class="form-section full" data-translation>
+    <legend>${t('translations')} ${offset+i+1}</legend>
     <div class="form-grid">
       ${languageField({lang:code},'lang',{label:'metadataLanguage',required:true,translation:true})}
       <label class="field">${t('translationStatus')}<select data-meta="status">${options(keyOptions(['authorTranslation','machineTranslation']),m.status || 'authorTranslation')}</select></label>
@@ -173,7 +172,8 @@ function fileRows(files) {
 }
 function filePicker(r) {
   const label = state.session.user ? (state.session.files ? 'attachmentHint' : 'serviceUnavailable') : 'uploadSignIn';
-  return `<div class="full"><label class="field">${t('upload')}<input id="attachment" type="file" accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx,.mp3,.mp4,.txt" multiple${!state.session.user || !state.session.files?' disabled':''}><small>${t(label)} ${state.session.files?t('smallFile'):''}</small></label>
+  return `<div class="full"><label class="field">${t('upload')}<input id="attachment" type="file" accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx,.mp3,.mp4,.txt" multiple${!state.session.user || !state.session.files || draft.uploading?' disabled':''}><small>${t(label)} ${state.session.files?t('smallFile'):''}</small></label>
+    <p id="upload-status" role="status" class="muted"${draft.uploading?'':' hidden'}>${t('uploadInProgress')}</p>
     <ul id="attachment-list">${fileRows(r.files || [])}</ul></div>`;
 }
 function choices(params) {
@@ -205,6 +205,7 @@ export async function submissionPage(params) {
   const r = draft.record;
   note = draft.note;
   const canWrite = state.session.user && state.session.persistent;
+  const canSave = canWrite && !draft.uploading;
   return layout(txt(typeHeading(r.type)),`<div class="form-panel">
     ${!state.session.user ? `<p>${t('signedOut')}</p>${signIn()}` : !canWrite ? `<p class="empty">${t('serviceUnavailable')}</p>` : ''}
     ${note ? `<div class="notice"><span>${t('reviewNote')} · <bdi>${esc(note)}</bdi></span></div>` : ''}
@@ -212,14 +213,14 @@ export async function submissionPage(params) {
     ${section('original',metadataFields(r))}
     ${section('searchableDetails',searchableFields(r.type,r))}
     ${section('details',typeFields(r.type,r))}
-    ${section('translations',`<div class="full" id="translation-list">${translationRows(r.metadata)}</div><div class="full"><button class="button secondary" type="button" data-add-translation>${icon('plus',15)}${t('addTranslation')}</button></div>`)}
+    ${section('translations',`<div class="full" id="translation-list">${translationRows(draft.translations ?? Object.entries(r.metadata || {}))}</div><div class="full"><button class="button secondary" type="button" data-add-translation>${icon('plus',15)}${t('addTranslation')}</button></div>`)}
     ${section('files',filePicker(r)+links(r.type,r))}
     ${section('doi',`<p class="full">${t('doiPolicy')}</p>${field(r,'doi')}${r.type!=='event'?field(r,'translationOf'):''}
     <label class="full"><input name="authority" type="checkbox"${r.authority?' checked':''} required> ${t('authority')} *</label>`)}
     <output class="form-feedback" id="submission-feedback" role="alert"></output>
-    <div class="form-actions"><button class="button secondary" name="action" value="draft"${canWrite?'':' disabled'}>${t('saveDraft')}</button>
-      <button class="button secondary" type="button" data-preview>${t('preview')}</button>
-      <button class="button" name="action" value="submit"${canWrite?'':' disabled'}>${t('sendForReview')}</button>
+    <div class="form-actions"><button class="button secondary" name="action" value="draft"${canSave?'':' disabled'}>${t('saveDraft')}</button>
+      <button class="button secondary" type="button" data-preview${draft.uploading?' disabled':''}>${t('preview')}</button>
+      <button class="button" name="action" value="submit"${canSave?'':' disabled'}>${t('sendForReview')}</button>
     </div></form></div>`);
 }
 function collect(form) {
@@ -232,14 +233,47 @@ function collect(form) {
   data.languages = languageList(data.languages);
   data.relatedId = associated(data.relatedId);
   data.translationOf = associated(data.translationOf);
-  const entries = [...form.querySelectorAll('[data-translation]')].map(row=>{
+  draft.translations = [...form.querySelectorAll('[data-translation]')].map(row=>{
     const parts = Object.fromEntries([...row.querySelectorAll('[data-meta]')].map(input=>[
       input.dataset.meta,input.hasAttribute('data-choice-select') ? choiceValue(input) : input.value.trim()
     ]));
     const {lang,...metadata} = parts;
     return [lang,metadata];
   });
-  return {...previous,...data,metadata:Object.fromEntries(entries.filter(([code])=>code))};
+  return {...previous,...data};
+}
+function canonicalLanguage(value) {
+  if (!value || value.length>63) return '';
+  try { return Intl.getCanonicalLocales(value)[0] || ''; }
+  catch { return ''; }
+}
+function prepareSubmission(form) {
+  const record = collect(form);
+  draft.record = record;
+  const original = canonicalLanguage(record.metadataLanguage || record.language);
+  const languageFields = form.querySelectorAll('[data-translation] [data-meta="lang"]');
+  const translations = new Map();
+  for (const [index,[value,metadata]] of draft.translations.entries()) {
+    const hasContent = Boolean(metadata.title || metadata.description || metadata.keywords);
+    if (!value && !hasContent) continue;
+    const code = canonicalLanguage(value);
+    let error;
+    if (!value) error = 'translationLanguageRequired';
+    else if (!code) error = 'translationLanguageInvalid';
+    else if (code===original) error = 'translationLanguageOriginal';
+    else if (translations.has(code)) error = 'translationLanguageDuplicate';
+    if (error) {
+      feedback(form,txt(error));
+      const select = languageFields[index];
+      const input = select.value===otherChoice
+        ? select.closest('[data-choice-field]').querySelector('[data-custom-value]') : select;
+      input.focus();
+      return null;
+    }
+    translations.set(code,metadata);
+  }
+  draft.record = {...record,metadata:Object.fromEntries(translations)};
+  return draft.record;
 }
 function errors(error) {
   const fieldName = error.field ? ' (' + txt(fields.get(error.field) || error.field) + ')' : '';
@@ -332,9 +366,12 @@ function bindSubmission() {
       draft.record.subjectCodes=draft.record.subjectCodes.filter(code=>code!==button.dataset.dropSubject); reselect(); pick.focus();
     }
     if (button.hasAttribute('data-add-translation')) {
-      const next = Object.keys(Object.fromEntries(languageOptions)).find(code=>!Object.hasOwn(draft.record.metadata,code) && code!==(draft.record.metadataLanguage || draft.record.language)) || '';
+      const entries = draft.translations ?? Object.entries(draft.record.metadata || {});
+      const used = new Set(entries.map(([code])=>canonicalLanguage(code)));
+      const original = canonicalLanguage(draft.record.metadataLanguage || draft.record.language);
+      const next = languageOptions.find(([code])=>!used.has(code) && code!==original)?.[0] || '';
       const list = form.querySelector('#translation-list');
-      list.insertAdjacentHTML('beforeend',translationRows({[next]:{}}));
+      list.insertAdjacentHTML('beforeend',translationRows([[next,{}]],list.children.length));
       draft.record=collect(form);
       list.lastElementChild.querySelector('[data-meta="lang"]').focus();
     }
@@ -349,35 +386,56 @@ function bindSubmission() {
       attachments.innerHTML=fileRows(draft.record.files);
     }
     if (button.hasAttribute('data-preview')) {
-      draft.record=collect(form); showPreview(draft.record);
+      if (draft.uploading) return;
+      const record = prepareSubmission(form);
+      if (record) showPreview(record);
     }
   });
   uploads.addEventListener('change',async ()=>{
     const queue = [...uploads.files];
-    if (!queue.length) return;
+    if (!queue.length || draft.uploading) return;
     const original = draft;
-    uploads.disabled=true;
-    pendingFiles++;
+    const syncUploadState = () => {
+      const activeForm = draft === original && document.getElementById('submission-form');
+      if (!activeForm) return;
+      activeForm.querySelector('#attachment').disabled = original.uploading || !state.session.user || !state.session.files;
+      activeForm.querySelector('#attachment-list').innerHTML = fileRows(original.record.files);
+      activeForm.querySelector('#upload-status').hidden = !original.uploading;
+      activeForm.querySelector('[data-preview]').disabled = original.uploading;
+      for (const button of activeForm.querySelectorAll('button[name=action]')) {
+        button.disabled = original.uploading || !state.session.user || !state.session.persistent;
+      }
+      return activeForm;
+    };
+    original.uploading=true;
+    syncUploadState();
     feedback(form,'');
-    for (const file of queue) {
-      if (original.record.files.length>=10 || file.size>20*1024*1024) { feedback(form,txt('smallFile')); break; }
-      const body = new FormData();
-      body.set('file',file);
-      try {
-        const result=await api('uploads',{method:'POST',body});
-        original.record.files.push(result);
-        original.record.attachmentIds=original.record.files.map(f=>f.id);
-        attachments.innerHTML=fileRows(original.record.files);
-      } catch(error) { feedback(form,errors(error)); }
+    const warnings = new Set();
+    try {
+      for (const file of queue) {
+        if (original.record.files.length>=10) { warnings.add(txt('attachmentLimit')); break; }
+        if (file.size>20*1024*1024) { warnings.add(txt('smallFile')); continue; }
+        const body = new FormData();
+        body.set('file',file);
+        try {
+          const result=await api('uploads',{method:'POST',body});
+          original.record.files.push(result);
+          original.record.attachmentIds=original.record.files.map(f=>f.id);
+          syncUploadState();
+        } catch(error) { warnings.add(errors(error)); }
+      }
+    } finally {
+      original.uploading=false;
+      uploads.value='';
+      const activeForm = syncUploadState();
+      if (activeForm && warnings.size) feedback(activeForm,[...warnings].join(' '));
     }
-    pendingFiles--;
-    uploads.disabled=false;
-    uploads.value='';
   });
   form.addEventListener('submit',async (e)=>{
     e.preventDefault();
-    if (!state.session.user || !state.session.persistent || pendingFiles) return;
-    draft.record=collect(form);
+    if (!state.session.user || !state.session.persistent || draft.uploading) return;
+    const record = prepareSubmission(form);
+    if (!record) return;
     const action=e.submitter?.value || 'draft';
     if (action==='submit' && (!form.checkValidity() || !draft.record.subjectCodes.length)) {
       feedback(form,txt('required'));
@@ -389,7 +447,7 @@ function bindSubmission() {
     feedback(form,'');
     try {
       const {submission} = await api('submissions',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({id:draft.id,revision:draft.revision,action,record:draft.record})});
+        body:JSON.stringify({id:draft.id,revision:draft.revision,action,record})});
       const key = action==='submit' ? 'sent' : 'saved';
       if (action==='submit') draft=undefined;
       else draft = {key:submission.id,id:submission.id,revision:submission.revision,record:submission.record,status:submission.status,note:submission.note};
@@ -399,7 +457,7 @@ function bindSubmission() {
       page?.insertAdjacentHTML('afterend',`<p class="notice" role="status">${t(key)}</p>`);
     } catch (error) {
       feedback(form,errors(error));
-      const invalidInput = error.field==='subjectCodes' ? group : form.elements.namedItem(error.field);
+      const invalidInput = error.field==='subjectCodes' ? group : form.elements.namedItem(error.field==='country' ? 'countryCode' : error.field);
       const target = invalidInput?.matches?.('[data-choice-select]') && invalidInput.value===otherChoice
         ? invalidInput.closest('[data-choice-field]').querySelector('[data-custom-value]') : invalidInput;
       target?.focus?.();

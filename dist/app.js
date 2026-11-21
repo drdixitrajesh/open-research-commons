@@ -227,7 +227,7 @@ function eventCard(r) {
   </article>`;
 }
 function itemRow(r, deadline=false) {
-  const info = deadline ? day(callDeadline(r)) : r.type === 'event' ? eventDate(r) : [r.authors,r.institution,r.year].filter(Boolean).join(' · ');
+  const info = deadline ? day(callDeadline(r)) : r.type === 'event' ? eventDate(r) : [r.authors,r.institution,r.year || day(r.releaseDate)].filter(Boolean).join(' · ');
   return `<article class="item-row">
     <span class="row-icon">${icon(r.type === 'thesis' ? 'cap' : r.type === 'event' ? 'calendar' : 'file')}</span>
     <div>${tag(recordKind(r))} ${sourceTag(r)}<h3>${aboutTitle(r)}</h3><p dir="auto">${esc(info)}${r.language ? ' · ' + esc(languageName(r.language)) : ''}</p></div>
@@ -505,7 +505,7 @@ function relatedRows(r) {
 }
 const doiHref = (doi) => doi ? 'https://doi.org/' + doi.split('/').map(encodeURIComponent).join('/') : '';
 function citations(r,meta) {
-  return [r.authors || r.institution,r.year || r.startDate?.slice(0,4),meta.title,r.doi ? doiHref(r.doi) : null].filter(Boolean).join('. ');
+  return [r.authors || r.institution,r.year || (r.releaseDate || r.startDate)?.slice(0,4),meta.title,r.doi ? doiHref(r.doi) : null].filter(Boolean).join('. ');
 }
 function detailsView(r, params, preview = false) {
   const selection = params.get('metadata') || lang;
@@ -516,7 +516,7 @@ function detailsView(r, params, preview = false) {
   const facts = [
     [r.type==='event'?'eventLanguage':'documentLanguage', [...new Set([r.language,...(r.languages || [])])].filter(Boolean).map(languageName).map(esc).join(' · ')],
     ['metadataLanguage',metadataLanguages.map(languageName).map(esc).join(' · ')],
-    ['institution',esc(r.institution)],['authors',esc(r.authors)],['date',esc(r.type==='event'?eventDate(r) : r.year)],['timezone',esc(r.timezone)],['venue',esc(r.venue)],['city',esc(r.city)],
+    ['institution',esc(r.institution)],['authors',esc(r.authors)],['date',esc(r.type==='event'?eventDate(r) : r.year)],['releaseDate',r.type!=='event' ? esc(day(r.releaseDate)) : ''],['timezone',esc(r.timezone)],['venue',esc(r.venue)],['city',esc(r.city)],
     ['country',country ? `<a href="${esc(url('search',{country:country.iso}))}">${esc(countryName(country))}</a>` : esc(r.country)],['dialingCode',esc(countryCodes(country))],['format',r.mode ? t(r.mode) : ''],['eventStatus',r.type==='event' && r.eventStatus ? t(r.eventStatus) : ''],['deadline',esc(day(r.deadline))],
     ['startTime',esc(r.startTime)],['endTime',esc(r.endTime)],['paperDeadline',esc(day(r.paperDeadline))],['registrationDeadline',esc(day(r.registrationDeadline))],['attendanceFee',esc(r.attendanceFee)],
     ['degree',esc(r.degree)],['department',esc(r.department)],['supervisors',esc(r.supervisors)],['access',r.access ? t(r.access) : ''],['embargoUntil',esc(day(r.embargoUntil))],['license',esc(r.license)],['rightsHolder',esc(r.rightsHolder)],
