@@ -29,6 +29,7 @@ heroText|Find academic events, explore their proceedings, and discover theses an
 search|Search|खोजें|Buscar|Rechercher|بحث|Pesquisar|搜索|Поиск
 searchPlaceholder|Search titles, authors, subjects, or DOIs|शीर्षक, लेखक, विषय या DOI खोजें|Busca títulos, autores, disciplinas o DOI|Rechercher par titre, auteur, discipline ou DOI|ابحث بالعنوان أو المؤلف أو التخصص أو DOI|Pesquise por título, autor, área ou DOI|搜索标题、作者、学科或 DOI|Поиск по названию, автору, дисциплине или DOI
 all|All contents|सभी सामग्री|Todo el contenido|Tous les contenus|كل المحتوى|Todo o conteúdo|全部内容|Все материалы
+notSpecified|Not specified|जानकारी उपलब्ध नहीं|Sin especificar|Non précisé|غير محدد|Não especificado|未注明|Не указано
 postEvent|Post an event|आयोजन पोस्ट करें|Anunciar un evento|Annoncer un événement|أضف فعالية|Divulgar um evento|发布活动|Добавить мероприятие
 deposit|Deposit research|शोध जमा करें|Depositar investigación|Déposer un travail de recherche|إيداع عمل بحثي|Depositar pesquisa|存档研究成果|Разместить исследование
 upcoming|Upcoming events|आगामी आयोजन|Próximos eventos|Événements à venir|الفعاليات المقبلة|Próximos eventos|即将举行的活动|Предстоящие мероприятия

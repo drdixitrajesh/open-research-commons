@@ -9,6 +9,7 @@ const assets = new Map([
   ['/index.html','text/html; charset=utf-8'], ['/styles.css','text/css; charset=utf-8'],
   ['/app.js','text/javascript; charset=utf-8'], ['/workflow.js','text/javascript; charset=utf-8'],
   ['/catalog-search.js','text/javascript; charset=utf-8'],
+  ['/event-filters.js','text/javascript; charset=utf-8'],
   ['/i18n.js','text/javascript; charset=utf-8'], ['/examples.js','text/javascript; charset=utf-8'],
   ['/mark.svg','image/svg+xml'], ['/images/field-notes.jpg','image/jpeg'],
   ['/data/subjects.json','application/json; charset=utf-8'], ['/data/subjects-license.txt','text/plain; charset=utf-8'],
@@ -18,7 +19,7 @@ const assets = new Map([
 const entries = await Promise.all([...assets].map(async ([path, mime]) => [
   path, [mime,(await readFile(new URL('../dist' + path,import.meta.url))).toString('base64')]
 ]));
-const clientAssets = entries.filter(([path]) => /\.(js|css)$/.test(path));
+const clientAssets = entries.filter(([path]) => /\.(js|css|json)$/.test(path));
 const clientDigest = createHash('sha256').update(JSON.stringify(clientAssets)).digest('hex').slice(0,16);
 // Version the whole module graph together so relative and circular imports share one URL prefix.
 const clientPrefix = '/_assets/' + clientDigest;

@@ -1,5 +1,6 @@
 import { locales, messages } from './i18n.js';
 import { buildCatalogIndex } from './catalog-search.js';
+import { callDeadline, countEvents, eventDateAt, eventFacets, eventPeriod, eventPeriods, indexEvents, notSpecified } from './event-filters.js';
 import { examples } from './examples.js';
 import { submissionPage, dashboardPage, bindWorkflow } from './workflow.js';
 
@@ -31,7 +32,7 @@ export let lang = 'en';
 export const state = {
   subjects: [], index: new Map(), records: [], resolution: new Map(),
   countries: [], countryIndex: new Map(), countryPages: new Map(),
-  directory: [],
+  directory: [], directoryFailed:false,
   session: {user:null,persistent:false,files:false}, failed:false,
   examples: preference(keyExamples) !== 'hide', next:null, nav:0
 };
@@ -70,7 +71,8 @@ export const countryOptions = () => sortedCountries().map(country => [
   country.iso, country.iso + ' · ' + countryName(country),
 ]);
 function countryFor(record) {
-  if (record.countryCode) return state.countryIndex.get(record.countryCode);
+  const country = state.countryIndex.get(record.countryCode?.toUpperCase());
+  if (country) return country;
   const name = normalize(record.country);
   return state.countries.find(c=>normalize(c.name)===name);
 }
@@ -202,14 +204,7 @@ function withExamples(records) {
 }
 const sortDates = (a,b) => (a.startDate || '9999').localeCompare(b.startDate || '9999');
 function dateBucket(r) {
-  let today;
-  try {
-    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:r.timezone || 'UTC'}).formatToParts(new Date()).map((p)=>[p.type,p.value]));
-    today = parts.year + '-' + parts.month + '-' + parts.day;
-  } catch { today = new Date().toISOString().slice(0,10); }
-  if (r.eventStatus === 'held' || (r.endDate || r.startDate || '').slice(0,10) < today) return 'past';
-  if ((r.startDate || '').slice(0,10) <= today && !['postponed','cancelled'].includes(r.eventStatus)) return 'ongoing';
-  return 'upcoming';
+  return eventPeriod(r, eventDateAt(r.timezone));
 }
 function tag(key) { return `<span class="kind">${t(key)}</span>`; }
 function exampleTag(r) { return r.example ? `<span class="tag">${t('example')}</span>` : ''; }
@@ -229,7 +224,7 @@ function eventCard(r) {
   </article>`;
 }
 function itemRow(r, deadline=false) {
-  const info = deadline ? day(r.deadline) : r.type === 'event' ? eventDate(r) : [r.authors,r.institution,r.year].filter(Boolean).join(' · ');
+  const info = deadline ? day(callDeadline(r)) : r.type === 'event' ? eventDate(r) : [r.authors,r.institution,r.year].filter(Boolean).join(' · ');
   return `<article class="item-row">
     <span class="row-icon">${icon(r.type === 'thesis' ? 'cap' : r.type === 'event' ? 'calendar' : 'file')}</span>
     <div>${tag(recordKind(r))} ${sourceTag(r)}<h3>${aboutTitle(r)}</h3><p dir="auto">${esc(info)}${r.language ? ' · ' + esc(languageName(r.language)) : ''}</p></div>
@@ -243,7 +238,7 @@ function heading(title,page,params) {
 }
 function homePage() {
   const records = activeRecords();
-  const dated = records.filter(r=>r.type==='event' && dateBucket(r)==='upcoming' && !['cancelled','postponed'].includes(r.eventStatus)).sort(sortDates);
+  const dated = records.filter(r=>r.type==='event' && dateBucket(r)==='upcoming').sort(sortDates);
   const countries = new Set();
   const featured = dated.filter(r=>{
     const country=r.countryCode || r.country || r.id;
@@ -304,6 +299,8 @@ function describeRecord(r) {
     keywords: [r.keywords,...translations.map(m=>m?.keywords)].flat(),
     contributors: [r.authors,r.institution].flat(),
     details: [r.description,r.country,r.city,r.startDate,r.endDate,r.year,r.releaseDate,recordKind(r),txt(recordKind(r)),
+      r.mode,r.mode && txt(r.mode),r.language && languageName(r.language),...(r.languages || []).map(languageName),
+      r.metadataLanguage && languageName(r.metadataLanguage),
       country?.iso,countryName(country),country?.name,countryCodes(country),...translations.map(m=>m?.description)],
     identifiers: [r.doi]
   };
@@ -329,25 +326,67 @@ function subSubjectOptions(parent, selected='') {
   const fields = state.subjects.filter(subject=>subject.parent===parent && subject.code.length===6);
   return options([['',txt('allSubSubjects')],...fields.map(subjectOption)],selected);
 }
-function subjectMenus(selected) {
+function subjectMenus(selected, eventFilter, filterCode) {
   const group = selected?.code.length===6 ? selected.parent : selected?.code;
   const divisions = state.subjects.filter(subject=>subject.parent===null);
   const groups = divisions.map(division=>{
     const subjects = state.subjects.filter(subject=>subject.parent===division.code);
     // Older links from Browse subjects can still select an entire division.
-    if (selected?.code===division.code) subjects.unshift(division);
     const [,name] = subjectOption(division);
-    return `<optgroup label="${esc(name)}">${options(subjects.map(subjectOption),group)}</optgroup>`;
+    const entries = subjects.map(subjectOption);
+    if (eventFilter) entries.unshift([division.code,division.code+' '+txt('allSubjects')]);
+    else if (selected?.code===division.code) entries.unshift(subjectOption(division));
+    return `<optgroup label="${esc(name)}" data-division="${division.code}">${options(entries,group)}</optgroup>`;
   }).join('');
-  return `<label class="field">${t('topic')}<select name="subject">${options([['',txt('allSubjects')]],group || '')}${groups}</select></label>
+  const entries = [['',txt('allSubjects')]];
+  if (eventFilter) entries.push([notSpecified,txt('notSpecified')]);
+  return `<label class="field">${t('topic')}<select name="subject">${options(entries,group || filterCode || '')}${groups}</select></label>
     <label class="field">${t('subSubject')}<select name="subsubject"${group?.length===4?'':' disabled'}>${subSubjectOptions(group,selected?.code)}</select></label>`;
+}
+function bindCatalogFilters(form, eventIndex, period) {
+  const subSubject = form.elements.namedItem('subsubject');
+  const format = new Intl.NumberFormat(lang);
+  function updateCounts() {
+    const filters = new URLSearchParams(new FormData(form));
+    filters.set('subject', filters.get('subsubject') || filters.get('subject') || '');
+    const {counts, dates} = countEvents(eventIndex, filters, period);
+    const setCount = (element, count) => {
+      const label = element.dataset.label ??= element.textContent;
+      element.textContent = label + ' (' + format.format(count) + ')';
+    };
+    for (const name of eventFacets) {
+      const select = form.elements.namedItem(name);
+      for (const option of select.options) setCount(option, counts[name].get(option.value) || 0);
+    }
+    for (const group of form.querySelectorAll('optgroup[data-division]')) {
+      const label = group.dataset.label ??= group.label;
+      group.label = label + ' (' + format.format(counts.subject.get(group.dataset.division) || 0) + ')';
+    }
+    const parent = filters.get('subject') && form.elements.namedItem('subject').value;
+    for (const option of subSubject.options) {
+      setCount(option, counts.subject.get(option.value || parent || '') || 0);
+    }
+    for (const label of form.querySelectorAll('[data-date-count]')) {
+      label.textContent = '(' + format.format(dates[label.dataset.dateCount]) + ')';
+    }
+  }
+  form.addEventListener('change', ({target})=>{
+    if (target.name==='subject') {
+      subSubject.innerHTML=subSubjectOptions(target.value);
+      subSubject.disabled=subSubject.options.length===1;
+    }
+    if (eventIndex) updateCounts();
+  });
+  if (eventIndex) updateCounts();
 }
 function recordList(page, params, scope, loadFailed) {
   const scoped = state.countryPages.get(scope);
   const all = scoped ? mergeCatalog(scoped.records) : activeRecords();
   const fixed = catalogTypes[page];
   const type = fixed || params.get('type') || '';
-  const period = params.get('period') || 'upcoming';
+  const eventFilter = type === 'event';
+  const requestedPeriod = params.get('period');
+  const period = page === 'events' ? (eventPeriods.includes(requestedPeriod) ? requestedPeriod : 'upcoming') : null;
   const query = params.get('q')?.trim() || '';
   const filters = params;
   const subject = filters.get('subject');
@@ -359,11 +398,19 @@ function recordList(page, params, scope, loadFailed) {
   const documentLanguage = filters.get('dl');
   const metadataLanguage = filters.get('ml');
   const from = filters.get('from'), to = filters.get('to');
-  const matches = all.filter(r => {
+  const candidates = all.filter(r => {
     if (type && (type==='research' ? r.type==='event' : type!==r.type)) return false;
-    if (page==='events' && (period==='deadlines' ? !r.deadline || r.deadline < new Date().toISOString().slice(0,10) : dateBucket(r)!==period)) return false;
-    if (subject && !subjectIncludes(r,subject)) return false;
     if (exactSubject && !subjectIncludes(r,exactSubject)) return false;
+    const country = countryFor(r);
+    if (dial && !country?.callingCodes.includes(dial)) return false;
+    if (dialFilter && !country?.callingCodes.includes(dialFilter)) return false;
+    if (filters.get('inst') && filters.get('inst') !== r.institution) return false;
+    return !scores || scores.has(r);
+  });
+  const eventIndex = eventFilter ? indexEvents(candidates, record => countryFor(record)?.iso) : null;
+  const eventCounts = eventIndex ? countEvents(eventIndex, filters, period) : null;
+  const matches = eventCounts?.matches ?? candidates.filter(r => {
+    if (subject && !subjectIncludes(r,subject)) return false;
     if (eventLanguage || documentLanguage) {
       if (r.type==='event' ? !(eventLanguage && [r.language,...(r.languages || [])].includes(eventLanguage))
         : !(documentLanguage && r.language===documentLanguage)) return false;
@@ -371,45 +418,49 @@ function recordList(page, params, scope, loadFailed) {
     if (metadataLanguage && (r.metadataLanguage || r.language)!==metadataLanguage && !r.metadata?.[metadataLanguage]) return false;
     const country = countryFor(r);
     if (filters.get('country') && (country?.iso || r.country) !== filters.get('country')) return false;
-    if (dial && !country?.callingCodes.includes(dial)) return false;
-    if (dialFilter && !country?.callingCodes.includes(dialFilter)) return false;
-    for (const [param,field] of Object.entries({mode:'mode',kind:null,inst:'institution'})) {
+    for (const [param,field] of Object.entries({mode:'mode',kind:null})) {
       if (filters.get(param) && filters.get(param) !== (field ? r[field] : recordKind(r))) return false;
     }
     if (from && (!r.startDate || (r.endDate || r.startDate).slice(0,10)<from)) return false;
     if (to && (!r.startDate || r.startDate.slice(0,10)>to)) return false;
-    if (scores && !scores.has(r)) return false;
     return true;
   });
-  if (page==='events') matches.sort(period==='past' ? (a,b)=>sortDates(b,a) : sortDates);
+  if (page==='events') matches.sort(period==='deadlines' ? (a,b)=>callDeadline(a).localeCompare(callDeadline(b))
+    : period==='past' ? (a,b)=>sortDates(b,a) : sortDates);
   if (scores) matches.sort((a,b)=>scores.get(b)-scores.get(a));
   if (exactSubject) matches.sort((a,b)=>Number(b.subjectCodes.includes(exactSubject))-Number(a.subjectCodes.includes(exactSubject)));
 
   const menu = (label, name, entries) => `<label class="field">${esc(label)}<select name="${name}">${options([['',txt('all')],...entries],params.get(name) || '')}</select></label>`;
+  const withUnspecified = entries => eventFilter ? [...entries,[notSpecified,txt('notSpecified')]] : entries;
   const kindLabel = type === 'material' ? txt('proceedings') : catalogKindLabel(type);
   const kinds = kindsFor(type).map(k=>[k,txt(k)]);
-  const languagesInRecords = [...new Set([...Object.keys(locales),...all.flatMap(r=>[r.language,r.metadataLanguage,...(r.languages || []),...Object.keys(r.metadata || {})])].filter(Boolean))].map(code=>[code,languageName(code)]);
-  const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${['upcoming','ongoing','past','deadlines'].map(p=>link(page,p,'class="tab"'+(p===period?' aria-current="page"':''),{...Object.fromEntries(params),period:p,lang:lang==='en'?'':lang,view:''})).join('')}</nav>` : '';
+  const languageCodes = all.flatMap(r=>[r.language,r.metadataLanguage,...(r.languages || []),...Object.keys(r.metadata || {})]).filter(Boolean);
+  const languagesInRecords = [...new Set([...Object.keys(locales),...languageCodes,...(eventFilter ? languageCodes.map(code=>code.split('-')[0]) : [])])].map(code=>[code,languageName(code)]);
+  const number = new Intl.NumberFormat(lang);
+  const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${eventPeriods.map(p =>
+    `<a class="tab"${p===period?' aria-current="page"':''} href="${esc(url(page,{...Object.fromEntries(params),period:p,view:''}))}">${t(p)} (${number.format(eventCounts.periods[p])})</a>`).join('')}</nav>` : '';
   const selectedSubject = state.index.get(params.get('subject'));
+  const dateField = (name, label) => `<label class="field"><span>${t(label)} <small data-date-count="${name}"></small></span><input name="${name}" type="date" value="${esc(params.get(name) || '')}"></label>`;
   const controls = `<form data-filter="${page}"><div class="filter-grid">
-    ${menu(kindLabel,'kind',kinds)}${subjectMenus(selectedSubject)}${menu(txt('country'),'country',countryOptions())}
-    ${type==='event' || !type ? menu(txt('eventLanguage'),'el',languagesInRecords) : ''}
+    ${menu(kindLabel,'kind',kinds)}${subjectMenus(selectedSubject,eventFilter,subject)}${menu(txt('country'),'country',withUnspecified(countryOptions()))}
+    ${type==='event' || !type ? menu(txt('eventLanguage'),'el',withUnspecified(languagesInRecords)) : ''}
     ${type!=='event' ? menu(txt('documentLanguage'),'dl',languagesInRecords) : ''}
-    ${menu(txt('metadataLanguage'),'ml',languagesInRecords)}
-    ${type==='event' || !type ? menu(txt('format'),'mode',['online','inPerson','hybrid'].map(v=>[v,txt(v)])) : ''}
-    ${type==='event' ? `<label class="field">${t('startDate')}<input name="from" type="date" value="${esc(params.get('from') || '')}"></label><label class="field">${t('endDate')}<input name="to" type="date" value="${esc(params.get('to') || '')}"></label>` : ''}
-    </div><div class="form-actions"><button class="button secondary">${t('filter')}</button>${link(page,'clear','class="text-link"',{type:page==='search'?type:'',q:query})}
+    ${menu(txt('metadataLanguage'),'ml',withUnspecified(languagesInRecords))}
+    ${type==='event' || !type ? menu(txt('format'),'mode',withUnspecified(['online','inPerson','hybrid'].map(v=>[v,txt(v)]))) : ''}
+    ${eventFilter ? dateField('from','startDate') + dateField('to','endDate') : ''}
+    </div><div class="form-actions"><button class="button secondary">${t('filter')}</button>${link(page,'clear','class="text-link"',{type:page==='search'?type:'',period:requestedPeriod && period,q:query})}
     ${selectedSubject ? `<a class="tag" href="${esc(url('subjects',{subject:selectedSubject.code}))}">${esc(codedSubjectLabel(selectedSubject))}</a>` : ''}
   </div><output class="form-feedback" role="alert"></output></form>`;
   const title = fixed ? txt(page) : txt('browseRecords');
   const heading = page === 'events' ? catalogKindLabel('event') : title;
-  return layout(title, searchbox(page,query,type) + tabs + controls + `<div class="section">
-    <p id="catalog-results" class="muted" tabindex="-1">${new Intl.NumberFormat(lang).format(matches.length)} ${t('results')}</p>
+  const html = layout(title, searchbox(page,query,type) + tabs + controls + `<div class="section">
+    <p id="catalog-results" class="muted" tabindex="-1">${number.format(matches.length)} ${t('results')}</p>
     ${matches.some(event=>event.directory) ? `<p class="page-description">${t('organizerDirectory')}</p>` : ''}
     ${withExamples(matches)}${loadFailed ? empty('partialResults') : ''}
     ${matches.length ? matches.map(r=>itemRow(r,period==='deadlines')).join('') : loadFailed ? '' : empty()}
     ${(scoped ? scoped.next : state.next) ? `<button class="button secondary" type="button" data-next data-scope="${esc(scope)}">${t('next')}</button>` : ''}
   </div>`, '', heading);
+  return {html, bind:()=>bindCatalogFilters(document.querySelector('form[data-filter]'),eventIndex,period)};
 }
 function subjectsPage(params) {
   const item = state.index.get(params.get('subject'));
@@ -519,7 +570,7 @@ async function render(focus=false) {
   lang = Object.hasOwn(locales,requestedLang) ? requestedLang : 'en';
   chrome(page);
   document.title = txt('brand') + (page === 'home' ? '' : ' · ' + txt(nav.find(([p])=>p===page)?.[1] || (page==='record'?'details':page)));
-  let html;
+  let html, bindFilters;
   if (page === 'record') {
     const id = params.get('record');
     if (!exactRecord(id) && !state.resolution.has(id) && !id.startsWith('directory-')) {
@@ -536,8 +587,9 @@ async function render(focus=false) {
   else if (page === 'countries') html = countriesPage();
   else if (page === 'institutions') html = institutionsPage(params);
   else if (['events','proceedings','theses','search'].includes(page)) {
-    const scope = catalogScope(params);
-    const comprehensive = catalogFilterKeys.some(key=>params.get(key));
+    const eventFilter = (catalogTypes[page] || params.get('type')) === 'event';
+    const scope = eventFilter ? '' : catalogScope(params);
+    const comprehensive = eventFilter || catalogFilterKeys.some(key=>params.get(key));
     const loadPending = scope && !state.countryPages.has(scope) ||
       comprehensive && (scope ? state.countryPages.get(scope)?.next : state.next || state.failed);
     let loadFailed = state.failed && !scope;
@@ -556,13 +608,16 @@ async function render(focus=false) {
       if (seq!==state.nav) return;
       el('announcement').textContent='';
     }
-    html = recordList(page,params,scope,loadFailed);
+    const catalog = recordList(page,params,scope,loadFailed || (eventFilter && state.directoryFailed));
+    html = catalog.html;
+    bindFilters = catalog.bind;
   }
   else if (page === 'submit') html = await submissionPage(params);
   else if (page === 'account' || page === 'review') html = await dashboardPage(page);
   else html = aboutPage();
   if (seq!==state.nav) return;
   el('main').innerHTML = html;
+  bindFilters?.();
   bindWorkflow(page,params);
   if (focus) {
     const results = focus==='results' ? el('catalog-results') : null;
@@ -604,12 +659,6 @@ document.addEventListener('click',async (e)=>{
   await go(destination);
 });
 document.addEventListener('change',(e)=>{
-  if (e.target.matches('form[data-filter] select[name=subject]')) {
-    const subSubject = e.target.form.elements.namedItem('subsubject');
-    subSubject.innerHTML=subSubjectOptions(e.target.value);
-    subSubject.disabled=subSubject.options.length===1;
-    return;
-  }
   if (e.target.id!=='interface-language') return;
   const destination=new URL(location.href);
   preference(keyLanguage,e.target.value);
@@ -635,15 +684,17 @@ document.addEventListener('submit',(e)=>{
   if (form.dataset.search || form.dataset.filter) {
     e.preventDefault();
     const searching = Boolean(form.dataset.search);
-    const page = searching ? 'search' : form.dataset.filter;
+    const searchType = el('search-type').value;
+    const keepEvents = form.dataset.search === 'events' && searchType === 'event';
+    const page = searching ? (keepEvents ? 'events' : 'search') : form.dataset.filter;
     const filters = document.querySelector('form[data-filter]');
     const chosen = filters ? Object.fromEntries(new FormData(filters)) : {};
     const values = {...Object.fromEntries(current().params),...chosen};
     if (filters) values.subject = chosen.subsubject || chosen.subject;
     delete values.subsubject;
     values.q = el('query')?.value.trim() || '';
-    if (page==='search') values.type = el('search-type').value;
-    if (searching) delete values.period;
+    if (page==='search') values.type = searchType;
+    if (searching && !keepEvents) delete values.period;
     delete values.view; delete values.lang; delete values.dial;
     const type = catalogTypes[page] || values.type || '';
     if (type==='event') delete values.dl;
@@ -707,13 +758,10 @@ async function prepareCatalog(scope,full,stillCurrent=()=>true) {
   }
 }
 async function fetchDirectory() {
-  const results = await Promise.allSettled(['events-directory','events-feed'].map(name=>fetch('/data/'+name+'.json').then(response=>{
-    if (!response.ok) throw new Error(name);
-    return response.json();
-  })));
+  const results = await Promise.allSettled(['events-directory','events-feed'].map(catalogData));
   const seen = new Set();
   for (const result of results) {
-    if (result.status!=='fulfilled') continue;
+    if (result.status!=='fulfilled') { state.directoryFailed=true; continue; }
     const entries = Array.isArray(result.value) ? result.value : result.value.events;
     for (const item of entries || []) {
       const key=eventIdentity(item);
@@ -724,11 +772,17 @@ async function fetchDirectory() {
     }
   }
 }
+function catalogData(name) {
+  return fetch(new URL('./data/'+name+'.json', import.meta.url)).then(response=>{
+    if (!response.ok) throw new Error(name);
+    return response.json();
+  });
+}
 const [subjects, session, records, countries] = await Promise.allSettled([
-  fetch('/data/subjects.json').then(r=>{if (!r.ok) throw new Error('subjects'); return r.json();}),
+  catalogData('subjects'),
   api('session'),
   fetchRecords(),
-  fetch('/data/countries.json').then(r=>{if (!r.ok) throw new Error('countries'); return r.json();}),
+  catalogData('countries'),
   fetchDirectory()
 ]);
 if (subjects.status==='fulfilled') {

@@ -17,6 +17,33 @@ const countryData = JSON.parse(await readFile(new URL('../dist/data/countries.js
 const explicitCountries = new Map(countryData.flatMap(({ iso, name }) => [
   [name.toLowerCase(), iso], [countries.of(iso).toLowerCase(), iso],
 ]));
+const countryCodes = new Set(countryData.map(({ iso }) => iso));
+// Explicit venues in the public organizer feeds, checked against their host institutions.
+const locations = new Map([
+  ['harvard science center', ['US', 'Cambridge']],
+  ['samberg conference center', ['US', 'Cambridge']],
+  ['mansoura university', ['EG', 'Mansoura']],
+  ['uta|cpb303', ['US', 'Arlington']],
+  ['centro brasileiro de pesquisas fisicas', ['BR', 'Rio de Janeiro']],
+  ['playa del carmen', ['MX', 'Playa del Carmen']],
+  ['central building of the national and kapodistrian university of athens', ['GR', 'Athens']],
+  ['thon hotel skeikampen', ['NO', 'Svingvoll']],
+  ['university of trento and fbk', ['IT', 'Trento']],
+  ['bambolim beach resort, goa, india', ['IN', 'Bambolim']],
+  ['esrf, grenoble', ['FR', 'Grenoble']],
+  ['wydział fizyki uw', ['PL', 'Warsaw']],
+  ['cern|503/1-001', ['CH', 'Meyrin']],
+  ['cern|4/3-006', ['CH', 'Meyrin']],
+  ['cern|31/3-004', ['CH', 'Meyrin']],
+]);
+const languageCodes = ['en', 'ar', 'bn', 'zh', 'nl', 'fr', 'de', 'hi', 'it', 'ja', 'ko', 'no', 'pl', 'pt', 'ru', 'es', 'sv', 'tr'];
+const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
+const languagesByName = new Map(languageCodes.map((code) => [languageNames.of(code).toLowerCase(), code]));
+const languageNamesPattern = '(?:' + [...languagesByName.keys()].join('|') + ')';
+const spokenLanguageStatement = new RegExp(
+  '\\b(?:(?:(?:official|working|spoken|conference|event|meeting|workshop) languages?)\\s*(?::|is\\b|are\\b|will be\\b)|(?:talks|sessions|presentations|the event|the workshop|the conference) (?:will be (?:given|held|conducted) in|will be in))\\s*(' +
+  languageNamesPattern + '(?:(?:\\s*,\\s*|\\s+and\\s+|\\s+or\\s+)' + languageNamesPattern + ')*)\\b', 'gi',
+);
 const typePatterns = [
   ['webinar', /\bwebinars?\b/i],
   ['workshop', /\bworkshops?\b/i],
@@ -27,11 +54,13 @@ const typePatterns = [
 const feeds = [
   {
     key: 'stanford', name: 'Stanford University', origin: 'https://events.stanford.edu',
+    timezone: 'America/Los_Angeles',
     eventTypes: ['37952570025304', '37952570027353', '37952570047842'],
     audience: ['General Public', 'Everyone'],
   },
   {
     key: 'mit', name: 'Massachusetts Institute of Technology', origin: 'https://calendar.mit.edu',
+    timezone: 'America/New_York',
     eventTypes: ['102764', '103222'], audience: ['Public'],
   },
   {
@@ -74,20 +103,82 @@ function kindOf(title, fallback) {
   return typePatterns.find(([, pattern]) => pattern.test(title))?.[0] || fallback;
 }
 
-function record(feed, { key, title, start, end, sourceUrl, eventType, countryCode, city, mode }) {
+function descriptionText(value) {
+  return text(typeof value === 'string' ? value.replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;/g, ' ') : '', 20_000);
+}
+
+function spokenLanguages(description) {
+  const declared = new Set();
+  for (const match of description.matchAll(spokenLanguageStatement)) {
+    for (const name of match[1].toLowerCase().split(/\s*,\s*|\s+and\s+|\s+or\s+/)) {
+      const code = languagesByName.get(name);
+      if (code) declared.add(code);
+    }
+  }
+  return [...declared];
+}
+
+function zone(value) {
+  if (typeof value !== 'string' || !value) return '';
+  try { new Intl.DateTimeFormat('en', { timeZone: value }); return value; }
+  catch { return ''; }
+}
+
+function clockTime(value) {
+  return typeof value === 'string' ? /^(?:[01]\d|2[0-3]):[0-5]\d/.exec(value)?.[0] || '' : '';
+}
+
+function localistZone(calendarZone, value) {
+  if (typeof value !== 'string') return '';
+  const offset = /([+-]\d\d:\d\d)$/.exec(value)?.[1];
+  const time = new Date(value);
+  if (!offset || !Number.isFinite(time.valueOf())) return '';
+  const display = new Intl.DateTimeFormat('en', { timeZone: calendarZone, timeZoneName: 'longOffset' });
+  const expected = display.formatToParts(time).find(({ type }) => type === 'timeZoneName')?.value;
+  return expected === 'GMT' + offset ? calendarZone : '';
+}
+
+function indicoLocation(event) {
+  const place = text(event.location, 120);
+  const parts = place.split(',').map((part) => part.trim());
+  const venueKey = place.toLowerCase();
+  const room = text(event.room, 30).toLowerCase().replace(/\s+/g, '');
+  const known = locations.get(venueKey + '|' + room) || locations.get(venueKey);
+  const markedCountry = explicitCountries.get(parts.at(-1).toLowerCase()) || '';
+  const addressCountry = explicitCountries.get(text(event.address, 250).split(',').at(-1).trim().toLowerCase()) || '';
+  const city = markedCountry && parts.length === 2 && /^[\p{L}\p{M} .'-]+$/u.test(parts[0]) ? parts[0] : '';
+  return [markedCountry || addressCountry || known?.[0] || '', city || known?.[1] || ''];
+}
+
+function indicoMode(title, description, countryCode) {
+  if (/\bhybrid\s+(?:event|format|meeting|workshop|conference)\b|\bin[- ]person\s+(?:event|meeting).{0,75}\b(?:remotely|online|virtually)\b/i.test(description)) return 'hybrid';
+  if (/\b(?:online|virtual|webinar)\b/i.test(title) || /\b(?:will be held|will take place)\s+(?:online|virtually)\b/i.test(description)) return 'online';
+  if (/\bin[- ]person only\b/i.test(description)) return 'inPerson';
+  if (countryCode && /\b(?:will (?:be held|take place)|takes place)\s+(?:at|in)\b/i.test(description) &&
+      !/\b(?:online|virtual|remotely)\b/i.test(description)) return 'inPerson';
+  return '';
+}
+
+function record(feed, { key, title, start, end, sourceUrl, eventType, countryCode, city, mode, timezone, startTime, endTime, description }) {
   if (!title || !sourceUrl || !eventType || !start || !end || start < from || start >= to || end < start ||
       /\b(?:cancel(?:l)?ed|postponed|template|test event)\b/i.test(title)) return null;
   const entry = {
     id: 'directory-' + feed.key + '-' + key, type: 'event', eventType, title,
     description: 'See the organizer’s event page for the program and participation details.',
-    institution: feed.name, startDate: start, endDate: end, sourceUrl, directory: true,
+    metadataLanguage: 'en', institution: feed.name, startDate: start, endDate: end, sourceUrl, directory: true,
   };
-  if (/^[A-Z]{2}$/.test(countryCode)) {
+  if (countryCodes.has(countryCode)) {
     entry.countryCode = countryCode;
     entry.country = countries.of(countryCode);
   }
   if (city) entry.city = city;
   if (mode) entry.mode = mode;
+  if (timezone) entry.timezone = timezone;
+  if (startTime) entry.startTime = startTime;
+  if (endTime) entry.endTime = endTime;
+  const spoken = spokenLanguages(description);
+  if (spoken.length) entry.language = spoken[0];
+  if (spoken.length > 1) entry.languages = spoken.slice(1);
   return entry;
 }
 
@@ -110,13 +201,19 @@ async function localist(feed) {
       const workshop = event.filters?.event_types?.some(({ name }) => name === 'Workshop');
       const eventType = kindOf(title, workshop ? 'workshop' : '');
       const mode = { virtual: 'online', inperson: 'inPerson', hybrid: 'hybrid' }[event.experience];
+      const known = locations.get(text(event.location_name, 120).toLowerCase());
+      const countryCode = text(event.geo?.country, 2).toUpperCase() || known?.[0];
+      const city = text(event.geo?.city, 80) || known?.[1];
+      const description = descriptionText(event.description_text || event.description);
       for (const { event_instance: instance } of event.event_instances ?? []) {
         if (!instance || !Number.isSafeInteger(instance.id)) continue;
         const start = dateOnly(instance.start);
         const end = dateOnly(instance.end) || start;
+        const timezone = localistZone(feed.timezone, instance.start);
         const entry = record(feed, {
-          key: instance.id, title, start, end, sourceUrl, eventType, mode,
-          countryCode: text(event.geo?.country, 2).toUpperCase(), city: text(event.geo?.city, 80),
+          key: instance.id, title, start, end, sourceUrl, eventType, mode, countryCode, city, description, timezone,
+          startTime: timezone && !instance.all_day ? clockTime(instance.start?.split('T')[1]) : '',
+          endTime: timezone && !instance.all_day && localistZone(feed.timezone, instance.end) ? clockTime(instance.end?.split('T')[1]) : '',
         });
         if (entry) records.push(entry);
       }
@@ -136,18 +233,19 @@ async function indico(feed) {
     const start = dateOnly(event.startDate?.date);
     const end = dateOnly(event.endDate?.date) || start;
     const title = text(event.title);
-    // Free-text venue and description fields may contain meeting credentials;
-    // do not store them. Only assign a location when indicated by the source.
-    const place = text(event.location, 120).split(',').map((part) => part.trim());
-    const countryCode = explicitCountries.get(place.at(-1)?.toLowerCase()) || '';
-    const city = countryCode && place.length === 2 && /^[\p{L}\p{M} .'-]+$/u.test(place[0])
-      ? place[0]
-      : '';
+    // Copy only normalized metadata. The organizer description can contain joining details.
+    const [countryCode, city] = indicoLocation(event);
+    const description = descriptionText(event.description);
+    const timezone = zone(event.timezone);
+    // The public ATS seminar page confirms both a conference room and remote attendance.
+    const mode = String(event.id) === '1755487' ? 'hybrid' : indicoMode(title, description, countryCode);
     const entry = record(feed, {
       key: event.id, start, end, title, sourceUrl: eventLink(feed.origin, event.url),
       eventType: kindOf(title, ''),
-      mode: /\b(?:online|virtual|webinar)\b/i.test(title) ? 'online' : undefined,
-      countryCode, city,
+      mode, countryCode, city, timezone, description,
+      // The category export can express wall-clock times in a different zone than the host.
+      startTime: timezone && zone(event.startDate?.tz) === timezone ? clockTime(event.startDate?.time) : '',
+      endTime: timezone && zone(event.endDate?.tz) === timezone ? clockTime(event.endDate?.time) : '',
     });
     if (entry) records.push(entry);
   }
@@ -182,9 +280,15 @@ function order(a, b) {
     a.sourceUrl.localeCompare(b.sourceUrl) || a.id.localeCompare(b.id);
 }
 
+const previousById = new Map(previous.map((entry) => [entry.id, entry]));
 const snapshot = [...new Map(records.sort(order).map((entry) => [
   entry.sourceUrl + '|' + entry.startDate, entry,
-])).values()].sort(order);
+])).values()].map((entry) => {
+  const prior = previousById.get(entry.id);
+  return prior?.title === entry.title && Array.isArray(prior.subjectCodes)
+    ? { ...entry, subjectCodes: prior.subjectCodes }
+    : entry;
+}).sort(order);
 const temporary = new URL('./.events-feed-' + randomUUID() + '.json', output);
 try {
   await writeFile(temporary, JSON.stringify(snapshot, null, 2) + '\n');

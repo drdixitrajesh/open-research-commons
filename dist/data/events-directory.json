@@ -14,7 +14,8 @@
     "endDate": "2026-11-23",
     "timezone": "Europe/Stockholm",
     "subjectCodes": [
-      "39",
+      "390104",
+      "390307",
       "4602"
     ],
     "sourceUrl": "https://www.education.lu.se/en/calendar/genai-and-education-journal-club-23-november",
@@ -39,11 +40,12 @@
     "endDate": "2026-12-03",
     "timezone": "Africa/Lagos",
     "subjectCodes": [
-      "37"
+      "370609"
     ],
     "sourceUrl": "https://afsc2026.oauife.edu.ng/schedule",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "deadline": "2026-07-31"
   },
   {
     "id": "directory-sydney-banking-2026",
@@ -60,12 +62,14 @@
     "endDate": "2026-12-01",
     "timezone": "Australia/Sydney",
     "subjectCodes": [
-      "35",
-      "38"
+      "350204",
+      "380107"
     ],
     "sourceUrl": "https://sbfc.sydney.edu.au/",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "paperDeadline": "2026-08-31",
+    "registrationDeadline": "2026-10-15"
   },
   {
     "id": "directory-tokyo-agricultural-sciences-2026",
@@ -88,7 +92,9 @@
     "startTime": "13:30",
     "endTime": "16:00",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "language": "en",
+    "registrationUrl": "https://forms.gle/xdbmEFJuqe9mx15C7"
   },
   {
     "id": "directory-lund-ai-days-2026",
@@ -109,7 +115,11 @@
     ],
     "sourceUrl": "https://www.education.lu.se/en/calendar/ai-days-2026-ai-our-time-opportunities-challenges-and-future",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "languages": [
+      "sv",
+      "en"
+    ]
   },
   {
     "id": "directory-sydney-acsear-2026",
@@ -126,12 +136,13 @@
     "endDate": "2026-12-04",
     "timezone": "Australia/Sydney",
     "subjectCodes": [
-      "35",
-      "41"
+      "350107"
     ],
     "sourceUrl": "https://a-csear-2026.sydney.edu.au/",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "deadline": "2026-09-18",
+    "paperDeadline": "2026-09-18"
   },
   {
     "id": "directory-mora-agenda-2030-dec-2026",
@@ -148,7 +159,7 @@
     "endDate": "2026-12-02",
     "timezone": "America/Mexico_City",
     "subjectCodes": [
-      "44",
+      "440407",
       "41"
     ],
     "sourceUrl": "https://www.institutomora.edu.mx/Instituto/IC/2025/CONVOCATORIA%202026%20-%20SEMINARIO%20AGENDA%202030.pdf",
@@ -170,8 +181,7 @@
     "endDate": "2026-12-04",
     "timezone": "Asia/Kolkata",
     "subjectCodes": [
-      "32",
-      "42"
+      "490502"
     ],
     "sourceUrl": "https://www.icmr.gov.in/icmrobject/uploads/Events/1794455805_srma_workshopflyer_f.pdf",
     "metadataLanguage": "en",
@@ -192,7 +202,7 @@
     "endDate": "2026-12-02",
     "timezone": "Europe/London",
     "subjectCodes": [
-      "49"
+      "490402"
     ],
     "sourceUrl": "https://warwick.ac.uk/fac/sci/maths/research/events/seminars/?orderBy=MS+Teams+Link",
     "metadataLanguage": "en",
@@ -214,7 +224,7 @@
     "endDate": "2026-12-05",
     "timezone": "Africa/Lagos",
     "subjectCodes": [
-      "37"
+      "370609"
     ],
     "sourceUrl": "https://afsc2026.oauife.edu.ng/training",
     "metadataLanguage": "en",
@@ -235,11 +245,12 @@
     "endDate": "2026-12-04",
     "timezone": "Pacific/Auckland",
     "subjectCodes": [
-      "39"
+      "390308"
     ],
     "sourceUrl": "https://itpresearch.ac.nz/north-island-2026/",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "deadline": "2026-10-23"
   },
   {
     "id": "directory-mav-2026",
@@ -256,12 +267,12 @@
     "endDate": "2026-12-04",
     "timezone": "Australia/Melbourne",
     "subjectCodes": [
-      "39",
-      "49"
+      "390109"
     ],
     "sourceUrl": "https://www.mav.vic.edu.au/Conference",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "deadline": "2026-06-30"
   },
   {
     "id": "directory-african-laser-2026",
@@ -278,11 +289,13 @@
     "endDate": "2026-12-09",
     "timezone": "Africa/Johannesburg",
     "subjectCodes": [
-      "51"
+      "5102"
     ],
     "sourceUrl": "https://www.su.ac.za/en/faculties/medicine/research/ethics/node/27229?language=en",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "language": "en",
+    "deadline": "2026-10-04"
   },
   {
     "id": "directory-agu-2026",
@@ -301,11 +314,12 @@
     "subjectCodes": [
       "37",
       "41",
-      "51"
+      "5109"
     ],
     "sourceUrl": "https://www.agu.org/annual-meeting",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "deadline": "2026-08-05"
   },
   {
     "id": "directory-ictp-probability-2026",
@@ -322,7 +336,8 @@
     "endDate": "2026-12-08",
     "timezone": "Europe/Rome",
     "subjectCodes": [
-      "49"
+      "490506",
+      "490510"
     ],
     "sourceUrl": "https://indico.ictp.it/event/11378",
     "metadataLanguage": "en",
@@ -343,9 +358,10 @@
     "endDate": "2026-12-10",
     "timezone": "America/Fortaleza",
     "subjectCodes": [
-      "37",
-      "46",
-      "49"
+      "490501",
+      "4403",
+      "4605",
+      "37"
     ],
     "sourceUrl": "https://portal.ifrn.edu.br/campus/reitoria/noticias/ifrn-e-ibge-apresentam-programacao-de-conferencia-internacional-que-sera-realizada-em-natal/",
     "metadataLanguage": "pt",
@@ -366,7 +382,8 @@
     "endDate": "2026-12-11",
     "timezone": "America/Monterrey",
     "subjectCodes": [
-      "49"
+      "490101",
+      "490107"
     ],
     "sourceUrl": "https://new.udem.edu.mx/es/institucional/encuentro-iberoamericano-de-polinomios-ortogonales-y-aplicaciones",
     "metadataLanguage": "es",
@@ -386,8 +403,8 @@
     "endDate": "2026-12-09",
     "timezone": "America/New_York",
     "subjectCodes": [
-      "42",
-      "4602"
+      "4611",
+      "4202"
     ],
     "sourceUrl": "https://www.ispor.org/conferences-education/calendar/event/2026/12/09/default-calendar/ai-enhanced-real-world-evidence",
     "startTime": "11:00",
@@ -409,12 +426,14 @@
     "endDate": "2026-12-11",
     "timezone": "Africa/Lagos",
     "subjectCodes": [
-      "39",
+      "3901",
+      "4404",
       "41"
     ],
     "sourceUrl": "https://www.apply.peacelanduni.edu.ng/Blog_Detail.aspx?blogId=36",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "deadline": "2026-11-20"
   },
   {
     "id": "directory-sydney-time-series-2026",
@@ -431,8 +450,9 @@
     "endDate": "2026-12-10",
     "timezone": "Australia/Sydney",
     "subjectCodes": [
-      "38",
-      "49"
+      "380205",
+      "350203",
+      "490511"
     ],
     "sourceUrl": "https://talus.maths.usyd.edu.au/s/scnitm/shelton-Symposium-Multiple-Emergi?Clean=1",
     "startTime": "09:45",
@@ -455,8 +475,7 @@
     "endDate": "2026-12-16",
     "timezone": "Pacific/Auckland",
     "subjectCodes": [
-      "35",
-      "38"
+      "350202"
     ],
     "sourceUrl": "https://acfr.aut.ac.nz/conferences-and-events/2026-new-zealand-finance-meeting",
     "metadataLanguage": "en",
@@ -476,13 +495,14 @@
     "endDate": "2026-12-18",
     "timezone": "Asia/Tokyo",
     "subjectCodes": [
-      "51",
-      "34"
+      "510405"
     ],
     "sourceUrl": "https://indico.yukawa.kyoto-u.ac.jp/event/90/",
     "metadataLanguage": "en",
     "directory": true,
-    "city": "Kyoto"
+    "city": "Kyoto",
+    "deadline": "2026-10-31",
+    "registrationDeadline": "2026-11-30"
   },
   {
     "id": "directory-saldr-ersa-2026",
@@ -499,8 +519,9 @@
     "endDate": "2026-12-15",
     "timezone": "Africa/Johannesburg",
     "subjectCodes": [
-      "38",
-      "39"
+      "380111",
+      "380104",
+      "4404"
     ],
     "sourceUrl": "https://saldru.uct.ac.za/events/saldru-ersa-december-workshop",
     "metadataLanguage": "en",
@@ -521,12 +542,13 @@
     "endDate": "2026-12-17",
     "timezone": "Europe/Istanbul",
     "subjectCodes": [
-      "37",
-      "46"
+      "3704"
     ],
     "sourceUrl": "https://etb.alanyauniversity.edu.tr/en/igd-2026",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "language": "en",
+    "paperDeadline": "2026-10-16"
   },
   {
     "id": "directory-unesco-learning-cities-health-2026",
@@ -543,12 +565,20 @@
     "endDate": "2026-12-16",
     "timezone": "Europe/Berlin",
     "subjectCodes": [
-      "39",
-      "42"
+      "390301",
+      "4206"
     ],
     "sourceUrl": "https://www.uil.unesco.org/en/articles/unesco-learning-cities-webinar-learning-cities-health-lifelong-learning-driver-urban-well-being-0",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "languages": [
+      "ar",
+      "zh",
+      "en",
+      "fr",
+      "ko",
+      "es"
+    ]
   },
   {
     "id": "directory-brunel-bielefeld-rmt-2026",
@@ -565,7 +595,8 @@
     "endDate": "2026-12-19",
     "timezone": "Europe/London",
     "subjectCodes": [
-      "49"
+      "490506",
+      "4902"
     ],
     "sourceUrl": "https://www.brunel.ac.uk/mathematics/research-and-phd-programmes/Random-Matrix-Theory-Workshops?a=29153",
     "metadataLanguage": "en",
@@ -590,7 +621,9 @@
     ],
     "sourceUrl": "https://www.easa.ac.za/easa-2027/",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "deadline": "2026-10-30",
+    "registrationDeadline": "2026-11-16"
   },
   {
     "id": "directory-wits-misg-2027",
@@ -607,7 +640,7 @@
     "endDate": "2027-01-22",
     "timezone": "Africa/Johannesburg",
     "subjectCodes": [
-      "49"
+      "4901"
     ],
     "sourceUrl": "https://www.wits.ac.za/csam/misg/misg-2027/",
     "metadataLanguage": "en",
@@ -650,8 +683,8 @@
     "endDate": "2027-03-22",
     "timezone": "Africa/Maputo",
     "subjectCodes": [
-      "39",
-      "44"
+      "390303",
+      "440808"
     ],
     "sourceUrl": "https://www.acher.ac/conference/program.php",
     "metadataLanguage": "en",
@@ -672,11 +705,13 @@
     "endDate": "2027-03-26",
     "timezone": "Africa/Maputo",
     "subjectCodes": [
-      "39"
+      "390303"
     ],
     "sourceUrl": "https://www.acher.ac/conference/program.php",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "deadline": "2026-11-30",
+    "paperDeadline": "2027-02-28"
   },
   {
     "id": "directory-egu-2027",
@@ -694,12 +729,13 @@
     "timezone": "Europe/Vienna",
     "subjectCodes": [
       "37",
-      "41",
-      "51"
+      "5109"
     ],
     "sourceUrl": "https://www.egu.eu/news/1903/call-for-abstracts-to-the-egu27-general-assembly-now-open/",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "deadline": "2027-01-12",
+    "language": "en"
   },
   {
     "id": "directory-ocean-decade-2027",
@@ -716,12 +752,14 @@
     "endDate": "2027-04-09",
     "timezone": "America/Sao_Paulo",
     "subjectCodes": [
-      "37",
-      "41"
+      "3708",
+      "410406"
     ],
     "sourceUrl": "https://www.ioc.unesco.org/en/2027-ocean-decade-conference-officially-announced-rio-de-janeiro",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "deadline": "2026-11-22",
+    "callForPapers": false
   },
   {
     "id": "directory-ieee-icra-2027",
@@ -738,11 +776,13 @@
     "endDate": "2027-05-28",
     "timezone": "Asia/Seoul",
     "subjectCodes": [
-      "40",
-      "46"
+      "4007",
+      "460205"
     ],
     "sourceUrl": "https://2027.ieee-icra.org/about/",
     "metadataLanguage": "en",
-    "directory": true
+    "directory": true,
+    "paperDeadline": "2026-09-16",
+    "registrationDeadline": "2027-05-14"
   }
 ]

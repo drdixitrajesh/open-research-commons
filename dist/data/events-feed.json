@@ -5,11 +5,19 @@
     "eventType": "seminar",
     "title": "High Energy Physics Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-11-20",
     "endDate": "2026-11-20",
     "sourceUrl": "https://indico.cern.ch/event/1755753/",
-    "directory": true
+    "directory": true,
+    "countryCode": "PL",
+    "country": "Poland",
+    "city": "Warsaw",
+    "timezone": "Europe/Warsaw",
+    "subjectCodes": [
+      "5107"
+    ]
   },
   {
     "id": "directory-mit-54505456899967",
@@ -17,12 +25,22 @@
     "eventType": "seminar",
     "title": "Richard P. Stanley Seminar in Combinatorics",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-11-20",
     "endDate": "2026-11-20",
     "sourceUrl": "https://calendar.mit.edu/event/richard-p-stanley-seminar-in-combinatorics-6602",
     "directory": true,
-    "mode": "inPerson"
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Cambridge",
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "13:00",
+    "endTime": "14:50",
+    "subjectCodes": [
+      "490404"
+    ]
   },
   {
     "id": "directory-cern-1730735",
@@ -30,11 +48,20 @@
     "eventType": "workshop",
     "title": "ArPS Workshop on Advanced Medical Physics and BioPhysics",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-11-21",
     "endDate": "2026-11-23",
     "sourceUrl": "https://indico.cern.ch/event/1730735/",
-    "directory": true
+    "directory": true,
+    "countryCode": "EG",
+    "country": "Egypt",
+    "city": "Mansoura",
+    "timezone": "Africa/Cairo",
+    "subjectCodes": [
+      "510501",
+      "510502"
+    ]
   },
   {
     "id": "directory-cern-1752336",
@@ -42,11 +69,20 @@
     "eventType": "workshop",
     "title": "UTA FC VD Assembly Stand Construction Workshop",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-11-21",
     "endDate": "2026-11-22",
     "sourceUrl": "https://indico.cern.ch/event/1752336/",
-    "directory": true
+    "directory": true,
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Arlington",
+    "timezone": "America/Chicago",
+    "subjectCodes": [
+      "510703",
+      "4017"
+    ]
   },
   {
     "id": "directory-mit-53982984371273",
@@ -54,6 +90,7 @@
     "eventType": "seminar",
     "title": "Algebraic Topology Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-11-23",
     "endDate": "2026-11-23",
@@ -62,7 +99,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:30",
+    "endTime": "17:30",
+    "subjectCodes": [
+      "490412",
+      "490402"
+    ]
   },
   {
     "id": "directory-mit-53737457175325",
@@ -70,6 +114,7 @@
     "eventType": "seminar",
     "title": "Symplectic Geometry Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-11-24",
     "endDate": "2026-11-24",
@@ -78,7 +123,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:30",
+    "endTime": "17:30",
+    "subjectCodes": [
+      "490402"
+    ]
   },
   {
     "id": "directory-cern-1710771",
@@ -86,11 +137,23 @@
     "eventType": "workshop",
     "title": "ISOLDE Workshop and Users meeting 2026",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-11-25",
     "endDate": "2026-11-27",
     "sourceUrl": "https://indico.cern.ch/event/1710771/",
-    "directory": true
+    "directory": true,
+    "countryCode": "CH",
+    "country": "Switzerland",
+    "city": "Meyrin",
+    "mode": "hybrid",
+    "timezone": "Europe/Zurich",
+    "startTime": "09:00",
+    "endTime": "16:00",
+    "subjectCodes": [
+      "510601",
+      "511001"
+    ]
   },
   {
     "id": "directory-cern-1755487",
@@ -98,11 +161,23 @@
     "eventType": "seminar",
     "title": "ATS Seminar - CERN RADIO FREQUENCY QUADRUPOLES FOR SOCIETAL APPLICATIONS",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-11-26",
     "endDate": "2026-11-26",
     "sourceUrl": "https://indico.cern.ch/event/1755487/",
-    "directory": true
+    "directory": true,
+    "countryCode": "CH",
+    "country": "Switzerland",
+    "city": "Meyrin",
+    "mode": "hybrid",
+    "timezone": "Europe/Zurich",
+    "startTime": "11:00",
+    "endTime": "12:30",
+    "subjectCodes": [
+      "511001",
+      "400913"
+    ]
   },
   {
     "id": "directory-cern-1749154",
@@ -110,12 +185,19 @@
     "eventType": "webinar",
     "title": "CERN Industry Webinar - November'26",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-11-26",
     "endDate": "2026-11-26",
     "sourceUrl": "https://indico.cern.ch/event/1749154/",
     "directory": true,
-    "mode": "online"
+    "mode": "online",
+    "timezone": "Europe/Zurich",
+    "startTime": "14:00",
+    "endTime": "16:00",
+    "subjectCodes": [
+      "3504"
+    ]
   },
   {
     "id": "directory-mit-53982984825449",
@@ -123,6 +205,7 @@
     "eventType": "seminar",
     "title": "Algebraic Topology Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-11-30",
     "endDate": "2026-11-30",
@@ -131,7 +214,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:30",
+    "endTime": "17:30",
+    "subjectCodes": [
+      "490412",
+      "490402"
+    ]
   },
   {
     "id": "directory-stanford-53994065166097",
@@ -139,6 +229,7 @@
     "eventType": "seminar",
     "title": "Biology Seminar Series - Peter Walter, PhD \"Targeting the Cell’s Stress Pathways for Therapeutic Benefit\"",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-11-30",
     "endDate": "2026-11-30",
@@ -147,7 +238,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Palo Alto",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "16:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "3101"
+    ]
   },
   {
     "id": "directory-stanford-54550492605028",
@@ -155,6 +252,7 @@
     "eventType": "seminar",
     "title": "ESE Seminar - Boryann Liaw: \"Building Sustainable Artificial Intelligence-Guided Energy Systems from Fundamental Science\"",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-11-30",
     "endDate": "2026-11-30",
@@ -163,7 +261,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "12:30",
+    "endTime": "13:20",
+    "subjectCodes": [
+      "4602",
+      "40"
+    ]
   },
   {
     "id": "directory-cern-1716817",
@@ -171,11 +276,19 @@
     "eventType": "workshop",
     "title": "Quantum computing and Sustainability : Workshop Registration",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-11-30",
     "endDate": "2026-12-02",
     "sourceUrl": "https://indico.cern.ch/event/1716817/",
-    "directory": true
+    "directory": true,
+    "countryCode": "BR",
+    "country": "Brazil",
+    "city": "Rio de Janeiro",
+    "timezone": "America/Sao_Paulo",
+    "subjectCodes": [
+      "510803"
+    ]
   },
   {
     "id": "directory-cern-1748030",
@@ -183,12 +296,17 @@
     "eventType": "seminar",
     "title": "ASP Online Seminars: Compact Light Sources: A Strategic Opportunity for Advancing Accelerator-Based Research in Africa",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-12-01",
     "endDate": "2026-12-01",
     "sourceUrl": "https://indico.cern.ch/event/1748030/",
     "directory": true,
-    "mode": "online"
+    "mode": "online",
+    "timezone": "UTC",
+    "subjectCodes": [
+      "511001"
+    ]
   },
   {
     "id": "directory-mit-54542036233896",
@@ -196,6 +314,7 @@
     "eventType": "seminar",
     "title": "BC-MIT Number Theory Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-01",
     "endDate": "2026-12-01",
@@ -204,7 +323,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "15:30",
+    "endTime": "18:00",
+    "subjectCodes": [
+      "490401"
+    ]
   },
   {
     "id": "directory-stanford-54508027849181",
@@ -212,6 +337,7 @@
     "eventType": "seminar",
     "title": "CPMH SEMINAR SERIES 'Cutting-edge advances towards personalized mental health'",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-12-01",
     "endDate": "2026-12-01",
@@ -220,7 +346,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "hybrid"
+    "mode": "hybrid",
+    "timezone": "America/Los_Angeles",
+    "startTime": "09:30",
+    "endTime": "10:30",
+    "subjectCodes": [
+      "5203"
+    ]
   },
   {
     "id": "directory-mit-53745571923957",
@@ -228,12 +360,20 @@
     "eventType": "seminar",
     "title": "Online Seminar On Undergraduate Mathematics Education",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-01",
     "endDate": "2026-12-01",
     "sourceUrl": "https://calendar.mit.edu/event/online-seminar-on-undergraduate-mathematics-education-184",
     "directory": true,
-    "mode": "online"
+    "mode": "online",
+    "timezone": "America/New_York",
+    "startTime": "12:00",
+    "endTime": "13:00",
+    "subjectCodes": [
+      "390109",
+      "390303"
+    ]
   },
   {
     "id": "directory-mit-54568473333928",
@@ -241,6 +381,7 @@
     "eventType": "seminar",
     "title": "Richard P. Stanley Seminar in Combinatorics",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-01",
     "endDate": "2026-12-01",
@@ -249,7 +390,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:15",
+    "endTime": "17:15",
+    "subjectCodes": [
+      "490404"
+    ]
   },
   {
     "id": "directory-stanford-54481993753237",
@@ -257,6 +404,7 @@
     "eventType": "workshop",
     "title": "Terman Library Presents: Textile Destress",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-12-01",
     "endDate": "2026-12-01",
@@ -265,7 +413,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "15:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "360601"
+    ]
   },
   {
     "id": "directory-stanford-54540964348970",
@@ -273,12 +427,19 @@
     "eventType": "webinar",
     "title": "CREATE Webinar - Enhancing Parent-Led Interventions Through Artificial Intelligence",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-12-02",
     "endDate": "2026-12-02",
     "sourceUrl": "https://events.stanford.edu/event/parent-led-interventions",
     "directory": true,
-    "mode": "online"
+    "mode": "online",
+    "timezone": "America/Los_Angeles",
+    "startTime": "12:00",
+    "subjectCodes": [
+      "5203",
+      "4602"
+    ]
   },
   {
     "id": "directory-stanford-54293952181828",
@@ -286,6 +447,7 @@
     "eventType": "symposium",
     "title": "E-IPER Autumn MS Capstone Symposium",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-12-02",
     "endDate": "2026-12-02",
@@ -294,7 +456,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "13:30",
+    "endTime": "15:30",
+    "subjectCodes": [
+      "41"
+    ]
   },
   {
     "id": "directory-stanford-54542943337165",
@@ -302,6 +470,7 @@
     "eventType": "seminar",
     "title": "Earth & Planetary Sciences Seminar - Prof. Esteban Gazel \"Bioleaching of critical elements from ultramafic minerals with synthetic biology\"",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-12-02",
     "endDate": "2026-12-02",
@@ -310,7 +479,15 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "12:00",
+    "endTime": "13:30",
+    "subjectCodes": [
+      "3703",
+      "310113",
+      "4019"
+    ]
   },
   {
     "id": "directory-mit-53975418085056",
@@ -318,6 +495,7 @@
     "eventType": "seminar",
     "title": "Lie Groups Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-02",
     "endDate": "2026-12-02",
@@ -326,7 +504,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "490406"
+    ]
   },
   {
     "id": "directory-mit-54533226582145",
@@ -334,6 +518,7 @@
     "eventType": "workshop",
     "title": "Hands-On AI Filmmaking Workshop",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-03",
     "endDate": "2026-12-03",
@@ -342,7 +527,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "15:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "360505",
+      "4602"
+    ]
   },
   {
     "id": "directory-mit-53974650696997",
@@ -350,6 +542,7 @@
     "eventType": "seminar",
     "title": "Symplectic Geometry Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-03",
     "endDate": "2026-12-03",
@@ -358,7 +551,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:30",
+    "endTime": "17:30",
+    "subjectCodes": [
+      "490402"
+    ]
   },
   {
     "id": "directory-mit-54162055989031",
@@ -366,6 +565,7 @@
     "eventType": "seminar",
     "title": "ChemE Dept. Seminar: Dissipative Self-Assembly of Colloidal Suspensions in Microgravity",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-04",
     "endDate": "2026-12-04",
@@ -374,7 +574,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "15:00",
+    "endTime": "16:00",
+    "subjectCodes": [
+      "4004",
+      "510405"
+    ]
   },
   {
     "id": "directory-mit-54471138148327",
@@ -382,6 +589,7 @@
     "eventType": "seminar",
     "title": "McGovern Institute Special Seminar with ZiYoung Kang",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-04",
     "endDate": "2026-12-04",
@@ -390,7 +598,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "12:00",
+    "endTime": "13:00",
+    "subjectCodes": [
+      "52",
+      "500406"
+    ]
   },
   {
     "id": "directory-stanford-53870838804293",
@@ -398,6 +613,7 @@
     "eventType": "workshop",
     "title": "\"Tracing Mindfulness Back to Its Sources\": T. T. and W. F. Chao Workshop with Bhikkhunī Dhammadinnā and Paul Harrison",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-12-05",
     "endDate": "2026-12-05",
@@ -406,7 +622,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "09:00",
+    "endTime": "15:00",
+    "subjectCodes": [
+      "500406"
+    ]
   },
   {
     "id": "directory-mit-53982985332412",
@@ -414,6 +636,7 @@
     "eventType": "seminar",
     "title": "Algebraic Topology Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-07",
     "endDate": "2026-12-07",
@@ -422,7 +645,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:30",
+    "endTime": "17:30",
+    "subjectCodes": [
+      "490412",
+      "490402"
+    ]
   },
   {
     "id": "directory-stanford-54065599199733",
@@ -430,6 +660,7 @@
     "eventType": "seminar",
     "title": "Biology Seminar Series - Suliana Manley \"Compartmentalizing and connecting the mitochondrial collective\"",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-12-07",
     "endDate": "2026-12-07",
@@ -438,7 +669,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "16:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "3101"
+    ]
   },
   {
     "id": "directory-cern-1648300",
@@ -446,11 +683,21 @@
     "eventType": "workshop",
     "title": "UPC 2026: International workshop on the physics of Ultra Peripheral Collisions",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-12-07",
     "endDate": "2026-12-13",
     "sourceUrl": "https://indico.cern.ch/event/1648300/",
-    "directory": true
+    "directory": true,
+    "countryCode": "MX",
+    "country": "Mexico",
+    "city": "Playa del Carmen",
+    "mode": "inPerson",
+    "timezone": "America/Cancun",
+    "subjectCodes": [
+      "510703",
+      "510601"
+    ]
   },
   {
     "id": "directory-stanford-54551038616750",
@@ -458,6 +705,7 @@
     "eventType": "seminar",
     "title": "eWEAR Seminar: AI-XR Co-Scientist",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-12-08",
     "endDate": "2026-12-08",
@@ -466,7 +714,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "hybrid"
+    "mode": "hybrid",
+    "timezone": "America/Los_Angeles",
+    "startTime": "15:00",
+    "endTime": "16:00",
+    "subjectCodes": [
+      "4602",
+      "4607"
+    ]
   },
   {
     "id": "directory-stanford-53861598502050",
@@ -474,6 +729,7 @@
     "eventType": "seminar",
     "title": "HAI Seminar with Angèle Christin in Conversation with Hannah Zeavin",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-12-09",
     "endDate": "2026-12-09",
@@ -482,7 +738,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "hybrid"
+    "mode": "hybrid",
+    "timezone": "America/Los_Angeles",
+    "startTime": "12:00",
+    "endTime": "13:15",
+    "subjectCodes": [
+      "470102",
+      "470106"
+    ]
   },
   {
     "id": "directory-mit-53975442771396",
@@ -490,6 +753,7 @@
     "eventType": "seminar",
     "title": "Lie Groups Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-09",
     "endDate": "2026-12-09",
@@ -498,7 +762,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "490406"
+    ]
   },
   {
     "id": "directory-mit-54036274479875",
@@ -506,6 +776,7 @@
     "eventType": "seminar",
     "title": "Symplectic Geometry Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-10",
     "endDate": "2026-12-10",
@@ -514,7 +785,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:30",
+    "endTime": "17:30",
+    "subjectCodes": [
+      "490402"
+    ]
   },
   {
     "id": "directory-cern-1609263",
@@ -522,6 +799,7 @@
     "eventType": "conference",
     "title": "4th International Conference on Neutrinos and Dark Matter",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-12-14",
     "endDate": "2026-12-17",
@@ -529,7 +807,12 @@
     "directory": true,
     "countryCode": "EG",
     "country": "Egypt",
-    "city": "Aswan"
+    "city": "Aswan",
+    "timezone": "Africa/Cairo",
+    "subjectCodes": [
+      "510701",
+      "510703"
+    ]
   },
   {
     "id": "directory-stanford-54065946630880",
@@ -537,6 +820,7 @@
     "eventType": "seminar",
     "title": "Biology Seminar Series - Andrew Ward \"Structure first approaches to vaccine design and antibody discovery\"",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2026-12-14",
     "endDate": "2026-12-14",
@@ -545,7 +829,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Palo Alto",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "16:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "310112",
+      "3204"
+    ]
   },
   {
     "id": "directory-cern-1670772",
@@ -553,11 +844,20 @@
     "eventType": "workshop",
     "title": "Athens Xmas Workshop in Theoretical Physics – 2026",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2026-12-16",
     "endDate": "2026-12-18",
     "sourceUrl": "https://indico.cern.ch/event/1670772/",
-    "directory": true
+    "directory": true,
+    "countryCode": "GR",
+    "country": "Greece",
+    "city": "Athens",
+    "mode": "inPerson",
+    "timezone": "Europe/Athens",
+    "subjectCodes": [
+      "51"
+    ]
   },
   {
     "id": "directory-cern-1640820",
@@ -565,11 +865,20 @@
     "eventType": "conference",
     "title": "Spåtind 2027 - Nordic Conference on Particle Physics",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2027-01-02",
     "endDate": "2027-01-07",
     "sourceUrl": "https://indico.cern.ch/event/1640820/",
-    "directory": true
+    "directory": true,
+    "countryCode": "NO",
+    "country": "Norway",
+    "city": "Svingvoll",
+    "mode": "inPerson",
+    "timezone": "Europe/Oslo",
+    "subjectCodes": [
+      "510703"
+    ]
   },
   {
     "id": "directory-cern-1697978",
@@ -577,6 +886,7 @@
     "eventType": "conference",
     "title": "XXXIII Cracow Epiphany Conference: Advances in precision calculations for the LHC",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2027-01-11",
     "endDate": "2027-01-15",
@@ -584,7 +894,13 @@
     "directory": true,
     "countryCode": "PL",
     "country": "Poland",
-    "city": "Krakow"
+    "city": "Krakow",
+    "timezone": "Europe/Zurich",
+    "startTime": "08:00",
+    "endTime": "18:00",
+    "subjectCodes": [
+      "510703"
+    ]
   },
   {
     "id": "directory-mit-54009921775291",
@@ -592,6 +908,7 @@
     "eventType": "seminar",
     "title": "Picower Special Seminar with Mark Wagner, PhD, NIH",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2027-01-21",
     "endDate": "2027-01-21",
@@ -600,7 +917,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Cambridge",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "3209"
+    ]
   },
   {
     "id": "directory-cern-1751965",
@@ -608,11 +931,19 @@
     "eventType": "workshop",
     "title": "ALADDIN and TWOCRYST Workshop",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2027-01-27",
     "endDate": "2027-01-29",
     "sourceUrl": "https://indico.cern.ch/event/1751965/",
-    "directory": true
+    "directory": true,
+    "timezone": "Europe/Zurich",
+    "startTime": "09:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "510703",
+      "511002"
+    ]
   },
   {
     "id": "directory-cern-1731883",
@@ -620,11 +951,20 @@
     "eventType": "workshop",
     "title": "22nd \"Trento\" Workshop on Advanced Silicon Radiation Detectors",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2027-02-09",
     "endDate": "2027-02-11",
     "sourceUrl": "https://indico.cern.ch/event/1731883/",
-    "directory": true
+    "directory": true,
+    "countryCode": "IT",
+    "country": "Italy",
+    "city": "Trento",
+    "timezone": "Europe/Rome",
+    "subjectCodes": [
+      "400906",
+      "511002"
+    ]
   },
   {
     "id": "directory-cern-1711136",
@@ -632,11 +972,22 @@
     "eventType": "workshop",
     "title": "CernVM Workshop 2027",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2027-02-15",
     "endDate": "2027-02-17",
     "sourceUrl": "https://indico.cern.ch/event/1711136/",
-    "directory": true
+    "directory": true,
+    "countryCode": "FR",
+    "country": "France",
+    "city": "Grenoble",
+    "mode": "hybrid",
+    "timezone": "Europe/Zurich",
+    "startTime": "09:00",
+    "endTime": "19:30",
+    "subjectCodes": [
+      "460601"
+    ]
   },
   {
     "id": "directory-cern-1685317",
@@ -644,13 +995,21 @@
     "eventType": "conference",
     "title": "Physics Opportunities at an Electron-Ion Collider (POETIC) XII International Conference",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2027-02-15",
     "endDate": "2027-02-19",
     "sourceUrl": "https://indico.cern.ch/event/1685317/",
     "directory": true,
     "countryCode": "IN",
-    "country": "India"
+    "country": "India",
+    "city": "Bambolim",
+    "mode": "inPerson",
+    "timezone": "Asia/Kolkata",
+    "subjectCodes": [
+      "510601",
+      "510703"
+    ]
   },
   {
     "id": "directory-stanford-53880716348747",
@@ -658,6 +1017,7 @@
     "eventType": "workshop",
     "title": "Drop-In Samizdat* Workshop (*DIY Unofficial, Unsanctioned, Limited Edition Publication)",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2027-02-18",
     "endDate": "2027-02-18",
@@ -666,7 +1026,14 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "15:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "360601",
+      "3602"
+    ]
   },
   {
     "id": "directory-mit-54037360022236",
@@ -674,12 +1041,22 @@
     "eventType": "conference",
     "title": "MIT Sloan Fintech Conference",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2027-02-19",
     "endDate": "2027-02-19",
     "sourceUrl": "https://calendar.mit.edu/event/mit-sloan-fintech-conference-856",
     "directory": true,
-    "mode": "inPerson"
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Cambridge",
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "08:00",
+    "endTime": "18:00",
+    "subjectCodes": [
+      "350202"
+    ]
   },
   {
     "id": "directory-stanford-53994406476584",
@@ -687,6 +1064,7 @@
     "eventType": "seminar",
     "title": "The 2027 William & Louise Greaves Filmmaker Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2027-03-05",
     "endDate": "2027-03-05",
@@ -695,7 +1073,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "10:00",
+    "endTime": "19:00",
+    "subjectCodes": [
+      "360505"
+    ]
   },
   {
     "id": "directory-stanford-53994406477609",
@@ -703,6 +1087,7 @@
     "eventType": "seminar",
     "title": "The 2027 William & Louise Greaves Filmmaker Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2027-03-06",
     "endDate": "2027-03-06",
@@ -711,7 +1096,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "10:00",
+    "endTime": "19:00",
+    "subjectCodes": [
+      "360505"
+    ]
   },
   {
     "id": "directory-stanford-53994406478634",
@@ -719,6 +1110,7 @@
     "eventType": "seminar",
     "title": "The 2027 William & Louise Greaves Filmmaker Seminar",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2027-03-07",
     "endDate": "2027-03-07",
@@ -727,7 +1119,13 @@
     "countryCode": "US",
     "country": "United States",
     "city": "Stanford",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "10:00",
+    "endTime": "19:00",
+    "subjectCodes": [
+      "360505"
+    ]
   },
   {
     "id": "directory-stanford-54124876661625",
@@ -735,12 +1133,18 @@
     "eventType": "conference",
     "title": "2027 Annual Conference in Menopause & Healthy Aging",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2027-03-10",
     "endDate": "2027-03-10",
     "sourceUrl": "https://events.stanford.edu/event/2027-annual-conference-in-menopause-healthy-aging",
     "directory": true,
-    "mode": "online"
+    "mode": "online",
+    "timezone": "America/Los_Angeles",
+    "subjectCodes": [
+      "321502",
+      "3202"
+    ]
   },
   {
     "id": "directory-stanford-54124876662650",
@@ -748,12 +1152,18 @@
     "eventType": "conference",
     "title": "2027 Annual Conference in Menopause & Healthy Aging",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2027-03-11",
     "endDate": "2027-03-11",
     "sourceUrl": "https://events.stanford.edu/event/2027-annual-conference-in-menopause-healthy-aging",
     "directory": true,
-    "mode": "online"
+    "mode": "online",
+    "timezone": "America/Los_Angeles",
+    "subjectCodes": [
+      "321502",
+      "3202"
+    ]
   },
   {
     "id": "directory-stanford-54124876664699",
@@ -761,12 +1171,18 @@
     "eventType": "conference",
     "title": "2027 Annual Conference in Menopause & Healthy Aging",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "Stanford University",
     "startDate": "2027-03-12",
     "endDate": "2027-03-12",
     "sourceUrl": "https://events.stanford.edu/event/2027-annual-conference-in-menopause-healthy-aging",
     "directory": true,
-    "mode": "online"
+    "mode": "online",
+    "timezone": "America/Los_Angeles",
+    "subjectCodes": [
+      "321502",
+      "3202"
+    ]
   },
   {
     "id": "directory-cern-1742816",
@@ -774,10 +1190,20 @@
     "eventType": "workshop",
     "title": "Zeek Workshop Europe 2027",
     "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
     "institution": "CERN Indico",
     "startDate": "2027-03-17",
     "endDate": "2027-03-18",
     "sourceUrl": "https://indico.cern.ch/event/1742816/",
-    "directory": true
+    "directory": true,
+    "countryCode": "CH",
+    "country": "Switzerland",
+    "city": "Meyrin",
+    "timezone": "Europe/Zurich",
+    "startTime": "09:00",
+    "endTime": "17:00",
+    "subjectCodes": [
+      "460407"
+    ]
   }
 ]
