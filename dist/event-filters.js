@@ -34,8 +34,32 @@ function facetValues(values) {
   return keys.length ? keys : [notSpecified];
 }
 
-function languages(tags) {
-  return facetValues(tags.filter(Boolean).flatMap(tag => [tag, tag.split('-')[0]]));
+function canonicalLanguage(value) {
+  if (!value) return '';
+  try { return Intl.getCanonicalLocales(value)[0] || ''; }
+  catch { return ''; }
+}
+
+export function languageSelection(value) {
+  return canonicalLanguage(value) || value || '';
+}
+
+export function recordLanguageTags(record, facet) {
+  if (facet === 'ml') return [record.metadataLanguage || record.language, ...Object.keys(record.metadata || {})];
+  if (record.type === 'event' && facet === 'el') {
+    const additional = Array.isArray(record.languages) ? record.languages : [];
+    return [record.language, ...additional];
+  }
+  return record.type !== 'event' && facet === 'dl' ? [record.language] : [];
+}
+
+export function languageKeys(values) {
+  const tags = values.map(canonicalLanguage).filter(Boolean);
+  return [...new Set(tags.flatMap(tag => [tag, tag.split('-')[0]]))];
+}
+
+export function matchesLanguage(record, facet, selected) {
+  return !selected || facetValues(languageKeys(recordLanguageTags(record, facet))).includes(languageSelection(selected));
 }
 
 export function indexEvents(records, countryCode, now = new Date()) {
@@ -59,8 +83,8 @@ export function indexEvents(records, countryCode, now = new Date()) {
         kind: facetValues([record.eventType]),
         subject: facetValues(subjects),
         country: facetValues([countryCode(record)]),
-        el: languages([record.language, ...(record.languages || [])]),
-        ml: languages([record.metadataLanguage || record.language, ...Object.keys(record.metadata || {})]),
+        el: facetValues(languageKeys(recordLanguageTags(record, 'el'))),
+        ml: facetValues(languageKeys(recordLanguageTags(record, 'ml'))),
         mode: facetValues([record.mode]),
       },
     };
@@ -69,6 +93,8 @@ export function indexEvents(records, countryCode, now = new Date()) {
 
 export function countEvents(index, filters, period) {
   const selected = Object.fromEntries(filterFields.map(name => [name, filters.get(name) || '']));
+  selected.el = languageSelection(selected.el);
+  selected.ml = languageSelection(selected.ml);
   const counts = Object.fromEntries(eventFacets.map(name => [name, new Map()]));
   const dates = {from: 0, to: 0};
   const periods = Object.fromEntries(eventPeriods.map(name => [name, 0]));

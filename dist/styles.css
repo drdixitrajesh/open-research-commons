@@ -145,7 +145,7 @@ label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 7
 .form-feedback:empty { display: none; }
 .subject-picker { position: relative; }
 .subject-summary { font-weight: 700; margin-bottom: .7rem; }
-.subject-browse { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem .85rem; }
+.subject-browse { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem .85rem; }
 .subject-add { margin-block: .7rem .95rem; }
 .subject-picker .pills { margin-block: .75rem 0; }
 .subject-picker .pills:empty { display: none; }

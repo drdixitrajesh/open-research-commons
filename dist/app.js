@@ -1,6 +1,8 @@
 import { locales, messages } from './i18n.js';
 import { buildCatalogIndex } from './catalog-search.js';
-import { callDeadline, countEvents, eventDateAt, eventFacets, eventPeriod, eventPeriods, indexEvents, notSpecified } from './event-filters.js';
+import { groupedSubjects, subjectFields } from './catalog-subjects.js';
+import { callDeadline, countEvents, eventDateAt, eventFacets, eventPeriod, eventPeriods, indexEvents,
+  languageKeys, languageSelection, matchesLanguage, notSpecified, recordLanguageTags } from './event-filters.js';
 import { examples } from './examples.js';
 import { submissionPage, dashboardPage, bindWorkflow } from './workflow.js';
 
@@ -42,6 +44,7 @@ export const types = {
   material:['proceedingsVolume','paper','abstractBook','abstract','presentation','poster','report','recording','supportingMaterial'],
   thesis:['doctoralThesis','mastersThesis','dissertation']
 };
+export const participationModes = ['online','inPerson','hybrid'];
 export const families = { event:'events', material:'proceedings', thesis:'theses' };
 export const txt = (key) => messages[lang]?.[key] ?? messages.en?.[key] ?? key;
 export const esc = (value = '') => String(value ?? '').replace(/[&<>"']/g, (c) => ({
@@ -274,7 +277,8 @@ export function subjectMatches(s, query) {
 const catalogTypes = {events:'event',proceedings:'material',theses:'thesis'};
 const kindsFor = (type) => types[type] || (type==='research' ? [...types.material,...types.thesis] : Object.values(types).flat());
 export function catalogKindLabel(type) {
-  const title = {event:'eventKind',material:'proceedings',thesis:'theses'}[type];
+  if (type==='material') return txt('proceedings');
+  const title = {event:'eventKind',thesis:'theses'}[type];
   if (!title) return txt(type==='research'?'researchType':'contentType');
   const names = new Intl.ListFormat(lang,{style:'short',type:'unit'}).format(types[type].map(txt));
   return lang==='zh' ? txt(title)+'（'+names+'）' : txt(title)+' ('+names+')';
@@ -322,25 +326,20 @@ function catalogScope(params) {
   return dial ? state.countries.filter(c=>c.callingCodes.includes(dial)).map(c=>c.iso).sort().join(',') : '';
 }
 const subjectOption = subject => [subject.code,codedSubjectLabel(subject)];
-function subSubjectOptions(parent, selected='') {
-  const fields = state.subjects.filter(subject=>subject.parent===parent && subject.code.length===6);
-  return options([['',txt('allSubSubjects')],...fields.map(subjectOption)],selected);
+export function subSubjectOptions(parent, selected='', placeholder=txt('allSubSubjects')) {
+  return options([['',placeholder],...subjectFields(state.subjects,parent).map(subjectOption)],selected);
+}
+export function subjectGroupOptions(selected='') {
+  return groupedSubjects(state.subjects).map(({division,groups})=>{
+    const entries = [[division.code,division.code+' '+txt('allSubjects')],...groups.map(subjectOption)];
+    return `<optgroup label="${esc(codedSubjectLabel(division))}" data-division="${division.code}">${options(entries,selected)}</optgroup>`;
+  }).join('');
 }
 function subjectMenus(selected, eventFilter, filterCode) {
   const group = selected?.code.length===6 ? selected.parent : selected?.code;
-  const divisions = state.subjects.filter(subject=>subject.parent===null);
-  const groups = divisions.map(division=>{
-    const subjects = state.subjects.filter(subject=>subject.parent===division.code);
-    // Older links from Browse subjects can still select an entire division.
-    const [,name] = subjectOption(division);
-    const entries = subjects.map(subjectOption);
-    if (eventFilter) entries.unshift([division.code,division.code+' '+txt('allSubjects')]);
-    else if (selected?.code===division.code) entries.unshift(subjectOption(division));
-    return `<optgroup label="${esc(name)}" data-division="${division.code}">${options(entries,group)}</optgroup>`;
-  }).join('');
   const entries = [['',txt('allSubjects')]];
   if (eventFilter) entries.push([notSpecified,txt('notSpecified')]);
-  return `<label class="field">${t('topic')}<select name="subject">${options(entries,group || filterCode || '')}${groups}</select></label>
+  return `<label class="field">${t('topic')}<select name="subject">${options(entries,group || filterCode || '')}${subjectGroupOptions(group)}</select></label>
     <label class="field">${t('subSubject')}<select name="subsubject"${group?.length===4?'':' disabled'}>${subSubjectOptions(group,selected?.code)}</select></label>`;
 }
 function bindCatalogFilters(form, eventIndex, period) {
@@ -412,10 +411,10 @@ function recordList(page, params, scope, loadFailed) {
   const matches = eventCounts?.matches ?? candidates.filter(r => {
     if (subject && !subjectIncludes(r,subject)) return false;
     if (eventLanguage || documentLanguage) {
-      if (r.type==='event' ? !(eventLanguage && [r.language,...(r.languages || [])].includes(eventLanguage))
-        : !(documentLanguage && r.language===documentLanguage)) return false;
+      if (r.type==='event' ? !(eventLanguage && matchesLanguage(r,'el',eventLanguage))
+        : !(documentLanguage && matchesLanguage(r,'dl',documentLanguage))) return false;
     }
-    if (metadataLanguage && (r.metadataLanguage || r.language)!==metadataLanguage && !r.metadata?.[metadataLanguage]) return false;
+    if (!matchesLanguage(r,'ml',metadataLanguage)) return false;
     const country = countryFor(r);
     if (filters.get('country') && (country?.iso || r.country) !== filters.get('country')) return false;
     for (const [param,field] of Object.entries({mode:'mode',kind:null})) {
@@ -430,12 +429,17 @@ function recordList(page, params, scope, loadFailed) {
   if (scores) matches.sort((a,b)=>scores.get(b)-scores.get(a));
   if (exactSubject) matches.sort((a,b)=>Number(b.subjectCodes.includes(exactSubject))-Number(a.subjectCodes.includes(exactSubject)));
 
-  const menu = (label, name, entries) => `<label class="field">${esc(label)}<select name="${name}">${options([['',txt('all')],...entries],params.get(name) || '')}</select></label>`;
+  const menu = (label, name, entries, selected = params.get(name) || '') => `<label class="field">${esc(label)}<select name="${name}">${options([['',txt('all')],...entries],selected)}</select></label>`;
   const withUnspecified = entries => eventFilter ? [...entries,[notSpecified,txt('notSpecified')]] : entries;
-  const kindLabel = type === 'material' ? txt('proceedings') : catalogKindLabel(type);
+  const kindLabel = catalogKindLabel(type);
   const kinds = kindsFor(type).map(k=>[k,txt(k)]);
-  const languageCodes = all.flatMap(r=>[r.language,r.metadataLanguage,...(r.languages || []),...Object.keys(r.metadata || {})]).filter(Boolean);
-  const languagesInRecords = [...new Set([...Object.keys(locales),...languageCodes,...(eventFilter ? languageCodes.map(code=>code.split('-')[0]) : [])])].map(code=>[code,languageName(code)]);
+  function languageMenu(label, facet) {
+    const selected = languageSelection(filters.get(facet));
+    const values = candidates.flatMap(record => recordLanguageTags(record,facet));
+    const available = languageKeys([...values, selected]);
+    const entries = available.map(code=>[code,languageName(code)]).sort((a,b)=>a[1].localeCompare(b[1],lang));
+    return menu(txt(label),facet,withUnspecified(entries),selected);
+  }
   const number = new Intl.NumberFormat(lang);
   const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${eventPeriods.map(p =>
     `<a class="tab"${p===period?' aria-current="page"':''} href="${esc(url(page,{...Object.fromEntries(params),period:p,view:''}))}">${t(p)} (${number.format(eventCounts.periods[p])})</a>`).join('')}</nav>` : '';
@@ -443,10 +447,10 @@ function recordList(page, params, scope, loadFailed) {
   const dateField = (name, label) => `<label class="field"><span>${t(label)} <small data-date-count="${name}"></small></span><input name="${name}" type="date" value="${esc(params.get(name) || '')}"></label>`;
   const controls = `<form data-filter="${page}"><div class="filter-grid">
     ${menu(kindLabel,'kind',kinds)}${subjectMenus(selectedSubject,eventFilter,subject)}${menu(txt('country'),'country',withUnspecified(countryOptions()))}
-    ${type==='event' || !type ? menu(txt('eventLanguage'),'el',withUnspecified(languagesInRecords)) : ''}
-    ${type!=='event' ? menu(txt('documentLanguage'),'dl',languagesInRecords) : ''}
-    ${menu(txt('metadataLanguage'),'ml',withUnspecified(languagesInRecords))}
-    ${type==='event' || !type ? menu(txt('format'),'mode',withUnspecified(['online','inPerson','hybrid'].map(v=>[v,txt(v)]))) : ''}
+    ${type==='event' || !type ? languageMenu('eventLanguage','el') : ''}
+    ${type!=='event' ? languageMenu('documentLanguage','dl') : ''}
+    ${languageMenu('metadataLanguage','ml')}
+    ${type==='event' || !type ? menu(txt('format'),'mode',withUnspecified(participationModes.map(v=>[v,txt(v)]))) : ''}
     ${eventFilter ? dateField('from','startDate') + dateField('to','endDate') : ''}
     </div><div class="form-actions"><button class="button secondary">${t('filter')}</button>${link(page,'clear','class="text-link"',{type:page==='search'?type:'',period:requestedPeriod && period,q:query})}
     ${selectedSubject ? `<a class="tag" href="${esc(url('subjects',{subject:selectedSubject.code}))}">${esc(codedSubjectLabel(selectedSubject))}</a>` : ''}
@@ -505,14 +509,15 @@ function citations(r,meta) {
 }
 function detailsView(r, params, preview = false) {
   const selection = params.get('metadata') || lang;
-  const originalLanguage = r.metadataLanguage || r.language || 'en';
+  const originalLanguage = r.metadataLanguage || r.language;
   const meta = selectedMetadata(r,selection);
-  const metadataLanguages = [...new Set([originalLanguage,...Object.keys(r.metadata || {})])];
+  const metadataLanguages = [...new Set([originalLanguage,...Object.keys(r.metadata || {})].filter(Boolean))];
   const country = countryFor(r);
   const facts = [
     [r.type==='event'?'eventLanguage':'documentLanguage', [...new Set([r.language,...(r.languages || [])])].filter(Boolean).map(languageName).map(esc).join(' · ')],
+    ['metadataLanguage',metadataLanguages.map(languageName).map(esc).join(' · ')],
     ['institution',esc(r.institution)],['authors',esc(r.authors)],['date',esc(r.type==='event'?eventDate(r) : r.year)],['timezone',esc(r.timezone)],['venue',esc(r.venue)],['city',esc(r.city)],
-    ['country',country ? `<a href="${esc(url('search',{country:country.iso}))}">${esc(countryName(country))}</a>` : esc(r.country)],['dialingCode',esc(countryCodes(country))],['format',r.mode ? t(r.mode) : ''],['eventStatus',r.eventStatus ? t(r.eventStatus) : ''],['deadline',esc(day(r.deadline))],
+    ['country',country ? `<a href="${esc(url('search',{country:country.iso}))}">${esc(countryName(country))}</a>` : esc(r.country)],['dialingCode',esc(countryCodes(country))],['format',r.mode ? t(r.mode) : ''],['eventStatus',r.type==='event' && r.eventStatus ? t(r.eventStatus) : ''],['deadline',esc(day(r.deadline))],
     ['startTime',esc(r.startTime)],['endTime',esc(r.endTime)],['paperDeadline',esc(day(r.paperDeadline))],['registrationDeadline',esc(day(r.registrationDeadline))],['attendanceFee',esc(r.attendanceFee)],
     ['degree',esc(r.degree)],['department',esc(r.department)],['supervisors',esc(r.supervisors)],['access',r.access ? t(r.access) : ''],['embargoUntil',esc(day(r.embargoUntil))],['license',esc(r.license)],['rightsHolder',esc(r.rightsHolder)],
     ['publicContact',esc(r.publicContact)],['doi',r.doi && !preview ? `<a href="${esc(doiHref(r.doi))}" rel="noopener"><bdi>${esc(r.doi)}</bdi></a>` : '']

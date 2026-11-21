@@ -1,7 +1,7 @@
 import {
-  activeRecords, announce, api, catalogKindLabel, codedSubjectLabel, countryOptions, esc, go, icon, lang, languageOptions, layout,
-  link, normalize, options, recordUrl, refresh, showPreview, signIn, state, subjectLabel,
-  subjectMatches, t, txt, types, url
+  activeRecords, announce, api, catalogKindLabel, countryOptions, esc, go, icon, lang, languageOptions, layout,
+  link, normalize, options, participationModes, recordUrl, refresh, showPreview, signIn, state, subjectLabel,
+  subSubjectOptions, subjectGroupOptions, subjectMatches, t, txt, types, url
 } from './app.js';
 
 const editable = new Set(['draft','changes_requested']);
@@ -85,15 +85,26 @@ function links(type,record) {
   return field(record,'sourceUrl',{kind:'url',wide:true}) + choiceField(record,'license',{choices:licenses,required:true}) + field(record,'rightsHolder')
     + field(record,'access',{choices:keyOptions(['open','embargoed','external']),required:true}) + field(record,'embargoUntil',{kind:'date'});
 }
-function metadataFields(type,record) {
+function metadataFields(record) {
   return field(record,'title',{required:true,wide:true}) + field(record,'description',{kind:'textarea',required:true,wide:true})
-    + field(record,'keywords',{wide:true})
-    + languageField(record,'language',{label:type==='event'?'eventLanguage':'documentLanguage',required:true})
-    + languageField(record,'metadataLanguage',{label:'originalLanguage'});
+    + field(record,'keywords',{wide:true});
 }
 function countryField(r, required) {
   const code=r.countryCode || state.countries.find(c=>normalize(c.name)===normalize(r.country))?.iso;
   return field({...r,countryCode:code},'countryCode',{label:'country',choices:countryOptions(),required});
+}
+function searchableFields(type,r) {
+  const isEvent = type==='event';
+  const common = field(r,type+'Type',{labelText:catalogKindLabel(type),choices:keyOptions(types[type]),required:true,wide:true})
+    + subjectPicker(r)
+    + countryField(r,type==='thesis')
+    + languageField(r,'language',{label:isEvent?'eventLanguage':'documentLanguage',required:true})
+    + languageField(r,'metadataLanguage',{help:'metadataLanguageHelp'});
+  return common + (isEvent
+    ? field(r,'mode',{label:'format',choices:keyOptions(participationModes),required:true})
+      + field(r,'startDate',{kind:'date',required:true}) + field(r,'endDate',{kind:'date',required:true})
+      + extraLanguages(r)
+    : '');
 }
 const associated = (value) => {
   const raw = String(value || '').trim();
@@ -101,31 +112,26 @@ const associated = (value) => {
 };
 function typeFields(type,r) {
   const roles = labeledOptions(roleChoices);
-  if (type==='event') return field(r,'eventType',{labelText:catalogKindLabel(type),required:true,wide:true,choices:keyOptions(types.event)})
-    + field(r,'eventStatus',{choices:keyOptions(eventStates),required:true})
-    + field(r,'institution',{required:true}) + field(r,'mode',{label:'format',choices:keyOptions(['online','inPerson','hybrid']),required:true})
-    + field(r,'startDate',{kind:'date',required:true}) + field(r,'endDate',{kind:'date',required:true})
+  if (type==='event') return field(r,'eventStatus',{choices:keyOptions(eventStates),required:true})
+    + field(r,'institution',{required:true})
     + field(r,'startTime',{kind:'time'}) + field(r,'endTime',{kind:'time'})
     + choiceField(r,'timezone',{choices:zones.map(zone=>[zone,zone.replaceAll('_',' ')]),placeholder:'Asia/Kolkata'})
-    + extraLanguages(r)
-    + field(r,'city') + countryField(r,false) + field(r,'venue',{wide:true})
+    + field(r,'city') + field(r,'venue',{wide:true})
     + field(r,'deadline',{kind:'date'}) + field(r,'paperDeadline',{kind:'date'}) + field(r,'registrationDeadline',{kind:'date'})
     + choiceField(r,'attendanceFee',{choices:labeledOptions(feeChoices)}) + field(r,'publicContact')
     + choiceField(r,'contributorRole',{choices:roles})
     + field(r,'speakers',{kind:'textarea',wide:true}) + field(r,'programme',{kind:'textarea',wide:true});
   const shared = field(r,'authors',{required:true,wide:true}) + choiceField(r,'contributorRole',{choices:roles})
-    + field(r,'institution',{required:type==='thesis'}) + countryField(r,type==='thesis')
+    + field(r,'institution',{required:type==='thesis'})
     + field(r,'year',{kind:'number',required:type==='thesis'}) + field(r,'releaseDate',{kind:'date'});
   if (type==='material') {
     const events = activeRecords().filter(r=>r.type==='event'&&!r.example&&!r.directory);
     const related = events.length
       ? choiceField(r,'relatedId',{choices:events.map(event=>[event.id,event.title]),help:'relatedHelp',wide:true,otherLabel:'relatedOther'})
       : field(r,'relatedId',{help:'relatedHelp',wide:true});
-    return field(r,'materialType',{labelText:catalogKindLabel(type),choices:keyOptions(types.material),required:true,wide:true})
-      + related + field(r,'relatedEventTitle',{wide:true}) + shared + field(r,'publisher');
+    return related + field(r,'relatedEventTitle',{wide:true}) + shared + field(r,'publisher');
   }
-  return field(r,'thesisType',{labelText:catalogKindLabel(type),choices:keyOptions(types.thesis),required:true,wide:true})
-    + choiceField(r,'degree',{required:true,choices:commonDegrees.map(value=>[value,value])})
+  return choiceField(r,'degree',{required:true,choices:commonDegrees.map(value=>[value,value])})
     + shared + field(r,'department') + field(r,'supervisors')
     + choiceField(r,'academicStatus',{choices:labeledOptions(academicChoices)});
 }
@@ -135,18 +141,12 @@ function selectedSubjects(codes) {
     return `<button type="button" class="tag" data-drop-subject="${esc(code)}" title="${t('remove')}">${index===0?t('primarySubject')+' · ':''}<bdi>${esc(code)}</bdi> ${esc(subjectLabel(item))} ×</button>`;
   }).join('');
 }
-function subjectChoices(parent) {
-  const entries = state.subjects.filter(subject=>subject.parent===parent)
-    .map(subject=>[subject.code,codedSubjectLabel(subject)]);
-  return options([['',txt('choose')],...entries],'');
-}
 function subjectPicker(r) {
-  return `<div class="full subject-picker">
+  return `<div class="full subject-picker" role="group" aria-label="${t('classification')}">
     <p class="subject-summary">${t('primarySubject')} * · ${t('additionalSubjects')}</p>
     <div class="subject-browse">
-      <label class="field">${t('subjectDivision')}<select id="subject-division">${subjectChoices(null)}</select></label>
-      <label class="field">${t('topic')}<select id="subject-group" disabled>${subjectChoices('')}</select></label>
-      <label class="field">${t('subSubject')}<select id="subject-field" disabled>${subjectChoices('')}</select></label>
+      <label class="field">${t('topic')}<select id="subject-group">${options([['',txt('choose')]],'')}${subjectGroupOptions()}</select></label>
+      <label class="field">${t('subSubject')}<select id="subject-field" disabled>${subSubjectOptions('','',txt('choose'))}</select></label>
     </div>
     <button class="button secondary subject-add" type="button" id="subject-add" disabled>${t('addSubject')}</button>
     <label for="subject-picker-input" class="field">${t('subjectSearch')}
@@ -209,9 +209,9 @@ export async function submissionPage(params) {
     ${!state.session.user ? `<p>${t('signedOut')}</p>${signIn()}` : !canWrite ? `<p class="empty">${t('serviceUnavailable')}</p>` : ''}
     ${note ? `<div class="notice"><span>${t('reviewNote')} · <bdi>${esc(note)}</bdi></span></div>` : ''}
     <form id="submission-form" novalidate>
-    ${section('original',metadataFields(r.type,r))}
-    ${section(typeHeading(r.type),typeFields(r.type,r))}
-    ${section('classification',subjectPicker(r))}
+    ${section('original',metadataFields(r))}
+    ${section('searchableDetails',searchableFields(r.type,r))}
+    ${section('details',typeFields(r.type,r))}
     ${section('translations',`<div class="full" id="translation-list">${translationRows(r.metadata)}</div><div class="full"><button class="button secondary" type="button" data-add-translation>${icon('plus',15)}${t('addTranslation')}</button></div>`)}
     ${section('files',filePicker(r)+links(r.type,r))}
     ${section('doi',`<p class="full">${t('doiPolicy')}</p>${field(r,'doi')}${r.type!=='event'?field(r,'translationOf'):''}
@@ -282,19 +282,14 @@ function bindSubmission() {
   const pick = form.querySelector('#subject-picker-input');
   const picked = form.querySelector('#picked-subjects');
   const candidates = form.querySelector('#subject-options');
-  const division = form.querySelector('#subject-division');
   const group = form.querySelector('#subject-group');
   const field = form.querySelector('#subject-field');
   const add = form.querySelector('#subject-add');
   const uploads = form.querySelector('#attachment');
   const attachments = form.querySelector('#attachment-list');
-  const selection = () => [field,group,division].find(control=>control.value);
+  const selection = () => field.value ? field : group;
   const canAdd = (code) => state.index.has(code) && draft.record.subjectCodes.length<8 && !draft.record.subjectCodes.includes(code);
-  function updateAdd() { add.disabled=!canAdd(selection()?.value); }
-  function refreshChoices(control,parent) {
-    control.innerHTML=subjectChoices(parent);
-    control.disabled=control.options.length===1;
-  }
+  function updateAdd() { add.disabled=!canAdd(selection().value); }
   function renderMatches() {
     const word=normalize(pick.value.trim());
     candidates.innerHTML = word && draft.record.subjectCodes.length<8 ? state.subjects.filter(s=>subjectMatches(s,word) && !draft.record.subjectCodes.includes(s.code)).slice(0,18)
@@ -312,19 +307,15 @@ function bindSubmission() {
     return true;
   }
   form.addEventListener('input', ()=>{ draft.record=collect(form); });
-  division.addEventListener('change',()=>{
-    refreshChoices(group,division.value);
-    refreshChoices(field,'');
-    updateAdd();
-  });
   group.addEventListener('change',()=>{
-    refreshChoices(field,group.value);
+    field.innerHTML=subSubjectOptions(group.value,'',txt('choose'));
+    field.disabled=field.options.length===1;
     updateAdd();
   });
   field.addEventListener('change',updateAdd);
   add.addEventListener('click',()=>{
     const selected=selection();
-    if (addSubject(selected?.value)) selected.focus();
+    if (addSubject(selected.value)) selected.focus();
   });
   pick.addEventListener('input',renderMatches);
   form.addEventListener('click',(e)=>{
@@ -390,7 +381,7 @@ function bindSubmission() {
     const action=e.submitter?.value || 'draft';
     if (action==='submit' && (!form.checkValidity() || !draft.record.subjectCodes.length)) {
       feedback(form,txt('required'));
-      (form.querySelector(':invalid') || division).focus();
+      (form.querySelector(':invalid') || group).focus();
       return;
     }
     const buttons = form.querySelectorAll('button[name=action]');
@@ -408,7 +399,7 @@ function bindSubmission() {
       page?.insertAdjacentHTML('afterend',`<p class="notice" role="status">${t(key)}</p>`);
     } catch (error) {
       feedback(form,errors(error));
-      const invalidInput = error.field==='subjectCodes' ? division : form.elements.namedItem(error.field);
+      const invalidInput = error.field==='subjectCodes' ? group : form.elements.namedItem(error.field);
       const target = invalidInput?.matches?.('[data-choice-select]') && invalidInput.value===otherChoice
         ? invalidInput.closest('[data-choice-field]').querySelector('[data-custom-value]') : invalidInput;
       target?.focus?.();
