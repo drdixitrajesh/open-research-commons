@@ -148,7 +148,7 @@ const current = () => {
 const returnPath = () => window.location.pathname + window.location.search;
 const primary = document.querySelector('meta[name="repository-primary"]')?.content;
 const protectedViews = new Set(['submit','account','review']);
-export const signIn = () => `<a class="button" href="/signin-with-chatgpt?return_to=${encodeURIComponent(returnPath())}" target="_top">${t('signIn')}</a>`;
+export const signIn = ({label='signIn',className='button'}={}) => `<a class="${esc(className)}" href="/signin-with-chatgpt?return_to=${encodeURIComponent(returnPath())}" target="_top">${t(label)}</a>`;
 
 export async function api(path, options = {}) {
   const response = await fetch('/api/' + path, {

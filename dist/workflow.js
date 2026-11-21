@@ -207,7 +207,7 @@ export async function submissionPage(params) {
   const canWrite = state.session.user && state.session.persistent;
   const canSave = canWrite && !draft.uploading;
   return layout(txt(typeHeading(r.type)),`<div class="form-panel">
-    ${!state.session.user ? `<p>${t('signedOut')}</p>${signIn()}` : !canWrite ? `<p class="empty">${t('serviceUnavailable')}</p>` : ''}
+    ${state.session.user && !canWrite ? `<p class="empty">${t('serviceUnavailable')}</p>` : ''}
     ${note ? `<div class="notice"><span>${t('reviewNote')} · <bdi>${esc(note)}</bdi></span></div>` : ''}
     <form id="submission-form" novalidate>
     ${section('original',metadataFields(r))}
@@ -218,6 +218,7 @@ export async function submissionPage(params) {
     ${section('doi',`<p class="full">${t('doiPolicy')}</p>${field(r,'doi')}${r.type!=='event'?field(r,'translationOf'):''}
     <label class="full"><input name="authority" type="checkbox"${r.authority?' checked':''} required> ${t('authority')} *</label>`)}
     <output class="form-feedback" id="submission-feedback" role="alert"></output>
+    ${!state.session.user ? `<p>${signIn({label:'signedOut',className:'text-link'})}</p>` : ''}
     <div class="form-actions"><button class="button secondary" name="action" value="draft"${canSave?'':' disabled'}>${t('saveDraft')}</button>
       <button class="button secondary" type="button" data-preview${draft.uploading?' disabled':''}>${t('preview')}</button>
       <button class="button" name="action" value="submit"${canSave?'':' disabled'}>${t('sendForReview')}</button>
