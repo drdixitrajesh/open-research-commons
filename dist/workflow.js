@@ -177,7 +177,7 @@ function filePicker(r) {
     <ul id="attachment-list">${fileRows(r.files || [])}</ul></div>`;
 }
 function choices(params) {
-  const entries = params.get('research') ? ['material','thesis'] : ['event','material','thesis'];
+  const entries = params.get('research') ? ['material','thesis','event'] : ['event','material','thesis'];
   const labels = {event:'eventHelp',material:'materialsHelp',thesis:'thesisHelp'};
   return layout(txt('startSubmission'),`<div class="event-grid">${entries.map(type=>`<article class="event-card">
     <h3>${link('submit',typeHeading(type),'',{type})}</h3><p>${t(labels[type])}</p>
