@@ -110,6 +110,7 @@ footer { background: var(--navy); color: #e2e8fb; }
 .footer-links { display: flex; flex-wrap: wrap; gap: .8rem; font-size: .88rem; }
 .page { min-height: 65vh; padding-block: 2rem 4rem; }
 .page h1 { margin-bottom: .35em; }
+.page h1.catalog-heading { font-size: clamp(2.25rem, 4.4vw, 4.25rem); line-height: 1.08; }
 .breadcrumb { display: flex; flex-wrap: wrap; gap: .64rem; color: var(--muted); font-size: .88rem; margin-bottom: 1.55rem; }
 .breadcrumb a { color: var(--blue-deep); }
 .page-description { color: var(--muted); }
@@ -118,6 +119,7 @@ footer { background: var(--navy); color: #e2e8fb; }
 .tab[aria-current=page], .tab[aria-pressed=true] { background: var(--blue); color: var(--white); border-color: var(--blue); }
 .filter-grid, .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .8rem 1rem; }
 .filter-grid { grid-template-columns: repeat(3, minmax(0,1fr)); margin-block: .8rem 1.2rem; }
+.filter-grid > .field { justify-content: flex-end; }
 label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 700; font-size: .92rem; }
 .field input, .field select, .field textarea, .select-search { border: 1px solid #a5acc2; border-radius: 4px; padding: .53rem .62rem; width: 100%; background: var(--white); color: var(--ink); font-size: .98rem; font-weight: 400; }
 .field input:disabled, .field select:disabled { background: #e9ebf1; }

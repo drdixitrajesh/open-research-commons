@@ -74,6 +74,9 @@ originalLanguage|Original metadata language|मूल मेटाडेटा �
 country|Country|देश|País|Pays|البلد|País|国家|Страна
 format|Participation mode|भागीदारी का तरीका|Modalidad de participación|Mode de participation|طريقة المشاركة|Modalidade de participação|参与形式|Формат участия
 recordType|Record type|प्रविष्टि का प्रकार|Tipo de registro|Type de notice|نوع السجل|Tipo de registro|记录类型|Тип записи
+eventKind|Event|आयोजन|Evento|Événement|الفعالية|Evento|学术活动|Мероприятие
+contentType|Content type|सामग्री का प्रकार|Tipo de contenido|Type de contenu|نوع المحتوى|Tipo de conteúdo|内容类型|Тип материала
+researchType|Research type|शोध का प्रकार|Tipo de trabajo académico|Type de publication scientifique|نوع العمل البحثي|Tipo de trabalho acadêmico|研究成果类型|Вид научной работы
 classification|ANZSRC 2020 Fields of Research|ANZSRC 2020 के शोध क्षेत्र|Áreas de investigación de ANZSRC 2020|Domaines de recherche ANZSRC 2020|مجالات البحث وفق تصنيف ANZSRC 2020|Áreas de pesquisa da ANZSRC 2020|ANZSRC 2020 研究领域|Области исследований ANZSRC 2020
 browseText|Find related events and research through the official Fields of Research hierarchy.|शोध क्षेत्रों के आधिकारिक वर्गीकरण से संबंधित आयोजन और शोध खोजें।|Encuentra eventos e investigaciones relacionados mediante la jerarquía oficial de áreas de investigación.|Trouvez les événements et travaux associés grâce à la hiérarchie officielle des domaines de recherche.|اعثر على الفعاليات والأبحاث ذات الصلة من خلال التصنيف الرسمي لمجالات البحث.|Encontre eventos e pesquisas relacionados na hierarquia oficial de áreas de pesquisa.|通过官方研究领域分类查找相关活动和研究成果。|Находите связанные мероприятия и работы по официальной иерархии областей исследований.
 subjectSearch|Search by subject name or code|विषय का नाम या कोड खोजें|Busca por disciplina o código|Rechercher par nom ou code de discipline|ابحث باسم التخصص أو رمزه|Pesquise por nome ou código da área|按学科名称或代码搜索|Поиск по названию дисциплины или коду

@@ -37,7 +37,7 @@ export const state = {
 };
 const nav = [['home','home'],['events','events'],['proceedings','proceedings'],['theses','theses'],['subjects','subjects'],['countries','countries']];
 export const types = {
-  event:['conference','seminar','symposium','workshop','webinar'],
+  event:['seminar','symposium','conference','workshop','webinar'],
   material:['proceedingsVolume','paper','abstractBook','abstract','presentation','poster','report','recording','supportingMaterial'],
   thesis:['doctoralThesis','mastersThesis','dissertation']
 };
@@ -66,6 +66,9 @@ export function countryCodes(country) {
   return visible.map(code=>code.startsWith('1') && code.length===4 ? '+1 '+code.slice(1) : '+'+code).join(', ');
 }
 export const sortedCountries = () => [...state.countries].sort((a,b)=>countryName(a).localeCompare(countryName(b),lang));
+export const countryOptions = () => sortedCountries().map(country => [
+  country.iso, [country.iso, countryName(country), countryCodes(country)].filter(Boolean).join(' · '),
+]);
 function countryFor(record) {
   if (record.countryCode) return state.countryIndex.get(record.countryCode);
   const name = normalize(record.country);
@@ -187,8 +190,8 @@ function chrome(page) {
 }
 
 export const breadcrumb = (label) => `<nav class="breadcrumb" aria-label="${t('details')}">${link('home','home')}<span aria-hidden="true">/</span><span>${esc(label)}</span></nav>`;
-export function layout(title, body, description = '') {
-  return `<section class="wrap page">${breadcrumb(title)}<h1>${esc(title)}</h1>${description ? `<p class="page-description">${esc(description)}</p>` : ''}${body}</section>`;
+export function layout(title, body, description = '', heading = title) {
+  return `<section class="wrap page">${breadcrumb(title)}<h1${heading !== title ? ' class="catalog-heading"' : ''}>${esc(heading)}</h1>${description ? `<p class="page-description">${esc(description)}</p>` : ''}${body}</section>`;
 }
 const empty = (key = 'noResults') => `<p class="empty">${t(key)}</p>`;
 function exampleNotice() {
@@ -275,6 +278,12 @@ export function subjectMatches(s, query) {
 }
 const catalogTypes = {events:'event',proceedings:'material',theses:'thesis'};
 const kindsFor = (type) => types[type] || (type==='research' ? [...types.material,...types.thesis] : Object.values(types).flat());
+export function catalogKindLabel(type) {
+  const title = {event:'eventKind',material:'proceedings',thesis:'theses'}[type];
+  if (!title) return txt(type==='research'?'researchType':'contentType');
+  const names = new Intl.ListFormat(lang,{style:'short',type:'unit'}).format(types[type].map(txt));
+  return lang==='zh' ? txt(title)+'（'+names+'）' : txt(title)+' ('+names+')';
+}
 const subjectIncludes = (record,code) => (record.subjectCodes || []).some(subject=>subject.startsWith(code));
 const catalogFilterKeys = ['q','type','subject','kind','country','dial','el','dl','ml','mode','from','to','inst'];
 let indexedCatalog;
@@ -376,30 +385,30 @@ function recordList(page, params, scope, loadFailed) {
   if (scores) matches.sort((a,b)=>scores.get(b)-scores.get(a));
   if (exactSubject) matches.sort((a,b)=>Number(b.subjectCodes.includes(exactSubject))-Number(a.subjectCodes.includes(exactSubject)));
 
-  const menu = (key, name, entries) => `<label class="field">${t(key)}<select name="${name}">${options([['',txt('all')],...entries],params.get(name) || '')}</select></label>`;
-  const countries = sortedCountries().map(country=>[country.iso,[countryName(country),countryCodes(country)].filter(Boolean).join(' · ')]);
+  const menu = (label, name, entries) => `<label class="field">${esc(label)}<select name="${name}">${options([['',txt('all')],...entries],params.get(name) || '')}</select></label>`;
   const kinds = kindsFor(type).map(k=>[k,txt(k)]);
   const languagesInRecords = [...new Set([...Object.keys(locales),...all.flatMap(r=>[r.language,r.metadataLanguage,...(r.languages || []),...Object.keys(r.metadata || {})])].filter(Boolean))].map(code=>[code,languageName(code)]);
   const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${['upcoming','ongoing','past','deadlines'].map(p=>link(page,p,'class="tab"'+(p===period?' aria-current="page"':''),{...Object.fromEntries(params),period:p,lang:lang==='en'?'':lang,view:''})).join('')}</nav>` : '';
   const selectedSubject = state.index.get(params.get('subject'));
   const controls = `<form data-filter="${page}"><div class="filter-grid">
-    ${menu('recordType','kind',kinds)}${subjectMenus(selectedSubject)}${menu('country','country',countries)}
-    ${type==='event' || !type ? menu('eventLanguage','el',languagesInRecords) : ''}
-    ${type!=='event' ? menu('documentLanguage','dl',languagesInRecords) : ''}
-    ${menu('metadataLanguage','ml',languagesInRecords)}
-    ${type==='event' || !type ? menu('format','mode',['online','inPerson','hybrid'].map(v=>[v,txt(v)])) : ''}
+    ${menu(catalogKindLabel(type),'kind',kinds)}${subjectMenus(selectedSubject)}${menu(txt('country'),'country',countryOptions())}
+    ${type==='event' || !type ? menu(txt('eventLanguage'),'el',languagesInRecords) : ''}
+    ${type!=='event' ? menu(txt('documentLanguage'),'dl',languagesInRecords) : ''}
+    ${menu(txt('metadataLanguage'),'ml',languagesInRecords)}
+    ${type==='event' || !type ? menu(txt('format'),'mode',['online','inPerson','hybrid'].map(v=>[v,txt(v)])) : ''}
     ${type==='event' ? `<label class="field">${t('startDate')}<input name="from" type="date" value="${esc(params.get('from') || '')}"></label><label class="field">${t('endDate')}<input name="to" type="date" value="${esc(params.get('to') || '')}"></label>` : ''}
     </div><div class="form-actions"><button class="button secondary">${t('filter')}</button>${link(page,'clear','class="text-link"',{type:page==='search'?type:'',q:query})}
     ${selectedSubject ? `<a class="tag" href="${esc(url('subjects',{subject:selectedSubject.code}))}">${esc(codedSubjectLabel(selectedSubject))}</a>` : ''}
   </div><output class="form-feedback" role="alert"></output></form>`;
   const title = fixed ? txt(page) : txt('browseRecords');
+  const heading = page === 'events' ? catalogKindLabel('event') : title;
   return layout(title, searchbox(page,query,type) + tabs + controls + `<div class="section">
     <p id="catalog-results" class="muted" tabindex="-1">${new Intl.NumberFormat(lang).format(matches.length)} ${t('results')}</p>
     ${matches.some(event=>event.directory) ? `<p class="page-description">${t('organizerDirectory')}</p>` : ''}
     ${withExamples(matches)}${loadFailed ? empty('partialResults') : ''}
     ${matches.length ? matches.map(r=>itemRow(r,period==='deadlines')).join('') : loadFailed ? '' : empty()}
     ${(scoped ? scoped.next : state.next) ? `<button class="button secondary" type="button" data-next data-scope="${esc(scope)}">${t('next')}</button>` : ''}
-  </div>`);
+  </div>`, '', heading);
 }
 function subjectsPage(params) {
   const item = state.index.get(params.get('subject'));

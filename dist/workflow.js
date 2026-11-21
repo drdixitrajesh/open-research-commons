@@ -1,6 +1,6 @@
 import {
-  activeRecords, announce, api, codedSubjectLabel, countryCodes, countryName, esc, go, icon, lang, languageOptions, layout,
-  link, normalize, options, recordUrl, refresh, showPreview, signIn, sortedCountries, state, subjectLabel,
+  activeRecords, announce, api, catalogKindLabel, codedSubjectLabel, countryOptions, esc, go, icon, lang, languageOptions, layout,
+  link, normalize, options, recordUrl, refresh, showPreview, signIn, state, subjectLabel,
   subjectMatches, t, txt, types, url
 } from './app.js';
 
@@ -32,14 +32,14 @@ const val = (record,name) => Array.isArray(record[name]) ? record[name].join(', 
 const typeHeading = (type) => ({event:'eventForm',material:'materialsForm',thesis:'thesisForm'})[type];
 const languageList = (value='') => value.split(/[,\n;]+/).map(tag=>tag.trim()).filter(Boolean);
 
-function field(record,name,{label=name,kind='text',required=false,wide=false,help,choices,placeholder}={}) {
+function field(record,name,{label=name,labelText=txt(label),kind='text',required=false,wide=false,help,choices,placeholder}={}) {
   const value = val(record,name);
   const common = `name="${name}" id="field-${name}"${required ? ' required' : ''}${help ? ` aria-describedby="help-${name}"` : ''}`;
   let html;
   if (choices) html=`<select ${common}>${options([['',txt('choose')],...choices],String(value))}</select>`;
   else if (kind==='textarea') html=`<textarea ${common} maxlength="8000" dir="auto">${esc(value)}</textarea>`;
   else html=`<input type="${kind}" ${common} value="${esc(value)}"${placeholder ? ` placeholder="${esc(placeholder)}"` : ''}${kind==='number' ? ' min="1000" max="2999"' : ''} dir="auto">`;
-  return `<label class="field${wide?' full':''}" for="field-${name}"><span>${t(label)}${required?' *':''}</span>${html}${help ? `<small id="help-${name}">${t(help)}</small>` : ''}</label>`;
+  return `<label class="field${wide?' full':''}" for="field-${name}"><span>${esc(labelText)}${required?' *':''}</span>${html}${help ? `<small id="help-${name}">${t(help)}</small>` : ''}</label>`;
 }
 function formLanguageOptions() {
   if (!languageOptionCache.has(lang)) {
@@ -92,9 +92,8 @@ function metadataFields(type,record) {
     + languageField(record,'metadataLanguage',{label:'originalLanguage'});
 }
 function countryField(r, required) {
-  const rows = sortedCountries().map(country=>[country.iso,[countryName(country),countryCodes(country)].filter(Boolean).join(' · ')]);
   const code=r.countryCode || state.countries.find(c=>normalize(c.name)===normalize(r.country))?.iso;
-  return field({...r,countryCode:code},'countryCode',{label:'country',choices:rows,required});
+  return field({...r,countryCode:code},'countryCode',{label:'country',choices:countryOptions(),required});
 }
 const associated = (value) => {
   const raw = String(value || '').trim();
@@ -102,7 +101,7 @@ const associated = (value) => {
 };
 function typeFields(type,r) {
   const roles = labeledOptions(roleChoices);
-  if (type==='event') return field(r,'eventType',{label:'eventForm',required:true,choices:keyOptions(types.event)})
+  if (type==='event') return field(r,'eventType',{labelText:catalogKindLabel(type),required:true,wide:true,choices:keyOptions(types.event)})
     + field(r,'eventStatus',{choices:keyOptions(eventStates),required:true})
     + field(r,'institution',{required:true}) + field(r,'mode',{label:'format',choices:keyOptions(['online','inPerson','hybrid']),required:true})
     + field(r,'startDate',{kind:'date',required:true}) + field(r,'endDate',{kind:'date',required:true})
@@ -122,10 +121,10 @@ function typeFields(type,r) {
     const related = events.length
       ? choiceField(r,'relatedId',{choices:events.map(event=>[event.id,event.title]),help:'relatedHelp',wide:true,otherLabel:'relatedOther'})
       : field(r,'relatedId',{help:'relatedHelp',wide:true});
-    return field(r,'materialType',{label:'recordType',choices:keyOptions(types.material),required:true,wide:true})
+    return field(r,'materialType',{labelText:catalogKindLabel(type),choices:keyOptions(types.material),required:true,wide:true})
       + related + field(r,'relatedEventTitle',{wide:true}) + shared + field(r,'publisher');
   }
-  return field(r,'thesisType',{label:'recordType',choices:keyOptions(types.thesis),required:true,wide:true})
+  return field(r,'thesisType',{labelText:catalogKindLabel(type),choices:keyOptions(types.thesis),required:true,wide:true})
     + choiceField(r,'degree',{required:true,choices:commonDegrees.map(value=>[value,value])})
     + shared + field(r,'department') + field(r,'supervisors')
     + choiceField(r,'academicStatus',{choices:labeledOptions(academicChoices)});
