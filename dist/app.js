@@ -1,0 +1,612 @@
+import { locales, messages } from './i18n.js';
+import { examples } from './examples.js';
+import { submissionPage, dashboardPage, bindWorkflow } from './workflow.js';
+
+const el = (id) => document.getElementById(id);
+const icons = {
+  search:'<circle cx="10.8" cy="10.8" r="5.7"/><path d="m15 15 4 4"/>',
+  globe:'<circle cx="12" cy="12" r="8"/><path d="M4 12h16m-8-8c2 2.2 3.2 4.9 3.2 8s-1.2 5.8-3.2 8c-2-2.2-3.2-4.9-3.2-8S10 6.2 12 4Z"/>',
+  user:'<circle cx="12" cy="8.5" r="3.1"/><path d="M5.5 20v-1.1a4.5 4.5 0 0 1 4.5-4.5h4a4.5 4.5 0 0 1 4.5 4.5V20"/>',
+  calendar:'<rect x="4.5" y="6" width="15" height="14" rx="1.7"/><path d="M8.5 4v4m7-4v4m-11 2h15"/>',
+  file:'<path d="M7 3.5h7l4 4V20H7zM14 3.5v4.4h4M10 12h5m-5 3h5"/>',
+  cap:'<path d="m2.5 9.5 9.5-5 9.5 5-9.5 5-9.5-5Zm4.1 2.3v4.3c3.2 2.4 7.6 2.4 10.8 0v-4.3m4.1-2.3v6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>'
+};
+export function icon(name, size = 19) {
+  return `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">${icons[name] || icons.file}</svg>`;
+}
+
+const keyLanguage = 'orc-language';
+const keyExamples = 'orc-examples';
+function preference(key, value) {
+  try {
+    if (value !== undefined) localStorage.setItem(key, value);
+    else return localStorage.getItem(key);
+  } catch {}
+  return null;
+}
+
+export let lang = 'en';
+export const state = {
+  subjects: [], index: new Map(), records: [], resolution: new Map(),
+  countries: [], countryIndex: new Map(), countryPages: new Map(),
+  directory: [],
+  session: {user:null,persistent:false,files:false}, failed:false,
+  examples: preference(keyExamples) !== 'hide', next:null, nav:0
+};
+const nav = [['home','home'],['events','events'],['proceedings','proceedings'],['theses','theses'],['subjects','subjects'],['countries','countries']];
+export const types = {
+  event:['conference','seminar','symposium','workshop','webinar'],
+  material:['proceedingsVolume','paper','abstractBook','abstract','presentation','poster','report','recording','supportingMaterial'],
+  thesis:['doctoralThesis','mastersThesis','dissertation']
+};
+export const families = { event:'events', material:'proceedings', thesis:'theses' };
+export const txt = (key) => messages[lang]?.[key] ?? messages.en?.[key] ?? key;
+export const esc = (value = '') => String(value ?? '').replace(/[&<>"']/g, (c) => ({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+export const t = (key) => esc(txt(key));
+export const subjectLabel = (s) => s?.translations?.[lang] ?? s?.label ?? '';
+export const languageName = (code) => {
+  if (!code) return '';
+  if (locales[code]?.name) return locales[code].name;
+  try { return new Intl.DisplayNames([lang],{type:'language'}).of(code) || code; }
+  catch { return code; }
+};
+export function countryName(country) {
+  if (!country) return '';
+  try { return new Intl.DisplayNames([lang],{type:'region'}).of(country.iso) || country.name; }
+  catch { return country.name; }
+}
+export function countryCodes(country) {
+  const codes=country?.callingCodes || [];
+  const visible=codes.length>8 ? codes.slice(0,1) : codes;
+  return visible.map(code=>code.startsWith('1') && code.length===4 ? '+1 '+code.slice(1) : '+'+code).join(', ');
+}
+export const sortedCountries = () => [...state.countries].sort((a,b)=>countryName(a).localeCompare(countryName(b),lang));
+function countryFor(record) {
+  if (record.countryCode) return state.countryIndex.get(record.countryCode);
+  const name = normalize(record.country);
+  return state.countries.find(c=>normalize(c.name)===name);
+}
+function dialNumber(value) {
+  const input=String(value || '').trim().replace(/[\s()-]/g,'');
+  if (!/^(?:\+|00)?\d{1,5}$/.test(input)) return '';
+  return input.replace(/^(?:\+|00)/,'');
+}
+export const normalize = (value) => String(value ?? '').normalize('NFD').toLowerCase()
+  .replace(/(\p{Script=Latin})\p{M}+/gu,'$1').normalize('NFC');
+export const validLink = (value) => {
+  try { const url = new URL(value); return ['http:','https:'].includes(url.protocol) ? url.href : ''; }
+  catch { return ''; }
+};
+const day = (value) => {
+  if (!value) return '';
+  const date = new Date(value.length === 10 ? value + 'T00:00Z' : value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return new Intl.DateTimeFormat(locales[lang]?.locale || lang,{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'}).format(date);
+};
+function eventDate(r) {
+  const start = day(r.startDate), end = day(r.endDate);
+  return end && start && start !== end ? start + ' – ' + end : start || end;
+}
+export const recordKind = (r) => r.eventType || r.materialType || r.thesisType || families[r.type] || 'details';
+function mergeCatalog(records) {
+  const seen = new Set(records.map(eventIdentity));
+  return [...records,...state.directory.filter(event=>!seen.has(eventIdentity(event))),...(state.examples?examples:[])];
+}
+function eventIdentity(event) {
+  if (event.sourceUrl) {
+    try {
+      const source=new URL(event.sourceUrl);
+      return source.hostname.replace(/^www\./,'') + source.pathname.replace(/\/+$/,'') + ' ' + (event.startDate || '');
+    } catch {}
+  }
+  return normalize(event.title) + ' ' + (event.startDate || '');
+}
+export const activeRecords = () => mergeCatalog(state.records);
+export function selectedMetadata(r, code = lang) {
+  const original = r.metadataLanguage || r.language || 'en';
+  if (code !== original && r.metadata?.[code]) {
+    const translation=r.metadata[code];
+    return {title:translation.title || r.title, description:translation.description || r.description,
+      keywords:translation.keywords?.length ? translation.keywords : r.keywords, lang:code,
+      titleLang:translation.title ? code : original, descriptionLang:translation.description ? code : original,
+      status:translation.status};
+  }
+  return {title:r.title,description:r.description,keywords:r.keywords,lang:original};
+}
+
+export function url(page = 'home', params = {}) {
+  const query = new URLSearchParams();
+  if (page !== 'home' && page !== 'record') query.set('view', page);
+  if (lang !== 'en') query.set('lang', lang);
+  for (const [name, value] of Object.entries(params)) if (value !== '' && value != null) query.set(name, value);
+  return '/' + (query.size ? '?' + query.toString() : '');
+}
+export const recordUrl = (id) => url('record',{record:id});
+export const link = (page,key,attrs='',params) => `<a ${attrs} href="${esc(url(page,params))}">${t(key)}</a>`;
+const current = () => {
+  const params = new URLSearchParams(location.search);
+  return { page:params.has('record') ? 'record' : params.get('view') || 'home', params };
+};
+const returnPath = () => window.location.pathname + window.location.search;
+const primary = document.querySelector('meta[name="repository-primary"]')?.content;
+const protectedViews = new Set(['submit','account','review']);
+export const signIn = () => `<a class="button" href="/signin-with-chatgpt?return_to=${encodeURIComponent(returnPath())}" target="_top">${t('signIn')}</a>`;
+
+export async function api(path, options = {}) {
+  const response = await fetch('/api/' + path, {
+    ...options, headers:{Accept:'application/json',...options.headers}
+  });
+  let data;
+  try { data = await response.json(); } catch { data = {}; }
+  if (!response.ok) throw Object.assign(new Error(data.error || 'serviceUnavailable'),{status:response.status,code:data.code,error:data.error,field:data.field});
+  return data;
+}
+
+function brand() {
+  return `<a class="brand" href="${esc(url())}"><img width="36" height="36" src="/mark.svg" alt=""><span>${t('brand')}</span></a>`;
+}
+export const options = (entries, selected) => entries.map(([key,label]) => `<option value="${esc(key)}"${key === selected ? ' selected' : ''}>${esc(label)}</option>`).join('');
+export const languageOptions = Object.keys(locales).map(code => [code,languageName(code)]);
+const typeOptions = () => [['',txt('all')],...Object.entries(families).map(([key,value]) => [key,txt(value)])];
+function searchbox(page='search', query='', type='') {
+  return `<form class="searchbox" data-search="${page}">
+    ${icon('search',23)}<label class="visually-hidden" for="query">${t('search')}</label>
+    <input id="query" name="q" type="search" placeholder="${t('searchPlaceholder')}" value="${esc(query)}">
+    <label class="visually-hidden" for="search-type">${t('recordType')}</label>
+    <select id="search-type" name="type">${options(typeOptions(),type)}</select>
+    <button type="submit" class="button">${t('search')}</button>
+  </form>`;
+}
+
+function chrome(page) {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = locales[lang]?.dir || 'ltr';
+  document.querySelector('.skip').textContent = txt('skip');
+  el('header').innerHTML = `<div class="wrap masthead">${brand()}
+    <nav aria-label="${t('browseRecords')}">${nav.map(([p,key])=>link(p,key,p===page?'aria-current="page"':'')).join('')}</nav>
+    <div class="header-actions">
+      <label class="language">${icon('globe')}<span class="visually-hidden">${t('interfaceLanguage')}</span><select id="interface-language">${options(languageOptions,lang)}</select></label>
+      <a class="icon-link" href="${esc(url('account'))}" aria-label="${t('account')}" title="${t('account')}">${icon('user')}</a>
+      ${link('submit','submit','class="button"')}
+    </div>
+  </div>`;
+  el('footer').innerHTML = `<div class="wrap footer-inner">${brand()}<p>${t('free')}</p><div class="footer-links">
+    ${link('about','about')} ${link('subjects','subjects')} ${link('institutions','institutions')} ${link('account','account')}
+    ${state.session.user?.isModerator ? link('review','review') : ''}
+  </div></div>`;
+}
+
+export const breadcrumb = (label) => `<nav class="breadcrumb" aria-label="${t('details')}">${link('home','home')}<span aria-hidden="true">/</span><span>${esc(label)}</span></nav>`;
+export function layout(title, body, description = '') {
+  return `<section class="wrap page">${breadcrumb(title)}<h1>${esc(title)}</h1>${description ? `<p class="page-description">${esc(description)}</p>` : ''}${body}</section>`;
+}
+const empty = (key = 'noResults') => `<p class="empty">${t(key)}</p>`;
+function exampleNotice() {
+  return `<div class="notice"><span>${t(state.examples ? 'demoNote' : 'examplesEmpty')}</span><button type="button" class="text-button" data-examples>${t(state.examples ? 'hideExamples' : 'showExamples')}</button></div>`;
+}
+function withExamples(records) {
+  return records.some(r=>r.example) || (!records.length && !state.records.length) ? exampleNotice() : '';
+}
+const sortDates = (a,b) => (a.startDate || '9999').localeCompare(b.startDate || '9999');
+function dateBucket(r) {
+  let today;
+  try {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:r.timezone || 'UTC'}).formatToParts(new Date()).map((p)=>[p.type,p.value]));
+    today = parts.year + '-' + parts.month + '-' + parts.day;
+  } catch { today = new Date().toISOString().slice(0,10); }
+  if (r.eventStatus === 'held' || (r.endDate || r.startDate || '').slice(0,10) < today) return 'past';
+  if ((r.startDate || '').slice(0,10) <= today && !['postponed','cancelled'].includes(r.eventStatus)) return 'ongoing';
+  return 'upcoming';
+}
+function tag(key) { return `<span class="kind">${t(key)}</span>`; }
+function exampleTag(r) { return r.example ? `<span class="tag">${t('example')}</span>` : ''; }
+function sourceTag(r) { return r.directory ? `<span class="tag source-tag">${t('organizerListing')}</span>` : exampleTag(r); }
+function aboutTitle(r) {
+  const meta = selectedMetadata(r);
+  return `<a href="${esc(recordUrl(r.id))}" lang="${esc(meta.titleLang || meta.lang)}" dir="auto">${esc(meta.title || txt('details'))}</a>`;
+}
+function eventCard(r) {
+  const location = [r.city,countryName(countryFor(r)) || r.country].filter(Boolean).map(esc).join(', ');
+  return `<article class="event-card">
+    <div class="card-top">${tag(recordKind(r))}${sourceTag(r)}</div>
+    <p class="card-date">${icon('calendar',16)} <bdi>${esc(eventDate(r))}</bdi></p>
+    <h3>${aboutTitle(r)}</h3>
+    <p class="card-meta">${[location,r.mode ? t(r.mode) : ''].filter(Boolean).join(' · ')}</p>
+    ${r.institution ? `<p class="card-meta" dir="auto">${esc(r.institution)}</p>` : ''}
+  </article>`;
+}
+function itemRow(r, deadline=false) {
+  const info = deadline ? day(r.deadline) : r.type === 'event' ? eventDate(r) : [r.authors,r.institution,r.year].filter(Boolean).join(' · ');
+  return `<article class="item-row">
+    <span class="row-icon">${icon(r.type === 'thesis' ? 'cap' : r.type === 'event' ? 'calendar' : 'file')}</span>
+    <div>${tag(recordKind(r))} ${sourceTag(r)}<h3>${aboutTitle(r)}</h3><p dir="auto">${esc(info)}${r.language ? ' · ' + esc(languageName(r.language)) : ''}</p></div>
+  </article>`;
+}
+function subjectMini(codes) {
+  return `<ul class="subject-list">${codes.map(code=>state.index.get(code)).filter(Boolean).map(s=>`<li><a href="${esc(url('subjects',{subject:s.code}))}"><bdi class="code">${s.code}</bdi>${esc(subjectLabel(s))}</a></li>`).join('')}</ul>`;
+}
+function heading(title,page,params) {
+  return `<div class="section-heading"><h2>${t(title)}</h2>${link(page,'viewAll','class="text-link"',params)}</div>`;
+}
+function homePage() {
+  const records = activeRecords();
+  const dated = records.filter(r=>r.type==='event' && dateBucket(r)==='upcoming' && !['cancelled','postponed'].includes(r.eventStatus)).sort(sortDates);
+  const countries = new Set();
+  const featured = dated.filter(r=>{
+    const country=r.countryCode || r.country || r.id;
+    if (countries.has(country)) return false;
+    countries.add(country);
+    return true;
+  }).slice(0,3);
+  const upcoming = [...featured,...dated.filter(r=>!featured.includes(r)).slice(0,3-featured.length)].sort(sortDates);
+  const research = records.filter(r=>r.type !== 'event').slice(0,3);
+  const deadlines = records.filter(r=>r.type==='event' && r.deadline && r.deadline >= new Date().toISOString().slice(0,10)).sort((a,b)=>a.deadline.localeCompare(b.deadline)).slice(0,3);
+  return `<section class="hero"><div class="wrap hero-grid">
+    <div class="hero-copy"><h1>${t('heroTitle')}</h1><p>${t('heroText')}</p><div class="hero-actions">
+    ${link('submit','postEvent','class="button"',{type:'event'})} ${link('submit','deposit','class="button secondary"',{research:1})}</div></div>
+    <div class="hero-image"><img src="/images/field-notes.jpg" alt="" width="1200" height="800" fetchpriority="high"></div>
+  </div></section>
+  <div class="wrap search-dock">${searchbox()}</div>
+  <div class="wrap">
+    <section class="section">
+      ${heading('upcoming','events')}
+      ${upcoming.some(event=>event.directory) ? `<p class="page-description">${t('organizerDirectory')}</p>` : ''}
+      ${withExamples(upcoming)}
+      ${state.failed ? empty('serviceUnavailable') : ''}
+      ${upcoming.length ? `<div class="event-grid">${upcoming.map(eventCard).join('')}</div>` : empty()}
+    </section>
+    <section class="section lower-home"><section>${heading('latestResearch','search',{type:'research'})}${research.length ? research.map(r=>itemRow(r)).join('') : empty()}</section>
+    <section>${heading('featuredSubjects','subjects')}${subjectMini(['31','41','42','46','39'])}</section></section>
+    ${deadlines.length ? `<section class="section">${heading('deadlines','events',{period:'deadlines'})}${deadlines.map(r=>itemRow(r,true)).join('')}</section>` : ''}
+  </div>`;
+}
+export function subjectMatches(s, query) {
+  return [s.code,s.label,...Object.values(s.translations || {})].some(v=>normalize(v).includes(query));
+}
+function tokenizeSearch(r) {
+  const country = countryFor(r);
+  const subjects = (r.subjectCodes || []).flatMap((code)=>{
+    const names = [];
+    for (let size = 2; size <= code.length; size += 2) {
+      const item = state.index.get(code.slice(0,size));
+      if (item) names.push(item.code, item.label, ...Object.values(item.translations || {}));
+    }
+    return names;
+  });
+  return normalize([r.title,r.description,r.keywords,r.doi,r.authors,r.institution,r.country,r.city,
+    country?.iso,countryName(country),country?.name,countryCodes(country),...subjects,
+    ...Object.values(r.metadata || {}).flatMap(m=>[m?.title,m?.description,m?.keywords])].filter(Boolean).join(' '));
+}
+function catalogScope(params) {
+  const country = params.get('country') || '';
+  if (state.countryIndex.has(country)) return country;
+  const query = (params.get('q') || '').trim();
+  if (/^[A-Z]{2}$/.test(query) && state.countryIndex.has(query)) return query;
+  const dial = dialNumber(params.get('dial')) || dialNumber(query);
+  return dial ? state.countries.filter(c=>c.callingCodes.includes(dial)).map(c=>c.iso).sort().join(',') : '';
+}
+function recordList(page, params, scope) {
+  const scoped = state.countryPages.get(scope);
+  const all = scoped ? mergeCatalog(scoped.records) : activeRecords();
+  const fixed = {events:'event',proceedings:'material',theses:'thesis'}[page];
+  const type = fixed || params.get('type') || '';
+  const period = params.get('period') || 'upcoming';
+  const query = params.get('q') || '';
+  const filters = params;
+  const group = (r) => (r.subjectCodes || []).some(code=>code.startsWith(filters.get('subject')));
+  const normalizedQuery = normalize(query.trim());
+  const dial = dialNumber(normalizedQuery);
+  const dialFilter = dialNumber(filters.get('dial'));
+  const exactCountry = /^[A-Z]{2}$/.test(query.trim()) && state.countryIndex.has(query.trim()) ? query.trim() : '';
+  const words = dial || exactCountry ? [] : normalizedQuery.split(/\s+/).filter(Boolean);
+  const hasLanguage = (r) => [r.language,...(r.languages || [])].includes(filters.get('el'));
+  const matches = all.filter(r => {
+    if (type && (type==='research' ? r.type==='event' : type!==r.type)) return false;
+    if (page==='events' && (period==='deadlines' ? !r.deadline || r.deadline < new Date().toISOString().slice(0,10) : dateBucket(r)!==period)) return false;
+    if (filters.get('subject') && !group(r)) return false;
+    if (filters.get('el') && (r.type!=='event' || !hasLanguage(r))) return false;
+    if (filters.get('dl') && (r.type==='event' || r.language!==filters.get('dl'))) return false;
+    if (filters.get('ml') && (r.metadataLanguage !== filters.get('ml') && !r.metadata?.[filters.get('ml')])) return false;
+    const country = countryFor(r);
+    if (filters.get('country') && (country?.iso || r.country) !== filters.get('country')) return false;
+    if (exactCountry && country?.iso !== exactCountry) return false;
+    if (dial && !country?.callingCodes.includes(dial)) return false;
+    if (dialFilter && !country?.callingCodes.includes(dialFilter)) return false;
+    for (const [param,field] of Object.entries({mode:'mode',kind:null,inst:'institution'})) {
+      if (filters.get(param) && filters.get(param) !== (field ? r[field] : recordKind(r))) return false;
+    }
+    if (filters.get('from') && (r.startDate || String(r.year || '') + '-01-01') < filters.get('from')) return false;
+    if (filters.get('to') && (r.startDate || String(r.year || '') + '-01-01') > filters.get('to')) return false;
+    if (words.length) {
+      const haystack = tokenizeSearch(r);
+      if (!words.every(word=>haystack.includes(word))) return false;
+    }
+    return true;
+  });
+  if (page==='events') matches.sort(period==='past' ? (a,b)=>sortDates(b,a) : sortDates);
+
+  const menu = (key, name, entries) => `<label class="field">${t(key)}<select name="${name}">${options([['',txt('all')],...entries],params.get(name) || '')}</select></label>`;
+  const countries = sortedCountries().map(country=>[country.iso,[countryName(country),countryCodes(country)].filter(Boolean).join(' · ')]);
+  const kinds = (types[type] || Object.values(types).flat()).map(k=>[k,txt(k)]);
+  const languagesInRecords = [...new Set([...Object.keys(locales),...all.flatMap(r=>[r.language,r.metadataLanguage,...(r.languages || []),...Object.keys(r.metadata || {})])].filter(Boolean))].map(code=>[code,languageName(code)]);
+  const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${['upcoming','ongoing','past','deadlines'].map(p=>link(page,p,'class="tab"'+(p===period?' aria-current="page"':''),{...Object.fromEntries(params),period:p,lang:lang==='en'?'':lang,view:''})).join('')}</nav>` : '';
+  const selectedSubject = state.index.get(params.get('subject'));
+  const controls = `<form data-filter="${page}"><div class="filter-grid">
+    ${menu('recordType','kind',kinds)}${menu('country','country',countries)}
+    <label class="field">${t('dialingCode')}<input name="dial" type="search" inputmode="tel" dir="ltr" placeholder="+91" value="${esc(params.get('dial') || '')}"></label>
+    ${type==='event' || !type ? menu('eventLanguage','el',languagesInRecords) : ''}
+    ${type!=='event' ? menu('documentLanguage','dl',languagesInRecords) : ''}
+    ${menu('metadataLanguage','ml',languagesInRecords)}
+    ${type==='event' || !type ? menu('format','mode',['online','inPerson','hybrid'].map(v=>[v,txt(v)])) : ''}
+    ${type==='event' ? `<label class="field">${t('startDate')}<input name="from" type="date" value="${esc(params.get('from') || '')}"></label><label class="field">${t('endDate')}<input name="to" type="date" value="${esc(params.get('to') || '')}"></label>` : ''}
+    </div><div class="form-actions"><button class="button secondary">${t('filter')}</button>${link(page,'clear','class="text-link"',{type:page==='search'?type:'',q:query})}
+    ${selectedSubject ? `<a class="tag" href="${esc(url('subjects',{subject:selectedSubject.code}))}">${esc(subjectLabel(selectedSubject))}</a>` : ''}
+  </div></form>`;
+  const title = fixed ? txt(page) : txt('browseRecords');
+  return layout(title, searchbox(page,query,type) + tabs + controls + `<div class="section">
+    <p class="muted">${new Intl.NumberFormat(lang).format(matches.length)} ${t('results')}</p>
+    ${matches.some(event=>event.directory) ? `<p class="page-description">${t('organizerDirectory')}</p>` : ''}
+    ${withExamples(matches)}${state.failed ? empty('serviceUnavailable') : ''}
+    ${matches.length ? matches.map(r=>itemRow(r,period==='deadlines')).join('') : empty()}
+    ${(scoped ? scoped.next : state.next) ? `<button class="button secondary" type="button" data-next data-scope="${esc(scope)}">${t('next')}</button>` : ''}
+  </div>`);
+}
+function subjectsPage(params) {
+  const item = state.index.get(params.get('subject'));
+  const title = item ? subjectLabel(item) : txt('subjects');
+  const children = state.subjects.filter(s=>s.parent === (item?.code || null));
+  return layout(title, `${item ? `<p><bdi class="code">${item.code}</bdi> ${t('classification')}${item.translations?.[lang] ? `<br>${t('officialLabel')} · <span lang="en">${esc(item.label)}</span> · ${t('platformTranslation')}` : ''}</p>
+  <nav class="tabs">${[['events','upcoming',{period:'upcoming'}],['events','past',{period:'past'}],['proceedings','proceedings',{}],['theses','theses',{}]].map(([p,k,v])=>link(p,k,'class="tab"',{subject:item.code,...v})).join('')}</nav>
+  ${item.parent ? `<p><a class="text-link" href="${esc(url('subjects',{subject:item.parent}))}">${esc(subjectLabel(state.index.get(item.parent)))}</a></p>` : ''}` : `<p><a class="text-link" href="/data/subjects-license.txt" target="_blank" rel="noopener">${t('classification')}</a></p>`}
+  <label class="field subject-filter">${t('subjectSearch')}<input id="subject-query" type="search" autocomplete="off"></label>
+  <div id="subject-results">${subjectTree(children)}</div>`, item ? '' : txt('browseText'));
+}
+function subjectTree(records) {
+  return records.length ? `<ul class="tree">${records.map(s=>`<li><a href="${esc(url('subjects',{subject:s.code}))}"><bdi class="code">${s.code}</bdi> ${esc(subjectLabel(s))}</a></li>`).join('')}</ul>` : empty();
+}
+function institutionsPage(params) {
+  const query = params.get('country') || '';
+  const rows = new Map();
+  for (const r of activeRecords()) if (r.institution && (!query || query===r.country)) rows.set(r.institution,r.country);
+  const countries = [...new Set(activeRecords().map(r=>r.country).filter(Boolean))].sort().map(v=>[v,v]);
+  return layout(txt('institutions'),`<form data-institution>
+      <label class="field subject-filter">${t('country')}<select name="country">${options([['',txt('all')],...countries],query)}</select></label>
+      <button class="button secondary">${t('filter')}</button></form>
+      <div class="section">${withExamples(activeRecords())}${rows.size ? `<ul class="subject-list">${[...rows].sort().map(([name,country])=>`<li><a href="${esc(url('search',{inst:name}))}"><strong dir="auto">${esc(name)}</strong> <span class="muted" dir="auto">${esc(country || '')}</span></a></li>`).join('')}</ul>` : empty('noInstitutions')}</div>`);
+}
+function countryTree(rows) {
+  return rows.length ? `<ul class="tree country-tree">${rows.map(country=>`<li>
+    <a href="${esc(url('search',{country:country.iso}))}"><bdi class="code">${esc(country.iso)}</bdi> <span>${esc(countryName(country))}</span> <bdi class="muted">${esc(countryCodes(country))}</bdi></a>
+  </li>`).join('')}</ul>` : empty();
+}
+function countriesPage() {
+  return layout(txt('countries'),`<label class="field subject-filter">${t('dialingSearch')}<input id="country-query" type="search" autocomplete="off"></label>
+    <div id="country-results">${countryTree(sortedCountries())}</div><p><a class="text-link" href="/data/countries-license.txt">${t('dialingCode')}</a></p>`,txt('dialingHelp'));
+}
+
+function relatedRows(r) {
+  return activeRecords().filter(other=>other.id !== r.id && (other.relatedId === r.id || other.id === r.relatedId));
+}
+const doiHref = (doi) => doi ? 'https://doi.org/' + doi.split('/').map(encodeURIComponent).join('/') : '';
+function citations(r,meta) {
+  return [r.authors || r.institution,r.year || r.startDate?.slice(0,4),meta.title,r.doi ? doiHref(r.doi) : null].filter(Boolean).join('. ');
+}
+function detailsView(r, params, preview = false) {
+  const selection = params.get('metadata') || lang;
+  const originalLanguage = r.metadataLanguage || r.language || 'en';
+  const meta = selectedMetadata(r,selection);
+  const metadataLanguages = [...new Set([originalLanguage,...Object.keys(r.metadata || {})])];
+  const country = countryFor(r);
+  const facts = [
+    [r.type==='event'?'eventLanguage':'documentLanguage', [...new Set([r.language,...(r.languages || [])])].filter(Boolean).map(languageName).map(esc).join(' · ')],
+    ['institution',esc(r.institution)],['authors',esc(r.authors)],['date',esc(r.type==='event'?eventDate(r) : r.year)],['timezone',esc(r.timezone)],['venue',esc(r.venue)],['city',esc(r.city)],
+    ['country',country ? `<a href="${esc(url('search',{country:country.iso}))}">${esc(countryName(country))}</a>` : esc(r.country)],['dialingCode',esc(countryCodes(country))],['format',r.mode ? t(r.mode) : ''],['eventStatus',r.eventStatus ? t(r.eventStatus) : ''],['deadline',esc(day(r.deadline))],
+    ['startTime',esc(r.startTime)],['endTime',esc(r.endTime)],['paperDeadline',esc(day(r.paperDeadline))],['registrationDeadline',esc(day(r.registrationDeadline))],['attendanceFee',esc(r.attendanceFee)],
+    ['degree',esc(r.degree)],['department',esc(r.department)],['supervisors',esc(r.supervisors)],['access',r.access ? t(r.access) : ''],['embargoUntil',esc(day(r.embargoUntil))],['license',esc(r.license)],['rightsHolder',esc(r.rightsHolder)],
+    ['publicContact',esc(r.publicContact)],['doi',r.doi && !preview ? `<a href="${esc(doiHref(r.doi))}" rel="noopener"><bdi>${esc(r.doi)}</bdi></a>` : '']
+  ];
+  const files = r.files || [];
+  const related = relatedRows(r);
+  const summary = r.status==='withdrawn' ? `<p class="empty">${t('withdrawn')} · <bdi>${esc(r.description)}</bdi></p>
+  ${r.doi ? `<p><a href="${esc(doiHref(r.doi))}"><bdi>${esc(r.doi)}</bdi></a></p>` : ''}` : `<div class="record-content">
+    <article class="record-pane">${metadataLanguages.length > 1 && !preview ? `<nav class="tabs" aria-label="${t('metadataLanguage')}">${metadataLanguages.map(code=>`<a class="tab"${meta.lang===code?' aria-current="page"':''} href="${esc(url('record',{record:r.id,metadata:code}))}">${esc(languageName(code))}</a>`).join('')}</nav>` : ''}
+      <h2>${t(r.type==='event'?'description':'abstract')}</h2>
+      ${meta.status ? `<p class="muted">${t('translationStatus')} · ${t(meta.status)}</p>` : ''}
+      <p lang="${esc(meta.descriptionLang || meta.lang)}" dir="auto">${esc(meta.description)}</p>
+      ${meta.keywords ? `<p lang="${esc(meta.lang)}" dir="auto"><strong>${t('keywords')}</strong> · ${esc(meta.keywords)}</p>` : ''}
+      ${r.programme || r.speakers ? `<p dir="auto">${esc([r.programme,r.speakers].filter(Boolean).join('\n'))}</p>` : ''}
+      ${!preview ? `${r.directory ? '' : `<h2>${t('files')}</h2>${files.length ? `<ul>${files.filter(f=>f.url === '/api/files/' + f.id || validLink(f.url)).map(f=>`<li><a href="${esc(f.url)}" dir="auto">${esc(f.name)}</a></li>`).join('')}</ul>` : `<p>${t('noFiles')}</p>`}`}
+      <div class="pills">${[['registrationUrl',r.registrationUrl],[r.directory?'organizerPage':'sourceUrl',r.sourceUrl || r.externalUrl],['programmeUrl',r.programmeUrl]].filter(([,v])=>validLink(v)).map(([k,v])=>`<a class="button secondary" href="${esc(validLink(v))}" rel="noopener noreferrer">${t(k)}</a>`).join('')}</div>
+      ${r.doi || r.example ? `<h2>${t('citation')}</h2><p id="citation" dir="auto">${esc(citations(r,meta))}</p><button type="button" data-citation class="button secondary">${t('copyCitation')}</button>` : ''}` : ''}
+    </article>
+    <aside class="record-pane"><h2>${t('details')}</h2><dl class="metadata">${facts.filter(([,v])=>v).map(([k,v])=>`<div><dt>${t(k)}</dt><dd dir="auto">${v}</dd></div>`).join('')}</dl>
+    ${subjectMini(r.subjectCodes || [])}${!preview ? `<h2>${t('related')}</h2>${related.length ? related.map(item=>itemRow(item)).join('') : empty('noRelated')}` : ''}</aside>
+  </div>`;
+  return `<section class="wrap page">${breadcrumb(txt(families[r.type] || 'details'))}<div class="pills">${tag(recordKind(r))}${sourceTag(r)}${r.status==='withdrawn'?tag('withdrawn'):''}</div>
+    <h1 lang="${esc(meta.titleLang || meta.lang)}" dir="auto">${esc(meta.title || txt('title'))}</h1>
+    ${r.example ? `<p class="notice">${t('demoNote')}</p>` : r.directory ? `<p class="notice">${t('organizerDirectory')}</p>` : ''}${summary}</section>`;
+}
+function aboutPage() {
+  return layout(txt('about'), `<div class="help"><p>${t('aboutText')}</p>
+    <details open><summary>${t('doi')}</summary><p>${t('doiPolicy')}</p></details>
+    <details><summary>${t('classification')}</summary><p>${t('browseText')}</p><p><a class="text-link" href="/data/subjects-license.txt">${t('classification')}</a></p></details>
+    <details><summary>${t('startSubmission')}</summary><p>${t('submissionIntro')}</p><p>${link('submit','submit','class="button"')}</p></details>
+    <details><summary>${t('examples')}</summary><p>${t('sampleContent')}</p></details>
+  </div>`);
+}
+const exactRecord = (id) => examples.find(r=>r.id===id) || state.directory.find(r=>r.id===id) || state.records.find(r=>r.id===id) || state.resolution.get(id);
+export function announce(key) { el('announcement').textContent = txt(key); }
+export function refresh() { return render(); }
+export function go(destination, focus=true) {
+  const target = new URL(destination,location.href);
+  if (primary && protectedViews.has(target.searchParams.get('view'))) {
+    window.location.assign(new URL(target.pathname + target.search + target.hash,primary));
+    return;
+  }
+  if (target.pathname + target.search !== returnPath()) history.pushState(null,'',target);
+  return render(focus);
+}
+export function showPreview(r) {
+  el('main').innerHTML = detailsView(r,new URLSearchParams(),true) + `<div class="wrap section"><button class="button secondary" type="button" data-edit>${t('edit')}</button></div>`;
+  window.scrollTo(0,0);
+  el('main').focus();
+}
+async function render(focus=false) {
+  const {page,params} = current();
+  const seq = ++state.nav;
+  const requestedLang = params.get('lang') || (params.has('lang') ? 'en' : preference(keyLanguage));
+  lang = Object.hasOwn(locales,requestedLang) ? requestedLang : 'en';
+  chrome(page);
+  document.title = txt('brand') + (page === 'home' ? '' : ' · ' + txt(nav.find(([p])=>p===page)?.[1] || (page==='record'?'details':page)));
+  let html;
+  if (page === 'record') {
+    const id = params.get('record');
+    if (!exactRecord(id) && !state.resolution.has(id) && !id.startsWith('directory-')) {
+      el('main').innerHTML = layout(txt('details'), '<p aria-busy="true"></p>');
+      try { const data = await api('records/' + encodeURIComponent(id)); state.resolution.set(id,data.record || null); }
+      catch { state.resolution.set(id,null); }
+    }
+    if (seq!==state.nav) return;
+    const r = exactRecord(id);
+    html = r?.status==='publication_pending' ? layout(txt('details'),empty('publication_pending')) : r ? detailsView(r,params) : layout(txt('details'),empty('recordMissing'));
+    if (r?.title) document.title = selectedMetadata(r,params.get('metadata') || lang).title + ' · ' + txt('brand');
+  } else if (page === 'home') html = homePage();
+  else if (page === 'subjects') html = subjectsPage(params);
+  else if (page === 'countries') html = countriesPage();
+  else if (page === 'institutions') html = institutionsPage(params);
+  else if (['events','proceedings','theses','search'].includes(page)) {
+    const scope = catalogScope(params);
+    if (scope && !state.countryPages.has(scope)) {
+      try { await fetchCatalog(scope); } catch { /* The current page remains available on a network error. */ }
+    }
+    html = recordList(page,params,scope);
+  }
+  else if (page === 'submit') html = await submissionPage(params);
+  else if (page === 'account' || page === 'review') html = await dashboardPage(page);
+  else html = aboutPage();
+  if (seq!==state.nav) return;
+  el('main').innerHTML = html;
+  bindWorkflow(page,params);
+  if (focus) {
+    window.scrollTo(0,0);
+    el('main').focus({preventScroll:true});
+  }
+}
+document.addEventListener('click',async (e)=>{
+  const button = e.target.closest('button');
+  if (button?.matches('[data-examples]')) {
+    state.examples = !state.examples;
+    preference(keyExamples,state.examples?'show':'hide');
+    await refresh();
+    document.querySelector('[data-examples]')?.focus();
+    return;
+  }
+  if (button?.matches('[data-citation]')) {
+    try { await navigator.clipboard.writeText(el('citation').textContent); announce('copied'); button.textContent=txt('copied'); }
+    catch { const range=document.createRange(); range.selectNodeContents(el('citation')); const selection=getSelection(); selection.removeAllRanges(); selection.addRange(range); }
+    return;
+  }
+  if (button?.matches('[data-next]')) {
+    button.disabled=true;
+    try {
+      const scope=button.dataset.scope;
+      if (scope && state.countryPages.has(scope)) await fetchCatalog(scope,state.countryPages.get(scope).next);
+      else await fetchRecords(state.next);
+      await refresh();
+    } catch { button.disabled=false; announce('serviceUnavailable'); }
+    return;
+  }
+  if (button?.matches('[data-edit]')) { await refresh(); return; }
+  const anchor = e.target.closest('a');
+  if (!anchor || anchor.target || anchor.download || e.button!==0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const destination = new URL(anchor.href,location.href);
+  if (destination.origin !== location.origin || destination.pathname !== '/' || destination.hash) return;
+  e.preventDefault();
+  await go(destination);
+});
+document.addEventListener('change',(e)=>{
+  if (e.target.id!=='interface-language') return;
+  const destination=new URL(location.href);
+  preference(keyLanguage,e.target.value);
+  destination.searchParams.set('lang',e.target.value);
+  if (destination.searchParams.has('record')) destination.searchParams.delete('metadata');
+  go(destination,false).then(()=>el('interface-language')?.focus());
+});
+document.addEventListener('input',(e)=>{
+  if (e.target.id==='country-query') {
+    const word = normalize(e.target.value.trim());
+    const dialing = dialNumber(word);
+    const rows = sortedCountries().filter(country=>!word || (dialing ? country.callingCodes.includes(dialing) : [country.name,countryName(country),country.iso].some(label=>normalize(label).includes(word))));
+    el('country-results').innerHTML=countryTree(rows);
+  }
+  if (e.target.id!=='subject-query') return;
+  const query = normalize(e.target.value.trim());
+  const parent = current().params.get('subject');
+  const rows = query ? state.subjects.filter(s=>subjectMatches(s,query)).slice(0,80) : state.subjects.filter(s=>s.parent===(parent || null));
+  el('subject-results').innerHTML=subjectTree(rows);
+});
+document.addEventListener('submit',(e)=>{
+  const form = e.target;
+  const inputs = new FormData(form);
+  if (form.dataset.search) { e.preventDefault(); go(url('search',Object.fromEntries(inputs))); }
+  if (form.dataset.filter) {
+    e.preventDefault();
+    const existing=Object.fromEntries(current().params);
+    delete existing.view; delete existing.lang;
+    go(url(form.dataset.filter,{...existing,...Object.fromEntries(inputs)}));
+  }
+  if (form.hasAttribute('data-institution')) { e.preventDefault(); go(url('institutions',Object.fromEntries(inputs))); }
+});
+window.addEventListener('popstate',()=>render());
+async function fetchRecords(cursor) {
+  const data = await api('records' + (cursor ? '?cursor=' + encodeURIComponent(cursor) : ''));
+  const records = data.records || [];
+  state.records = cursor ? [...state.records,...records] : records;
+  state.next = data.next || null;
+}
+async function fetchCatalog(scope,cursor) {
+  const params = new URLSearchParams({country:scope});
+  if (cursor) params.set('cursor',cursor);
+  const data = await api('records?' + params);
+  state.countryPages.set(scope,{records:[...(cursor?state.countryPages.get(scope).records:[]),...(data.records || [])],next:data.next || null});
+}
+async function fetchDirectory() {
+  const results = await Promise.allSettled(['events-directory','events-feed'].map(name=>fetch('/data/'+name+'.json').then(response=>{
+    if (!response.ok) throw new Error(name);
+    return response.json();
+  })));
+  const seen = new Set();
+  for (const result of results) {
+    if (result.status!=='fulfilled') continue;
+    const entries = Array.isArray(result.value) ? result.value : result.value.events;
+    for (const item of entries || []) {
+      const key=eventIdentity(item);
+      if (item.directory===true && item.id?.startsWith('directory-') && validLink(item.sourceUrl) && !seen.has(key)) {
+        seen.add(key);
+        state.directory.push(item);
+      }
+    }
+  }
+}
+const [subjects, session, records, countries] = await Promise.allSettled([
+  fetch('/data/subjects.json').then(r=>{if (!r.ok) throw new Error('subjects'); return r.json();}),
+  api('session'),
+  fetchRecords(),
+  fetch('/data/countries.json').then(r=>{if (!r.ok) throw new Error('countries'); return r.json();}),
+  fetchDirectory()
+]);
+if (subjects.status==='fulfilled') {
+  state.subjects=subjects.value;
+  state.index=new Map(state.subjects.map(item=>[item.code,item]));
+}
+if (session.status==='fulfilled') state.session=session.value;
+if (countries.status==='fulfilled') {
+  state.countries=countries.value;
+  state.countryIndex=new Map(state.countries.map(item=>[item.iso,item]));
+}
+state.failed=records.status==='rejected';
+if ((state.records.length || state.directory.length) && !preference(keyExamples)) state.examples=false;
+await refresh();

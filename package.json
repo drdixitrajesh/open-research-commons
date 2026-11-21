@@ -1,0 +1,13 @@
+{
+  "name": "open-research-commons",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:cloudflare": "node scripts/build.mjs --cloudflare",
+    "preview": "node scripts/preview.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

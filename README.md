@@ -1,0 +1,24 @@
+# Open Research Commons
+
+A multilingual repository for academic events, the materials they produce, and postgraduate research. Use the site to search published metadata by title, contributor, subject, country, international dialing code, language, or DOI. New submissions go through review. Every published record requires a verified or newly registered DOI.
+
+## Run and build
+
+Use Node.js 22 or later and pnpm.
+
+- `pnpm install`
+- `pnpm preview` to browse the interface and clearly marked examples on localhost. The static preview has no sign-in, submission, or upload service.
+- `pnpm build` to generate `dist/server/index.js`, a Cloudflare Worker bundle ready for Sites packaging.
+
+The hosted application uses Sites sign-in, D1, and R2. [Backend configuration](BACKEND.md) covers migrations, moderator access, and real DOI registration. The catalog is empty until approved records are published. Illustrative records have no registered DOIs.
+
+[Cloudflare deployment](README-CLOUDFLARE.md) describes the public catalog mirror and its shared records and contributor workflows.
+
+## Data and media
+
+- [ANZSRC source and license](dist/data/subjects-license.txt). The official English classification is complete. Platform-provided subject translations cover all divisions and selected groups and fields. Other subject labels use the official English text.
+- [Country and dialing-code data sources](dist/data/countries-license.txt). Country names display in the selected interface language when supported by the browser. Shared calling codes can match multiple ISO regions.
+- The upcoming-events directory links to official organizer notices. Each listing carries its official source URL. Run `node scripts/refresh-event-directory.mjs` to refresh the Stanford, MIT, and CERN feed snapshot, then rebuild and deploy. The curated listings are maintained in `dist/data/events-directory.json`.
+- The decorative photograph `dist/images/field-notes.jpg` was generated with the built-in OpenAI image generator for this website. The brief was an overhead editorial photograph of a scientific field notebook, botanical sketches, and a skeleton leaf, with a cobalt and parchment palette.
+
+Submission changes appear in the account dashboard. Email notifications and language-based assignment of moderator queues are outside this build. New DOI registration needs a public landing URL and the operator's production DataCite account.

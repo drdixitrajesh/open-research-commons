@@ -1,0 +1,14 @@
+ANZSRC 2020 Fields of Research
+
+Based on Australian Bureau of Statistics data. This work includes Stats NZ’s data, which Stats NZ licenses for reuse under the Creative Commons Attribution 4.0 International licence.
+
+Australian Bureau of Statistics (2020), “ANZSRC 2020 FoR – structure, definitions and explanatory notes,” Table 3, revised 24 October 2025, accessed 20 November 2026.
+https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/2020
+
+© Commonwealth of Australia 2025
+© Crown Copyright New Zealand 2025
+Licence https://creativecommons.org/licenses/by/4.0/
+ABS copyright https://www.abs.gov.au/website-privacy-copyright-and-disclaimer
+Stats NZ copyright https://www.stats.govt.nz/about-us/copyright/
+
+This JSON extract includes the codes, English labels, and parent relationships for all 23 divisions, 213 groups, and 1,967 fields. Division labels use sentence case. Open Research Commons added independent display translations for all divisions and selected groups and fields. The English label remains available in every record.

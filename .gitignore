@@ -1,0 +1,8 @@
+node_modules/
+dist/server/
+dist/cloudflare/
+dist/.openai/
+.impeccable/review/
+.wrangler/
+.env
+.dev.vars

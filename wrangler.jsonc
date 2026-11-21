@@ -1,0 +1,10 @@
+{
+  "$schema": "https://developers.cloudflare.com/workers/wrangler/configuration-schema.json",
+  "name": "open-research-commons",
+  "main": "dist/cloudflare/index.js",
+  "compatibility_date": "2025-10-01",
+  "workers_dev": true,
+  "build": {
+    "command": "pnpm build:cloudflare"
+  }
+}
