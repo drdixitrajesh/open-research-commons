@@ -1,7 +1,7 @@
 import { locales, messages } from './i18n.js';
 import { buildCatalogIndex } from './catalog-search.js';
 import { groupedSubjects, subjectFields } from './catalog-subjects.js';
-import { callDeadline, countEvents, eventDateAt, eventFacets, eventPeriod, eventPeriods, indexEvents,
+import { callDeadline, countEvents, eventFacets, eventPeriods, indexEvents,
   languageKeys, languageSelection, matchesLanguage, notSpecified, recordLanguageTags } from './event-filters.js';
 import { examples } from './examples.js';
 import { submissionPage, dashboardPage, bindWorkflow } from './workflow.js';
@@ -206,9 +206,6 @@ function withExamples(records) {
   return records.some(r=>r.example) || (!records.length && !state.records.length) ? exampleNotice() : '';
 }
 const sortDates = (a,b) => (a.startDate || '9999').localeCompare(b.startDate || '9999');
-function dateBucket(r) {
-  return eventPeriod(r, eventDateAt(r.timezone));
-}
 function tag(key) { return `<span class="kind">${t(key)}</span>`; }
 function exampleTag(r) { return r.example ? `<span class="tag">${t('example')}</span>` : ''; }
 function sourceTag(r) { return r.directory ? `<span class="tag source-tag">${t('organizerListing')}</span>` : exampleTag(r); }
@@ -239,9 +236,34 @@ function subjectMini(codes) {
 function heading(title,page,params) {
   return `<div class="section-heading"><h2>${t(title)}</h2>${link(page,'viewAll','class="text-link"',params)}</div>`;
 }
+function homeGuide() {
+  const guideLink = (page,label,params) => link(page,label,'class="text-link"',params);
+  return `<section class="section home-guide" aria-labelledby="home-guide-heading">
+    <h2 id="home-guide-heading">${t('homeGuideTitle')}</h2>
+    <p class="page-description">${t('homeGuideIntro')}</p>
+    <div class="home-guide-grid">
+      <section>
+        <h3>${t('homeGuideEventsTitle')}</h3>
+        <p>${t('homeGuideEventsText')}</p>
+        <div class="home-guide-links">${guideLink('events','upcoming')} ${guideLink('events','deadlines',{period:'deadlines'})}</div>
+      </section>
+      <section>
+        <h3>${t('homeGuideResearchTitle')}</h3>
+        <p>${t('homeGuideResearchText')}</p>
+        <div class="home-guide-links">${guideLink('proceedings','proceedings')} ${guideLink('theses','theses')} ${guideLink('subjects','subjects')}</div>
+      </section>
+      <section>
+        <h3>${t('homeGuideSubmitTitle')}</h3>
+        <p>${t('homeGuideSubmitText')}</p>
+        <div class="home-guide-links">${guideLink('submit','startSubmission')}</div>
+      </section>
+    </div>
+  </section>`;
+}
 function homePage() {
   const records = activeRecords();
-  const dated = records.filter(r=>r.type==='event' && dateBucket(r)==='upcoming').sort(sortDates);
+  const events = indexEvents(records.filter(r=>r.type==='event'), r=>countryFor(r)?.iso);
+  const dated = events.filter(row=>row.period==='upcoming').map(row=>row.record).sort(sortDates);
   const countries = new Set();
   const featured = dated.filter(r=>{
     const country=r.countryCode || r.country || r.id;
@@ -251,7 +273,8 @@ function homePage() {
   }).slice(0,3);
   const upcoming = [...featured,...dated.filter(r=>!featured.includes(r)).slice(0,3-featured.length)].sort(sortDates);
   const research = records.filter(r=>r.type !== 'event').slice(0,3);
-  const deadlines = records.filter(r=>r.type==='event' && r.deadline && r.deadline >= new Date().toISOString().slice(0,10)).sort((a,b)=>a.deadline.localeCompare(b.deadline)).slice(0,3);
+  const deadlines = events.filter(row=>row.openCall).map(row=>row.record)
+    .sort((a,b)=>callDeadline(a).localeCompare(callDeadline(b))).slice(0,3);
   return `<section class="hero"><div class="wrap hero-grid">
     <div class="hero-copy"><h1>${t('heroTitle')}</h1><p>${t('heroText')}</p><div class="hero-actions">
     ${link('submit','postEvent','class="button"',{type:'event'})} ${link('submit','deposit','class="button secondary"',{research:1})}</div></div>
@@ -266,6 +289,7 @@ function homePage() {
       ${state.failed ? empty('serviceUnavailable') : ''}
       ${upcoming.length ? `<div class="event-grid">${upcoming.map(eventCard).join('')}</div>` : empty()}
     </section>
+    ${homeGuide()}
     <section class="section lower-home"><section>${heading('latestResearch','search',{type:'research'})}${research.length ? research.map(r=>itemRow(r)).join('') : empty()}</section>
     <section>${heading('featuredSubjects','subjects')}${subjectMini(['31','41','42','46','39'])}</section></section>
     ${deadlines.length ? `<section class="section">${heading('deadlines','events',{period:'deadlines'})}${deadlines.map(r=>itemRow(r,true)).join('')}</section>` : ''}
@@ -518,7 +542,7 @@ function detailsView(r, params, preview = false) {
     ['metadataLanguage',metadataLanguages.map(languageName).map(esc).join(' · ')],
     ['institution',esc(r.institution)],['authors',esc(r.authors)],['date',esc(r.type==='event'?eventDate(r) : r.year)],['releaseDate',r.type!=='event' ? esc(day(r.releaseDate)) : ''],['timezone',esc(r.timezone)],['venue',esc(r.venue)],['city',esc(r.city)],
     ['country',country ? `<a href="${esc(url('search',{country:country.iso}))}">${esc(countryName(country))}</a>` : esc(r.country)],['dialingCode',esc(countryCodes(country))],['format',r.mode ? t(r.mode) : ''],['eventStatus',r.type==='event' && r.eventStatus ? t(r.eventStatus) : ''],['deadline',esc(day(r.deadline))],
-    ['startTime',esc(r.startTime)],['endTime',esc(r.endTime)],['paperDeadline',esc(day(r.paperDeadline))],['registrationDeadline',esc(day(r.registrationDeadline))],['attendanceFee',esc(r.attendanceFee)],
+    ['startTime',esc(r.startTime)],['endTime',esc(r.endTime)],['callOpens',esc(day(r.callOpens))],['paperDeadline',esc(day(r.paperDeadline))],['registrationDeadline',esc(day(r.registrationDeadline))],['attendanceFee',esc(r.attendanceFee)],
     ['degree',esc(r.degree)],['department',esc(r.department)],['supervisors',esc(r.supervisors)],['access',r.access ? t(r.access) : ''],['embargoUntil',esc(day(r.embargoUntil))],['license',esc(r.license)],['rightsHolder',esc(r.rightsHolder)],
     ['publicContact',esc(r.publicContact)],['doi',r.doi && !preview ? `<a href="${esc(doiHref(r.doi))}" rel="noopener"><bdi>${esc(r.doi)}</bdi></a>` : '']
   ];

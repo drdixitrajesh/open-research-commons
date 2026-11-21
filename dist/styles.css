@@ -94,6 +94,12 @@ p { max-inline-size: 72ch; }
 .card-meta { margin: .1rem 0 0; font-size: .88rem; color: var(--muted); }
 .lower-home { display: grid; grid-template-columns: 1.45fr 1fr; gap: 3.4rem; }
 .lower-home section { min-width: 0; }
+.home-guide > .page-description { margin-bottom: 1.6rem; }
+.home-guide-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.7rem; }
+.home-guide-grid > section { min-width: 0; border-block-start: 1px solid var(--line); padding-block-start: 1rem; }
+.home-guide-grid h3 { margin-bottom: .45rem; }
+.home-guide-grid p { margin-bottom: .8rem; }
+.home-guide-links { display: flex; flex-wrap: wrap; gap: .35rem .8rem; }
 .item-row { border-top: 1px solid var(--line); padding: .92rem 0; display: grid; grid-template-columns: auto 1fr; gap: .85rem; align-items: start; }
 .item-row h3 { margin: .15rem 0 .23rem; font-size: 1.07rem; }
 .item-row p { margin: .1rem 0 0; font-size: .9rem; color: var(--muted); }
@@ -189,6 +195,7 @@ label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 7
   .searchbox select { flex: 1; max-inline-size: 100%; border-inline-start: 0; }
   .searchbox .button { min-width: 5.3rem; }
   .event-grid, .lower-home, .record-content { grid-template-columns: 1fr; gap: .9rem; }
+  .home-guide-grid { grid-template-columns: 1fr; gap: 1.2rem; }
   .lower-home { gap: 2rem; }
   .section { padding-block: 2.45rem; }
   .filter-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }

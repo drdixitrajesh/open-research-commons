@@ -69,6 +69,7 @@ export function indexEvents(records, countryCode, now = new Date()) {
     if (!daysByZone.has(zone)) daysByZone.set(zone, eventDateAt(zone, now));
     const today = daysByZone.get(zone);
     const start = isoDay(record.startDate);
+    const opens = isoDay(record.callOpens);
     const deadline = isoDay(callDeadline(record));
     const period = eventPeriod(record, today);
     const subjects = (record.subjectCodes || []).flatMap(code => {
@@ -78,7 +79,8 @@ export function indexEvents(records, countryCode, now = new Date()) {
     });
     return {
       record, period, start, end: isoDay(record.endDate) || start,
-      openCall: record.callForPapers !== false && period !== 'past' && !inactiveStatuses.includes(record.eventStatus) && deadline >= today,
+      openCall: record.callForPapers !== false && period !== 'past' && !inactiveStatuses.includes(record.eventStatus)
+        && opens <= today && deadline >= today,
       values: {
         kind: facetValues([record.eventType]),
         subject: facetValues(subjects),
