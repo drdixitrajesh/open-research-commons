@@ -346,8 +346,7 @@ function recordList(page, params, scope) {
   const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${['upcoming','ongoing','past','deadlines'].map(p=>link(page,p,'class="tab"'+(p===period?' aria-current="page"':''),{...Object.fromEntries(params),period:p,lang:lang==='en'?'':lang,view:''})).join('')}</nav>` : '';
   const selectedSubject = state.index.get(params.get('subject'));
   const controls = `<form data-filter="${page}"><div class="filter-grid">
-    ${menu('recordType','kind',kinds)}${menu('country','country',countries)}
-    ${type==='event' ? subjectMenu(selectedSubject) : `<label class="field">${t('dialingCode')}<input name="dial" type="search" inputmode="tel" dir="ltr" placeholder="+91" value="${esc(params.get('dial') || '')}"></label>`}
+    ${menu('recordType','kind',kinds)}${menu('country','country',countries)}${subjectMenu(selectedSubject)}
     ${type==='event' || !type ? menu('eventLanguage','el',languagesInRecords) : ''}
     ${type!=='event' ? menu('documentLanguage','dl',languagesInRecords) : ''}
     ${menu('metadataLanguage','ml',languagesInRecords)}
@@ -564,15 +563,13 @@ document.addEventListener('submit',(e)=>{
   const inputs = new FormData(form);
   if (form.dataset.search) {
     e.preventDefault();
-    const query = Object.fromEntries(inputs);
-    if (query.type==='event') query.subject = current().params.get('subject');
-    go(url('search',query));
+    go(url('search',{...Object.fromEntries(inputs),subject:current().params.get('subject')}));
   }
   if (form.dataset.filter) {
     e.preventDefault();
     const existing=Object.fromEntries(current().params);
     delete existing.view; delete existing.lang;
-    if (inputs.has('subject')) delete existing.dial;
+    delete existing.dial;
     go(url(form.dataset.filter,{...existing,...Object.fromEntries(inputs)}));
   }
   if (form.hasAttribute('data-institution')) { e.preventDefault(); go(url('institutions',Object.fromEntries(inputs))); }
