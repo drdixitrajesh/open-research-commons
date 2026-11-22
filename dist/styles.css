@@ -163,6 +163,23 @@ label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 7
 .field textarea { min-height: 106px; resize: vertical; }
 .field small, .muted { color: var(--muted); font-weight: 400; }
 .full { grid-column: 1/-1; }
+.event-calendar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .9rem 1.1rem;
+  margin-block: 1.15rem 1.35rem;
+  padding: .85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--white);
+}
+.event-calendar dl { display: grid; gap: .4rem; margin: 0; min-inline-size: 0; }
+.event-calendar dl > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: .12rem .65rem; }
+.event-calendar dt { color: var(--muted); font-size: .86rem; }
+.event-calendar dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.event-calendar .button { min-block-size: 44px; max-inline-size: 100%; text-align: center; }
 .record-content { display: grid; grid-template-columns: 1.5fr 1fr; align-items: start; gap: 2rem; }
 .record-pane { border-block-start: 1px solid var(--line); padding-block-start: 1.1rem; min-width: 0; }
 .record-pane h2 { font-size: 2.25rem; }
@@ -351,6 +368,8 @@ label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 7
   .subject-browse { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
+  .event-calendar dl > div { display: grid; gap: .12rem; }
+  .event-calendar .button { flex: 1 0 100%; }
   .filter-grid, .form-grid { grid-template-columns: minmax(0, 1fr); }
   .event-periods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .events-rss { grid-column: 1 / -1; justify-self: end; }

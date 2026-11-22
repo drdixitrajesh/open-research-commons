@@ -13,6 +13,7 @@ const assets = new Map([
   ['/catalog-search.js','text/javascript; charset=utf-8'],
   ['/catalog-subjects.js','text/javascript; charset=utf-8'],
   ['/event-filters.js','text/javascript; charset=utf-8'],
+  ['/event-calendar.js','text/javascript; charset=utf-8'],
   ['/i18n.js','text/javascript; charset=utf-8'], ['/examples.js','text/javascript; charset=utf-8'],
   ['/mark.svg','image/svg+xml'], ['/images/field-notes.jpg','image/jpeg'],
   ['/data/subjects.json','application/json; charset=utf-8'], ['/data/subjects-license.txt','text/plain; charset=utf-8'],
@@ -33,6 +34,7 @@ ${cloudflare
   ? "import { cloudflareResponse } from './scripts/cloudflare-entry.js';"
   : "import { handleApi } from './src/worker.js';\nimport { eventsRssResponse, readPublishedEvents } from './src/events-rss.js';"}
 import { loadOrganizerSnapshot } from './src/organizer-snapshot.js';
+${cloudflare ? '' : "import { calendarRecordId, eventCalendarResponse } from './src/event-calendar-response.js';\nimport { examples } from './dist/examples.js';"}
 const assetMap = new Map(${JSON.stringify(entries)});
 const clientPaths = new Set(${JSON.stringify(clientAssets.map(([path]) => path))});
 const clientPrefix = ${JSON.stringify(clientPrefix)};
@@ -77,6 +79,23 @@ export default {
     const url = new URL(request.url);
     ${cloudflare ? "const response = await cloudflareResponse(request, env); if (response) return response;" : "if (url.pathname.startsWith('/api/')) return handleApi(request,env,subjects);"}
     if (!['GET','HEAD'].includes(request.method)) return new Response(null,{status:405,headers:{Allow:'GET, HEAD'}});
+    ${cloudflare ? '' : `
+    const calendarId = calendarRecordId(url.pathname);
+    if (calendarId) {
+      let record;
+      if (calendarId.startsWith('example-')) {
+        record = examples.find(item => item.id === calendarId);
+      } else if (calendarId.startsWith('directory-')) {
+        record = curatedEvents.find(item => item.id === calendarId)
+          || (await loadOrganizerSnapshot(packagedOrganizerEvents)).find(item => item.id === calendarId);
+      } else {
+        const apiUrl = new URL('/api/records/' + calendarId,url);
+        const result = await handleApi(new Request(apiUrl),env,subjects);
+        if (result.status === 200) record = (await result.json()).record;
+        if (result.status >= 500) return new Response(null,{status:503,headers:{'Cache-Control':'no-store'}});
+      }
+      return eventCalendarResponse(request,record);
+    }`}
     if (url.pathname === '/data/events-feed.json') {
       const data = request.method === 'HEAD' ? null : JSON.stringify(await loadOrganizerSnapshot(packagedOrganizerEvents));
       return new Response(data, { headers: {

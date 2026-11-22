@@ -1,5 +1,6 @@
 import { locales, messages } from './i18n.js';
 import { buildCatalogIndex } from './catalog-search.js';
+import { eventSchedule } from './event-calendar.js';
 import { groupedSubjects, subjectFields } from './catalog-subjects.js';
 import { callDeadline, countEvents, eventFacets, eventPeriods, indexEvents,
   languageKeys, languageSelection, matchesLanguage, notSpecified, recordLanguageTags } from './event-filters.js';
@@ -795,6 +796,36 @@ function classificationLinks(scheme, codes, preview) {
     return preview ? label : `<a href="${esc(url('subjects',schemeParams(scheme,item.code)))}">${label}</a>`;
   }).join(' · ');
 }
+function calendarTime(schedule, timeZone) {
+  const format = new Intl.DateTimeFormat(locales[lang]?.locale || lang, {
+    year:'numeric', month:'short', day:'numeric', hour:'numeric', minute:'2-digit',
+    timeZoneName:'short', timeZone,
+  });
+  if (schedule.start && schedule.end) {
+    const range = typeof format.formatRange === 'function'
+      ? format.formatRange(schedule.start,schedule.end)
+      : format.format(schedule.start) + ' – ' + format.format(schedule.end);
+    return `<bdi>${esc(range)}</bdi>`;
+  }
+  const time = `<bdi>${esc(format.format(schedule.start || schedule.end))}</bdi>`;
+  return schedule.start ? time : `${t('endTime')} · ${time}`;
+}
+function eventCalendarPanel(record, metadataLanguage) {
+  const schedule = eventSchedule(record);
+  if (!schedule) return '';
+  const query = new URLSearchParams();
+  if (metadataLanguage) query.set('metadata',metadataLanguage);
+  const href = '/calendar/' + encodeURIComponent(record.id) + '.ics' + (query.size ? '?' + query : '');
+  const timed = schedule.start || schedule.end;
+  const date = schedule.start ? '' : `<div><dt>${t('date')}</dt><dd>${esc(eventDate(schedule))}</dd></div>`;
+  return `<div class="event-calendar">
+    <dl>${date}${timed ? `<div><dt>${t('calendarOrganizerTime')}</dt><dd>${calendarTime(schedule,record.timezone.trim())}</dd></div>
+      <div><dt>${t('calendarLocalTime')}</dt><dd>${calendarTime(schedule)}</dd></div>` : ''}</dl>
+    <a class="button secondary" href="${esc(href)}" download type="text/calendar">
+      ${icon('calendar')} ${t('addToCalendar')}
+    </a>
+  </div>`;
+}
 function detailsView(r, params, preview = false) {
   const selection = params.get('metadata') || lang;
   const originalLanguage = r.metadataLanguage || r.language;
@@ -830,7 +861,8 @@ function detailsView(r, params, preview = false) {
   </div>`;
   return `<section class="wrap page">${breadcrumb(txt(families[r.type] || 'details'))}<div class="pills">${tag(recordKind(r))}${sourceTag(r)}${r.status==='withdrawn'?tag('withdrawn'):''}</div>
     <h1 lang="${esc(meta.titleLang || meta.lang)}" dir="auto">${esc(meta.title || txt('title'))}</h1>
-    ${r.example ? `<p class="notice">${t('demoNote')}</p>` : r.directory ? `<p class="notice">${t('organizerDirectory')}</p>` : ''}${summary}</section>`;
+    ${r.example ? `<p class="notice">${t('demoNote')}</p>` : r.directory ? `<p class="notice">${t('organizerDirectory')}</p>` : ''}
+    ${r.type==='event' && !preview ? eventCalendarPanel(r,meta.titleLang || meta.lang) : ''}${summary}</section>`;
 }
 function aboutPage() {
   return layout(txt('about'), `<div class="help"><p>${t('aboutText')}</p>

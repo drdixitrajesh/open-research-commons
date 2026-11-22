@@ -1,3 +1,5 @@
+import { calendarRecordId } from '../src/event-calendar-response.js';
+
 const primaryOrigin = 'https://open-research-commons.softinator.chatgpt.site';
 const ownerViews = new Set(['submit', 'account', 'review']);
 const authPaths = new Set([
@@ -106,6 +108,9 @@ export async function cloudflareResponse(request) {
     });
   }
 
+  if (calendarRecordId(url.pathname)) {
+    return readable ? proxyPublic(request, url, false, true) : methodDenied(request);
+  }
   if (url.pathname !== '/api' && !url.pathname.startsWith('/api/')) return null;
   const isCatalog = url.pathname === '/api/records';
   const detail = detailPath.exec(url.pathname);

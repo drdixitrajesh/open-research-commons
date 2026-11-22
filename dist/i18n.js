@@ -219,6 +219,9 @@ authors|Authors or contributors|लेखक या योगदानकर्�
 institution|Organizer or institution|आयोजक या संस्थान|Organizador o institución|Organisateur ou établissement|الجهة المنظمة أو المؤسسة|Organizador ou instituição|组织者或机构|Организатор или учреждение
 city|City|शहर|Ciudad|Ville|المدينة|Cidade|城市|Город
 venue|Venue|आयोजन स्थल|Lugar de celebración|Lieu de l’événement|مكان انعقاد الفعالية|Local do evento|活动场地|Место проведения
+addToCalendar|Add to calendar|कैलेंडर में जोड़ें|Añadir al calendario|Ajouter au calendrier|أضف إلى التقويم|Adicionar ao calendário|添加到日历|Добавить в календарь
+calendarOrganizerTime|Organizer time|आयोजक का समय|Hora del organizador|Heure de l’organisateur|توقيت المنظّم|Horário do organizador|主办方时间|Время организатора
+calendarLocalTime|Your local time|आपका स्थानीय समय|Tu hora local|Votre heure locale|توقيتك المحلي|Seu horário local|你的本地时间|Ваше местное время
 timezone|Event time zone|आयोजन का समय क्षेत्र|Zona horaria del evento|Fuseau horaire de l’événement|المنطقة الزمنية للفعالية|Fuso horário do evento|活动时区|Часовой пояс мероприятия
 startDate|Start date|आरंभ तिथि|Fecha de inicio|Date de début|تاريخ البدء|Data de início|开始日期|Дата начала
 endDate|End date|समाप्ति तिथि|Fecha de finalización|Date de fin|تاريخ الانتهاء|Data de término|结束日期|Дата окончания
