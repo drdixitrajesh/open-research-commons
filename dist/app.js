@@ -460,7 +460,7 @@ function subjectMenus(selected, eventFilter, filterCode) {
   return `<label class="field"><span>${t('topic')} <small dir="ltr">(ANZSRC 2020 FoR)</small></span><select name="subject">${options(entries,selectedDivision)}</select></label>
     <div class="research-stream-filter">
       <label class="field">${t('researchStreamSearch')}<input type="search" data-stream-search aria-controls="research-stream-options" autocomplete="off"${disabled}></label>
-      <label class="field">${t('subSubject')}<select id="research-stream-options" name="subsubject"${disabled}>${choices.html}</select></label>
+      <label class="field"><span>${t('subSubject')} <small dir="ltr">(FoR)</small></span><select id="research-stream-options" name="subsubject"${disabled}>${choices.html}</select></label>
       <p class="research-stream-status" role="status" hidden>${t('noResults')}</p>
     </div>`;
 }
