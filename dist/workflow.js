@@ -77,33 +77,26 @@ function choiceValue(select) {
 function section(key,content) {
   return `<fieldset class="form-section"><legend>${t(key)}</legend><div class="form-grid">${content}</div></fieldset>`;
 }
-function links(type,record) {
-  if (type==='event') return field(record,'sourceUrl',{kind:'url'}) + field(record,'registrationUrl',{kind:'url'})
-    + field(record,'programmeUrl',{kind:'url'}) + field(record,'verificationNotes',{kind:'textarea',wide:true});
+function links(record) {
   const licenses = [...standardLicenses.map(value=>[value,value]),['All rights reserved',txt('rightsReserved')]];
   return field(record,'sourceUrl',{kind:'url',wide:true}) + choiceField(record,'license',{choices:licenses,required:true}) + field(record,'rightsHolder')
     + field(record,'access',{choices:keyOptions(['open','embargoed','external']),required:true}) + field(record,'embargoUntil',{kind:'date'});
 }
 function metadataFields(record) {
-  return field(record,'title',{required:true,wide:true}) + field(record,'description',{kind:'textarea',required:true,wide:true})
-    + field(record,'keywords',{wide:true});
+  return field(record,'title',{required:true,wide:true}) + field(record,'description',{kind:'textarea',required:true,wide:true});
 }
 function countryField(r, required) {
   const code=r.countryCode || state.countries.find(c=>normalize(c.name)===normalize(r.country))?.iso;
   return field({...r,countryCode:code},'countryCode',{label:'country',choices:countryOptions(),required});
 }
+function recordTypeField(type,r) {
+  return field(r,type+'Type',{labelText:catalogKindLabel(type),choices:keyOptions(types[type]),required:true,wide:true});
+}
 function searchableFields(type,r) {
-  const isEvent = type==='event';
-  const common = field(r,type+'Type',{labelText:catalogKindLabel(type),choices:keyOptions(types[type]),required:true,wide:true})
-    + subjectPicker(r)
+  return recordTypeField(type,r) + subjectPicker(r)
     + countryField(r,type==='thesis')
-    + languageField(r,'language',{label:isEvent?'eventLanguage':'documentLanguage',required:true})
+    + languageField(r,'language',{label:'documentLanguage',required:true})
     + languageField(r,'metadataLanguage',{help:'metadataLanguageHelp'});
-  return common + (isEvent
-    ? field(r,'mode',{label:'format',choices:keyOptions(participationModes),required:true})
-      + field(r,'startDate',{kind:'date',required:true}) + field(r,'endDate',{kind:'date',required:true})
-      + extraLanguages(r)
-    : '');
 }
 const associated = (value) => {
   const raw = String(value || '').trim();
@@ -111,15 +104,6 @@ const associated = (value) => {
 };
 function typeFields(type,r) {
   const roles = labeledOptions(roleChoices);
-  if (type==='event') return field(r,'eventStatus',{choices:keyOptions(eventStates),required:true})
-    + field(r,'institution',{required:true})
-    + field(r,'startTime',{kind:'time'}) + field(r,'endTime',{kind:'time'})
-    + choiceField(r,'timezone',{choices:zones.map(zone=>[zone,zone.replaceAll('_',' ')]),placeholder:'Asia/Kolkata'})
-    + field(r,'city') + field(r,'venue',{wide:true})
-    + field(r,'deadline',{kind:'date'}) + field(r,'paperDeadline',{kind:'date'}) + field(r,'registrationDeadline',{kind:'date'})
-    + choiceField(r,'attendanceFee',{choices:labeledOptions(feeChoices)}) + field(r,'publicContact')
-    + choiceField(r,'contributorRole',{choices:roles})
-    + field(r,'speakers',{kind:'textarea',wide:true}) + field(r,'programme',{kind:'textarea',wide:true});
   const shared = field(r,'authors',{required:true,wide:true}) + choiceField(r,'contributorRole',{choices:roles})
     + field(r,'institution',{required:type==='thesis'})
     + field(r,'year',{kind:'number',help:'yearOrReleaseDate'}) + field(r,'releaseDate',{kind:'date'});
@@ -141,17 +125,18 @@ function selectedSubjects(codes) {
   }).join('');
 }
 function subjectPicker(r) {
-  return `<div class="full subject-picker" role="group" aria-label="${t('classification')}">
-    <p class="subject-summary">${t('primarySubject')} * · ${t('additionalSubjects')}</p>
-    <div class="subject-browse">
+  const browse = `<div class="subject-browse">
       <label class="field">${t('topic')}<select id="subject-group">${options([['',txt('choose')]],'')}${subjectGroupOptions()}</select></label>
       <label class="field">${t('subSubject')}<select id="subject-field" disabled>${subSubjectOptions('','',txt('choose'))}</select></label>
     </div>
-    <button class="button secondary subject-add" type="button" id="subject-add" disabled>${t('addSubject')}</button>
-    <label for="subject-picker-input" class="field">${t('subjectSearch')}
+    <button class="button secondary subject-add" type="button" id="subject-add" disabled>${t('addSubject')}</button>`;
+  const search = `<label for="subject-picker-input" class="field">${t('subjectSearch')}
       <input type="search" id="subject-picker-input" autocomplete="off"></label>
     <div id="subject-options" class="subject-options"></div>
-    <div id="picked-subjects" class="pills" aria-live="polite">${selectedSubjects(r.subjectCodes)}</div>
+    <div id="picked-subjects" class="pills" aria-live="polite">${selectedSubjects(r.subjectCodes)}</div>`;
+  return `<div class="full subject-picker" role="group" aria-label="${t('classification')}">
+    <p class="subject-summary">${t('primarySubject')} * · ${t('additionalSubjects')}</p>
+    ${r.type==='event' ? search + disclosure('subjects',browse) : browse + search}
   </div>`;
 }
 function translationRows(entries, offset=0) {
@@ -180,11 +165,57 @@ function choices(params) {
   const entries = params.get('research') ? ['material','thesis','event'] : ['event','material','thesis'];
   const labels = {event:'eventHelp',material:'materialsHelp',thesis:'thesisHelp'};
   return layout(txt('startSubmission'),`<div class="event-grid">${entries.map(type=>`<article class="event-card">
-    <h3>${link('submit',typeHeading(type),'',{type})}</h3><p>${t(labels[type])}</p>
+    <h3>${link('submit',type==='event'?'eventSubmitCard':typeHeading(type),'',{type})}</h3><p>${t(labels[type])}</p>
   </article>`).join('')}</div>`,txt('submissionIntro'));
 }
 function blank(type) {
   return {type,access:'open',eventStatus:'scheduled',subjectCodes:[],metadata:{},files:[],attachmentIds:[]};
+}
+function disclosure(key,content,{wide=false,open=false}={}) {
+  return `<details class="event-disclosure${wide?' full':''}"${open?' open':''}><summary>${t(key)}</summary>
+    <div class="event-disclosure-content">${content}</div></details>`;
+}
+function translationFields(r) {
+  return `<div class="full" id="translation-list">${translationRows(draft.translations ?? Object.entries(r.metadata || {}))}</div>
+    <div class="full"><button class="button secondary" type="button" data-add-translation>${icon('plus',15)}${t('addTranslation')}</button></div>`;
+}
+function authorityField(r) {
+  return `<label class="full"><input name="authority" type="checkbox"${r.authority?' checked':''} required> ${t('authority')} *</label>`;
+}
+const needsEventLocation = mode => mode==='inPerson' || mode==='hybrid';
+function eventFields(r) {
+  const locationRequired = needsEventLocation(r.mode);
+  const location = `<div class="full" data-event-location><div class="form-grid">${countryField(r,locationRequired)}
+    ${field(r,'city',{required:locationRequired})}${field(r,'venue',{required:locationRequired,wide:true})}</div></div>`;
+  const schedule = field(r,'mode',{label:'format',choices:keyOptions(participationModes),required:true,wide:true})
+    + field(r,'startDate',{kind:'date',required:true}) + field(r,'endDate',{kind:'date',required:true})
+    + '<template data-event-location-main></template>' + (locationRequired ? location : '');
+  const verification = field(r,'sourceUrl',{kind:'url',wide:true,help:'eventVerificationHelp'})
+    + disclosure('eventVerificationExtras',`<div class="form-grid">${field(r,'verificationNotes',{kind:'textarea',wide:true})}${filePicker(r)}</div>`,
+      {wide:true,open:!r.sourceUrl && Boolean(r.verificationNotes || r.files?.length)});
+  const more = field({...r,eventStatus:r.eventStatus || 'scheduled'},'eventStatus',{choices:keyOptions(eventStates)})
+    + field(r,'startTime',{kind:'time'}) + field(r,'endTime',{kind:'time'})
+    + choiceField(r,'timezone',{choices:zones.map(zone=>[zone,zone.replaceAll('_',' ')]),placeholder:'Asia/Kolkata',help:'eventTimeZoneHelp'})
+    + '<template data-event-location-extra></template>' + (locationRequired ? '' : location)
+    + field(r,'deadline',{kind:'date'}) + field(r,'paperDeadline',{kind:'date'}) + field(r,'registrationDeadline',{kind:'date'})
+    + field(r,'registrationUrl',{kind:'url'}) + field(r,'programmeUrl',{kind:'url'})
+    + choiceField(r,'attendanceFee',{choices:labeledOptions(feeChoices)}) + field(r,'publicContact')
+    + choiceField(r,'contributorRole',{choices:labeledOptions(roleChoices)})
+    + field(r,'speakers',{kind:'textarea',wide:true}) + field(r,'programme',{kind:'textarea',wide:true})
+    + field(r,'keywords',{wide:true}) + languageField(r,'metadataLanguage',{help:'metadataLanguageHelp'}) + extraLanguages(r);
+  return section('eventBasics',recordTypeField('event',r) + metadataFields(r) + field(r,'institution',{required:true})
+      + languageField(r,'language',{label:'eventLanguage',required:true}) + subjectPicker(r))
+    + section('eventSchedule',schedule) + section('eventVerification',verification)
+    + disclosure('eventMoreDetails',`<div class="form-grid">${more}</div>`)
+    + disclosure('eventPublicationExtras',section('translations',translationFields(r))
+      + section('doi',`<p class="full">${t('doiPolicy')}</p>${field(r,'doi')}`))
+    + `<p>${authorityField(r)}</p>`;
+}
+function researchFields(r) {
+  return section('original',metadataFields(r) + field(r,'keywords',{wide:true}))
+    + section('searchableDetails',searchableFields(r.type,r)) + section('details',typeFields(r.type,r))
+    + section('translations',translationFields(r)) + section('files',filePicker(r)+links(r))
+    + section('doi',`<p class="full">${t('doiPolicy')}</p>${field(r,'doi')}${field(r,'translationOf')}${authorityField(r)}`);
 }
 export async function submissionPage(params) {
   const type = params.get('type');
@@ -212,13 +243,7 @@ export async function submissionPage(params) {
     ${state.session.user && !canWrite ? `<p class="empty">${t('serviceUnavailable')}</p>` : ''}
     ${note ? `<div class="notice"><span>${t('reviewNote')} · <bdi>${esc(note)}</bdi></span></div>` : ''}
     <form id="submission-form" novalidate>
-    ${section('original',metadataFields(r))}
-    ${section('searchableDetails',searchableFields(r.type,r))}
-    ${section('details',typeFields(r.type,r))}
-    ${section('translations',`<div class="full" id="translation-list">${translationRows(draft.translations ?? Object.entries(r.metadata || {}))}</div><div class="full"><button class="button secondary" type="button" data-add-translation>${icon('plus',15)}${t('addTranslation')}</button></div>`)}
-    ${section('files',filePicker(r)+links(r.type,r))}
-    ${section('doi',`<p class="full">${t('doiPolicy')}</p>${field(r,'doi')}${r.type!=='event'?field(r,'translationOf'):''}
-    <label class="full"><input name="authority" type="checkbox"${r.authority?' checked':''} required> ${t('authority')} *</label>`)}
+    ${r.type==='event' ? eventFields(r) : researchFields(r)}
     <output class="form-feedback" id="submission-feedback" role="alert"></output>
     ${!state.session.user ? `<p>${signIn({label:'signedOut',className:'text-link'})}</p>` : ''}
     <div class="form-actions"><button class="button secondary" name="action" value="draft"${canSave?'':' disabled'}>${t('saveDraft')}</button>
@@ -250,6 +275,10 @@ function canonicalLanguage(value) {
   try { return Intl.getCanonicalLocales(value)[0] || ''; }
   catch { return ''; }
 }
+function focusField(input) {
+  for (let parent = input?.closest?.('details'); parent; parent = parent.parentElement?.closest('details')) parent.open = true;
+  input?.focus?.();
+}
 function prepareSubmission(form) {
   const record = collect(form);
   draft.record = record;
@@ -270,7 +299,7 @@ function prepareSubmission(form) {
       const select = languageFields[index];
       const input = select.value===otherChoice
         ? select.closest('[data-choice-field]').querySelector('[data-custom-value]') : select;
-      input.focus();
+      focusField(input);
       return null;
     }
     translations.set(code,metadata);
@@ -312,16 +341,42 @@ function bindChoiceFields(form) {
     if (show) input.focus();
   });
 }
+function bindEventFields(form) {
+  const mainLocation = form.querySelector('[data-event-location-main]');
+  const extraLocation = form.querySelector('[data-event-location-extra]');
+  const location = form.querySelector('[data-event-location]');
+  const mode = form.elements.namedItem('mode');
+  const startDate = form.elements.namedItem('startDate');
+  const endDate = form.elements.namedItem('endDate');
+  let suggestedEndDate = '';
+  mode.addEventListener('change',()=>{
+    const required = needsEventLocation(mode.value);
+    (required ? mainLocation : extraLocation).after(location);
+    for (const input of location.querySelectorAll('select,input')) {
+      input.required = required;
+      input.labels[0].firstElementChild.textContent = txt(fields.get(input.name) || input.name) + (required ? ' *' : '');
+    }
+  });
+  endDate.addEventListener('change',()=>{ suggestedEndDate = ''; });
+  startDate.addEventListener('change',()=>{
+    if (endDate.value && endDate.value!==suggestedEndDate) return;
+    suggestedEndDate = startDate.value;
+    endDate.value = suggestedEndDate;
+    draft.record = collect(form);
+  });
+}
 function bindSubmission() {
   const form = document.getElementById('submission-form');
   if (!form || !draft) return;
   bindChoiceFields(form);
+  if (draft.record.type==='event') bindEventFields(form);
   const pick = form.querySelector('#subject-picker-input');
   const picked = form.querySelector('#picked-subjects');
   const candidates = form.querySelector('#subject-options');
   const group = form.querySelector('#subject-group');
   const field = form.querySelector('#subject-field');
   const add = form.querySelector('#subject-add');
+  const subjectInput = draft.record.type==='event' ? pick : group;
   const uploads = form.querySelector('#attachment');
   const attachments = form.querySelector('#attachment-list');
   const selection = () => field.value ? field : group;
@@ -442,7 +497,7 @@ function bindSubmission() {
     const action=e.submitter?.value || 'draft';
     if (action==='submit' && (!form.checkValidity() || !draft.record.subjectCodes.length)) {
       feedback(form,txt('required'));
-      (form.querySelector(':invalid') || group).focus();
+      focusField(form.querySelector('input:invalid, select:invalid, textarea:invalid') || subjectInput);
       return;
     }
     const buttons = form.querySelectorAll('button[name=action]');
@@ -460,10 +515,11 @@ function bindSubmission() {
       page?.insertAdjacentHTML('afterend',`<p class="notice" role="status">${t(key)}</p>`);
     } catch (error) {
       feedback(form,errors(error));
-      const invalidInput = error.field==='subjectCodes' ? group : form.elements.namedItem(error.field==='country' ? 'countryCode' : error.field);
+      const invalidInput = error.field==='subjectCodes' ? subjectInput : error.field==='attachmentIds' ? uploads
+        : form.elements.namedItem(error.field==='country' ? 'countryCode' : error.field);
       const target = invalidInput?.matches?.('[data-choice-select]') && invalidInput.value===otherChoice
         ? invalidInput.closest('[data-choice-field]').querySelector('[data-custom-value]') : invalidInput;
-      target?.focus?.();
+      focusField(target);
     } finally { buttons.forEach(b=>b.disabled=false); }
   });
 }

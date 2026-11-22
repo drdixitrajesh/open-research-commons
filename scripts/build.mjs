@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
+import { messages } from '../dist/i18n.js';
 
 const cloudflare = process.argv.includes('--cloudflare');
 const primary = 'https://open-research-commons.softinator.chatgpt.site';
@@ -51,11 +52,17 @@ function landing(url) {
     if (tag !== 'en') alt.searchParams.set('lang',tag);
     return '<link rel="alternate" hreflang="'+tag+'" href="'+pageEsc(alt.href)+'">';
   }).join('\\n') : '';
+  const siteName = !url.searchParams.has('view') && !url.searchParams.has('record')
+    ? '<script type="application/ld+json">' + JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'WebSite',
+        name: ${JSON.stringify(messages.en.brand)}, url: new URL('/', canonical).href
+      }) + '</script>\\n'
+    : '';
   if (code === 'en') canonical.searchParams.delete('lang');
   return originalPage
     .replace('<html lang="en">','<html lang="'+code+'" dir="'+(code==='ar'?'rtl':'ltr')+'">')
     ${cloudflare ? `.replace('</head>','<meta name="repository-primary" content="${primary}"></head>')` : ''}
-    .replace('</head>','<link rel="canonical" href="'+pageEsc(canonical.href)+'">\\n'+alts+'\\n</head>');
+    .replace('</head>','<link rel="canonical" href="'+pageEsc(canonical.href)+'">\\n'+siteName+alts+'\\n</head>');
 }
 export default {
   async fetch(request,env) {

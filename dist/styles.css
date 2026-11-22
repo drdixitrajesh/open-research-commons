@@ -38,9 +38,9 @@ p { max-inline-size: 72ch; }
 .site-header { background: var(--paper); border-bottom: 1px solid var(--line); }
 .masthead { display: flex; align-items: center; gap: 1.4rem; min-height: 78px; }
 .brand { display: inline-flex; align-items: center; gap: .67rem; color: var(--navy); text-decoration: none; min-width: max-content; }
-.brand img { width: 36px; height: 36px; }
-.brand span { display: block; font-size: 1rem; font-weight: 700; line-height: 1.14; letter-spacing: -.025em; max-inline-size: 9rem; }
-.masthead nav { display: flex; gap: clamp(.6rem, 1.5vw, 1.6rem); align-items: center; margin-inline: auto; }
+.brand img { flex: none; width: 36px; height: 36px; }
+.brand span { display: block; font-size: 1rem; font-weight: 700; line-height: 1.14; letter-spacing: -.025em; max-inline-size: 12rem; text-wrap: balance; overflow-wrap: anywhere; }
+.masthead nav { display: flex; flex-wrap: wrap; gap: .35rem clamp(.6rem, 1.5vw, 1.6rem); align-items: center; margin-inline: auto; }
 .masthead nav a { text-decoration: none; font-size: .86rem; white-space: nowrap; color: var(--ink); }
 .masthead nav a:hover, .masthead nav [aria-current=page] { color: var(--blue); text-decoration: underline; }
 .header-actions { display: flex; gap: .68rem; align-items: center; }
@@ -146,6 +146,12 @@ label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 7
 .form-section { margin-block: 1.5rem; border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.2rem 1.2rem; background: var(--white); }
 .form-section legend { font-size: 1.1rem; font-weight: 700; padding-inline: .44rem; }
 .form-panel .form-section .form-section { margin-block: .4rem; }
+.event-disclosure { margin-block: 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--white); }
+.event-disclosure.full { margin-block: 0; }
+.event-disclosure > summary { padding: .8rem 1rem; color: var(--blue-deep); font-weight: 700; cursor: pointer; }
+.event-disclosure-content { padding: 0 1rem 1rem; }
+.event-disclosure-content > :last-child { margin-block-end: 0; }
+.event-disclosure[open] > summary { margin-block-end: .35rem; }
 .form-actions { display: flex; flex-wrap: wrap; gap: .62rem; align-items: center; }
 .form-feedback { display: block; margin-block: .6rem; color: #8a2933; }
 .form-feedback:empty { display: none; }
@@ -175,7 +181,7 @@ label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 7
 .help summary { color: var(--blue-deep); font-weight: 700; cursor: pointer; }
 .empty { padding: 1.2rem; background: var(--fog); color: var(--muted); border-radius: 6px; }
 .loading { min-height: 62vh; padding-block: 4rem; }
-@media (max-width: 1220px) {
+@media (max-width: 1360px) {
   .masthead { flex-wrap: wrap; gap: .7rem; padding-block: .82rem .65rem; }
   .masthead nav { order: 3; flex-basis: 100%; margin-inline: 0; overflow-x: auto; padding: .15rem .15rem .5rem; }
   .header-actions { margin-inline-start: auto; }
