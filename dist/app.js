@@ -210,6 +210,14 @@ const sortDates = (a,b) => (a.startDate || '9999').localeCompare(b.startDate || 
 function tag(key) { return `<span class="kind">${t(key)}</span>`; }
 function exampleTag(r) { return r.example ? `<span class="tag">${t('example')}</span>` : ''; }
 function sourceTag(r) { return r.directory ? `<span class="tag source-tag">${t('organizerListing')}</span>` : exampleTag(r); }
+function eventSourceLink(record) {
+  if (record.type !== 'event' || record.example) return '';
+  const source = validLink(record.sourceUrl || record.externalUrl);
+  if (!source) return '';
+  const label = record.directory ? 'organizerPage' : 'eventSourcePage';
+  const title = selectedMetadata(record).title || record.title;
+  return `<a class="text-link event-source-link" href="${esc(source)}" rel="noopener noreferrer" aria-label="${t(label)} · ${esc(title)}">${t(label)}</a>`;
+}
 function aboutTitle(r) {
   const meta = selectedMetadata(r);
   return `<a href="${esc(recordUrl(r.id))}" lang="${esc(meta.titleLang || meta.lang)}" dir="auto">${esc(meta.title || txt('details'))}</a>`;
@@ -222,13 +230,14 @@ function eventCard(r) {
     <h3>${aboutTitle(r)}</h3>
     <p class="card-meta">${[location,r.mode ? t(r.mode) : ''].filter(Boolean).join(' · ')}</p>
     ${r.institution ? `<p class="card-meta" dir="auto">${esc(r.institution)}</p>` : ''}
+    ${eventSourceLink(r)}
   </article>`;
 }
 function itemRow(r, deadline=false) {
   const info = deadline ? day(callDeadline(r)) : r.type === 'event' ? eventDate(r) : [r.authors,r.institution,r.year || day(r.releaseDate)].filter(Boolean).join(' · ');
   return `<article class="item-row">
     <span class="row-icon">${icon(r.type === 'thesis' ? 'cap' : r.type === 'event' ? 'calendar' : 'file')}</span>
-    <div>${tag(recordKind(r))} ${sourceTag(r)}<h3>${aboutTitle(r)}</h3><p dir="auto">${esc(info)}${r.language ? ' · ' + esc(languageName(r.language)) : ''}</p></div>
+    <div>${tag(recordKind(r))} ${sourceTag(r)}<h3>${aboutTitle(r)}</h3><p dir="auto">${esc(info)}${r.language ? ' · ' + esc(languageName(r.language)) : ''}</p>${eventSourceLink(r)}</div>
   </article>`;
 }
 function subjectMini(codes) {
@@ -403,6 +412,29 @@ function bindCatalogFilters(form, eventIndex, period) {
   });
   if (eventIndex) updateCounts();
 }
+function organizerSources() {
+  const sources = [
+    ['Stanford University', [['sourceCalendar', 'https://events.stanford.edu/']]],
+    ['Massachusetts Institute of Technology (MIT)', [['sourceCalendar', 'https://calendar.mit.edu/']]],
+    ['CERN Indico', [
+      ['sourceConferencesCalendar', 'https://indico.cern.ch/category/6741/'],
+      ['sourceSeminarsCalendar', 'https://indico.cern.ch/category/6745/'],
+    ], 'sourceReferenceOnly'],
+    ['University of Central Florida', [
+      ['sourceSeminarsRss', 'https://events.ucf.edu/category/23/speakerlectureseminar/feed.rss'],
+      ['sourceWorkshopsRss', 'https://events.ucf.edu/category/29/workshopconference/feed.rss'],
+    ]],
+    ['Max Planck Institute for Solar System Research', [['sourceSeminarsRss', 'https://www.mps.mpg.de/news/seminars.rss']]],
+  ];
+  return `<details class="event-sources" id="event-sources">
+    <summary>${t('eventSources')}</summary>
+    <div><p>${t('eventSourcesNote')}</p><ul>${sources.map(([name, urls, note]) =>
+      `<li><strong dir="auto">${esc(name)}</strong><span>${urls.map(([key, href]) =>
+        `<a class="text-link" href="${esc(href)}" rel="noopener noreferrer" aria-label="${t(key)} · ${esc(name)}">${t(key)}</a>`).join('')}</span>${note ? `<small class="muted">${t(note)}</small>` : ''}</li>`
+    ).join('')}</ul></div>
+  </details>`;
+}
+
 function recordList(page, params, scope, loadFailed) {
   const scoped = state.countryPages.get(scope);
   const all = scoped ? mergeCatalog(scoped.records) : activeRecords();
@@ -483,7 +515,7 @@ function recordList(page, params, scope, loadFailed) {
   </div><output class="form-feedback" role="alert"></output></form>`;
   const title = fixed ? txt(page) : txt('browseRecords');
   const heading = page === 'events' ? catalogKindLabel('event') : title;
-  const html = layout(title, searchbox(page,query,type) + tabs + controls + `<div class="section">
+  const html = layout(title, searchbox(page,query,type) + tabs + (page === 'events' ? organizerSources() : '') + controls + `<div class="section">
     <p id="catalog-results" class="muted" tabindex="-1">${number.format(matches.length)} ${t('results')}</p>
     ${matches.some(event=>event.directory) ? `<p class="page-description">${t('organizerDirectory')}</p>` : ''}
     ${withExamples(matches)}${loadFailed ? empty('partialResults') : ''}
@@ -572,6 +604,8 @@ function detailsView(r, params, preview = false) {
 function aboutPage() {
   return layout(txt('about'), `<div class="help"><p>${t('aboutText')}</p>
     <details open><summary>${t('doi')}</summary><p>${t('doiPolicy')}</p></details>
+    <details id="account-privacy"><summary>${t('accountPrivacy')}</summary><p>${t('accountPrivacyNote')}</p>
+    ${state.session.emailAuth ? `<p>${t('accountEmailProvider')}</p><p>${t('loginMobilePrivacy')}</p>` : ''}</details>
     <details><summary>${t('classification')}</summary><p>${t('browseText')}</p><p><a class="text-link" href="/data/subjects-license.txt">${t('classification')}</a></p></details>
     <details><summary>${t('startSubmission')}</summary><p>${t('submissionIntro')}</p><p>${link('submit','submit','class="button"')}</p></details>
     <details><summary>${t('examples')}</summary><p>${t('sampleContent')}</p></details>

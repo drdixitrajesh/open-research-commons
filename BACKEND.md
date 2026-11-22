@@ -13,8 +13,13 @@ The Worker reads the ANZSRC Fields of Research code and official English label m
 | DATACITE_PUBLISHER | Repository or institution responsible for publishing deposits |
 | SITE_PUBLIC_URL | Canonical public HTTPS origin used for permanent DOI landing pages |
 | DATACITE_CONTACT_EMAIL | Optional operator contact included in DataCite request identification |
+| AUTH_SECRET | Random secret of at least 32 bytes for email codes and private mobile-number encryption |
+| AUTH_EMAIL_FROM | Sender address on a domain verified by Resend |
+| AUTH_RESEND_API_KEY | Resend sending-only key scoped to the verified sender domain |
 
 Configure production values in the hosting platform. Store credentials as secrets. The Worker reads authenticated identity from Sites dispatch headers. The identity provider must own and sanitize those headers at the ingress boundary. A local preview has no authenticated sessions without a trusted ingress integration.
+
+Apply the email-auth migration before enabling the three login settings. Existing contributors link their verified email while signed in to their prior account. The dashboard lets email users save, replace, or remove their optional mobile number. Email delivery uses Resend for sign-in codes.
 
 Approval requires a DOI. Existing DOIs are checked against DataCite or Crossref for a matching title and resource type. The publisher of an existing DOI retains control of its resolver destination. New DOIs are registered through production DataCite after approval. Registration requires the configured landing page to be accessible without sign-in. An interrupted registration keeps the reserved identifier so the moderator can retry from the same submission.
 

@@ -1,97 +1,5 @@
 [
   {
-    "id": "directory-cern-1113000",
-    "type": "event",
-    "eventType": "conference",
-    "title": "African Conference on High Energy Physics (ACHEP)",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2022-01-01",
-    "endDate": "2030-12-31",
-    "sourceUrl": "https://indico.cern.ch/event/1113000/",
-    "directory": true,
-    "timezone": "Europe/Zurich",
-    "startTime": "08:00",
-    "endTime": "18:00",
-    "subjectCodes": [
-      "5107"
-    ]
-  },
-  {
-    "id": "directory-cern-1539812",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "Workshop on 𝛾𝛾 physics at lepton-hadron colliders",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2025-09-25",
-    "endDate": "2028-09-25",
-    "sourceUrl": "https://indico.cern.ch/event/1539812/",
-    "directory": true,
-    "timezone": "Europe/Warsaw",
-    "subjectCodes": [
-      "510703"
-    ]
-  },
-  {
-    "id": "directory-cern-1719434",
-    "type": "event",
-    "eventType": "seminar",
-    "title": "UK Accelerator Institutes Seminar Series Autumn 2026 (Session 17)",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-10-15",
-    "endDate": "2026-12-03",
-    "sourceUrl": "https://indico.cern.ch/event/1719434/",
-    "directory": true,
-    "timezone": "Europe/London",
-    "subjectCodes": [
-      "511001"
-    ]
-  },
-  {
-    "id": "directory-cern-1352282",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "9th High Power Targetry Workshop (HPTW2026)",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-11-16",
-    "endDate": "2026-11-21",
-    "sourceUrl": "https://indico.cern.ch/event/1352282/",
-    "directory": true,
-    "countryCode": "CH",
-    "country": "Switzerland",
-    "city": "Meyrin",
-    "timezone": "Europe/Zurich",
-    "startTime": "08:00",
-    "endTime": "13:30"
-  },
-  {
-    "id": "directory-cern-1755753",
-    "type": "event",
-    "eventType": "seminar",
-    "title": "High Energy Physics Seminar",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-11-20",
-    "endDate": "2026-11-20",
-    "sourceUrl": "https://indico.cern.ch/event/1755753/",
-    "directory": true,
-    "countryCode": "PL",
-    "country": "Poland",
-    "city": "Warsaw",
-    "timezone": "Europe/Warsaw",
-    "subjectCodes": [
-      "5107"
-    ]
-  },
-  {
     "id": "directory-mit-54505456899967",
     "type": "event",
     "eventType": "seminar",
@@ -112,48 +20,6 @@
     "endTime": "14:50",
     "subjectCodes": [
       "490404"
-    ]
-  },
-  {
-    "id": "directory-cern-1730735",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "ArPS Workshop on Advanced Medical Physics and BioPhysics",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-11-21",
-    "endDate": "2026-11-23",
-    "sourceUrl": "https://indico.cern.ch/event/1730735/",
-    "directory": true,
-    "countryCode": "EG",
-    "country": "Egypt",
-    "city": "Mansoura",
-    "timezone": "Africa/Cairo",
-    "subjectCodes": [
-      "510501",
-      "510502"
-    ]
-  },
-  {
-    "id": "directory-cern-1752336",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "UTA FC VD Assembly Stand Construction Workshop",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-11-21",
-    "endDate": "2026-11-22",
-    "sourceUrl": "https://indico.cern.ch/event/1752336/",
-    "directory": true,
-    "countryCode": "US",
-    "country": "United States",
-    "city": "Arlington",
-    "timezone": "America/Chicago",
-    "subjectCodes": [
-      "510703",
-      "4017"
     ]
   },
   {
@@ -228,30 +94,6 @@
     ]
   },
   {
-    "id": "directory-cern-1710771",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "ISOLDE Workshop and Users meeting 2026",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-11-25",
-    "endDate": "2026-11-27",
-    "sourceUrl": "https://indico.cern.ch/event/1710771/",
-    "directory": true,
-    "countryCode": "CH",
-    "country": "Switzerland",
-    "city": "Meyrin",
-    "mode": "hybrid",
-    "timezone": "Europe/Zurich",
-    "startTime": "09:00",
-    "endTime": "16:00",
-    "subjectCodes": [
-      "510601",
-      "511001"
-    ]
-  },
-  {
     "id": "directory-mps-46732",
     "type": "event",
     "title": "S3 Seminar: Excitation/damping of solar inertial modes (Muneeb Mushtaq)",
@@ -297,50 +139,6 @@
     "city": "Göttingen",
     "subjectCodes": [
       "510108"
-    ]
-  },
-  {
-    "id": "directory-cern-1755487",
-    "type": "event",
-    "eventType": "seminar",
-    "title": "ATS Seminar - CERN RADIO FREQUENCY QUADRUPOLES FOR SOCIETAL APPLICATIONS",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-11-26",
-    "endDate": "2026-11-26",
-    "sourceUrl": "https://indico.cern.ch/event/1755487/",
-    "directory": true,
-    "countryCode": "CH",
-    "country": "Switzerland",
-    "city": "Meyrin",
-    "mode": "hybrid",
-    "timezone": "Europe/Zurich",
-    "startTime": "11:00",
-    "endTime": "12:30",
-    "subjectCodes": [
-      "511001",
-      "400913"
-    ]
-  },
-  {
-    "id": "directory-cern-1749154",
-    "type": "event",
-    "eventType": "webinar",
-    "title": "CERN Industry Webinar - November'26",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-11-26",
-    "endDate": "2026-11-26",
-    "sourceUrl": "https://indico.cern.ch/event/1749154/",
-    "directory": true,
-    "mode": "online",
-    "timezone": "Europe/Zurich",
-    "startTime": "14:00",
-    "endTime": "16:00",
-    "subjectCodes": [
-      "3504"
     ]
   },
   {
@@ -456,44 +254,6 @@
     "city": "Göttingen",
     "subjectCodes": [
       "3703"
-    ]
-  },
-  {
-    "id": "directory-cern-1716817",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "Quantum computing and Sustainability : Workshop Registration",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-11-30",
-    "endDate": "2026-12-02",
-    "sourceUrl": "https://indico.cern.ch/event/1716817/",
-    "directory": true,
-    "countryCode": "BR",
-    "country": "Brazil",
-    "city": "Rio de Janeiro",
-    "timezone": "America/Sao_Paulo",
-    "subjectCodes": [
-      "510803"
-    ]
-  },
-  {
-    "id": "directory-cern-1748030",
-    "type": "event",
-    "eventType": "seminar",
-    "title": "ASP Online Seminars: Compact Light Sources: A Strategic Opportunity for Advancing Accelerator-Based Research in Africa",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-12-01",
-    "endDate": "2026-12-01",
-    "sourceUrl": "https://indico.cern.ch/event/1748030/",
-    "directory": true,
-    "mode": "online",
-    "timezone": "UTC",
-    "subjectCodes": [
-      "511001"
     ]
   },
   {
@@ -955,28 +715,6 @@
     ]
   },
   {
-    "id": "directory-cern-1648300",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "UPC 2026: International workshop on the physics of Ultra Peripheral Collisions",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-12-07",
-    "endDate": "2026-12-13",
-    "sourceUrl": "https://indico.cern.ch/event/1648300/",
-    "directory": true,
-    "countryCode": "MX",
-    "country": "Mexico",
-    "city": "Playa del Carmen",
-    "mode": "inPerson",
-    "timezone": "America/Cancun",
-    "subjectCodes": [
-      "510703",
-      "510601"
-    ]
-  },
-  {
     "id": "directory-stanford-54551038616750",
     "type": "event",
     "eventType": "seminar",
@@ -1092,27 +830,6 @@
     ]
   },
   {
-    "id": "directory-cern-1609263",
-    "type": "event",
-    "eventType": "conference",
-    "title": "4th International Conference on Neutrinos and Dark Matter",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-12-14",
-    "endDate": "2026-12-17",
-    "sourceUrl": "https://indico.cern.ch/event/1609263/",
-    "directory": true,
-    "countryCode": "EG",
-    "country": "Egypt",
-    "city": "Aswan",
-    "timezone": "Africa/Cairo",
-    "subjectCodes": [
-      "510701",
-      "510703"
-    ]
-  },
-  {
     "id": "directory-stanford-54065946630880",
     "type": "event",
     "eventType": "seminar",
@@ -1158,70 +875,6 @@
     "city": "Göttingen",
     "subjectCodes": [
       "510109"
-    ]
-  },
-  {
-    "id": "directory-cern-1670772",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "Athens Xmas Workshop in Theoretical Physics – 2026",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2026-12-16",
-    "endDate": "2026-12-18",
-    "sourceUrl": "https://indico.cern.ch/event/1670772/",
-    "directory": true,
-    "countryCode": "GR",
-    "country": "Greece",
-    "city": "Athens",
-    "mode": "inPerson",
-    "timezone": "Europe/Athens",
-    "subjectCodes": [
-      "51"
-    ]
-  },
-  {
-    "id": "directory-cern-1640820",
-    "type": "event",
-    "eventType": "conference",
-    "title": "Spåtind 2027 - Nordic Conference on Particle Physics",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2027-01-02",
-    "endDate": "2027-01-07",
-    "sourceUrl": "https://indico.cern.ch/event/1640820/",
-    "directory": true,
-    "countryCode": "NO",
-    "country": "Norway",
-    "city": "Svingvoll",
-    "mode": "inPerson",
-    "timezone": "Europe/Oslo",
-    "subjectCodes": [
-      "510703"
-    ]
-  },
-  {
-    "id": "directory-cern-1697978",
-    "type": "event",
-    "eventType": "conference",
-    "title": "XXXIII Cracow Epiphany Conference: Advances in precision calculations for the LHC",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2027-01-11",
-    "endDate": "2027-01-15",
-    "sourceUrl": "https://indico.cern.ch/event/1697978/",
-    "directory": true,
-    "countryCode": "PL",
-    "country": "Poland",
-    "city": "Krakow",
-    "timezone": "Europe/Zurich",
-    "startTime": "08:00",
-    "endTime": "18:00",
-    "subjectCodes": [
-      "510703"
     ]
   },
   {
@@ -1337,26 +990,6 @@
     ]
   },
   {
-    "id": "directory-cern-1751965",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "ALADDIN and TWOCRYST Workshop",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2027-01-27",
-    "endDate": "2027-01-29",
-    "sourceUrl": "https://indico.cern.ch/event/1751965/",
-    "directory": true,
-    "timezone": "Europe/Zurich",
-    "startTime": "09:00",
-    "endTime": "17:00",
-    "subjectCodes": [
-      "510703",
-      "511002"
-    ]
-  },
-  {
     "id": "directory-mps-46736",
     "type": "event",
     "title": "S3 Seminar: Investigating high-speed outflows from a coronal hole with UV spectroscopy (Mario Roco Moraleda)",
@@ -1396,72 +1029,6 @@
     "startTime": "12:00",
     "endTime": "13:00",
     "mode": "online"
-  },
-  {
-    "id": "directory-cern-1731883",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "22nd \"Trento\" Workshop on Advanced Silicon Radiation Detectors",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2027-02-09",
-    "endDate": "2027-02-11",
-    "sourceUrl": "https://indico.cern.ch/event/1731883/",
-    "directory": true,
-    "countryCode": "IT",
-    "country": "Italy",
-    "city": "Trento",
-    "timezone": "Europe/Rome",
-    "subjectCodes": [
-      "400906",
-      "511002"
-    ]
-  },
-  {
-    "id": "directory-cern-1711136",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "CernVM Workshop 2027",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2027-02-15",
-    "endDate": "2027-02-17",
-    "sourceUrl": "https://indico.cern.ch/event/1711136/",
-    "directory": true,
-    "countryCode": "FR",
-    "country": "France",
-    "city": "Grenoble",
-    "mode": "hybrid",
-    "timezone": "Europe/Zurich",
-    "startTime": "09:00",
-    "endTime": "19:30",
-    "subjectCodes": [
-      "460601"
-    ]
-  },
-  {
-    "id": "directory-cern-1685317",
-    "type": "event",
-    "eventType": "conference",
-    "title": "Physics Opportunities at an Electron-Ion Collider (POETIC) XII International Conference",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2027-02-15",
-    "endDate": "2027-02-19",
-    "sourceUrl": "https://indico.cern.ch/event/1685317/",
-    "directory": true,
-    "countryCode": "IN",
-    "country": "India",
-    "city": "Bambolim",
-    "mode": "inPerson",
-    "timezone": "Asia/Kolkata",
-    "subjectCodes": [
-      "510601",
-      "510703"
-    ]
   },
   {
     "id": "directory-ucf-4209874",
@@ -1668,28 +1235,6 @@
     "subjectCodes": [
       "321502",
       "3202"
-    ]
-  },
-  {
-    "id": "directory-cern-1742816",
-    "type": "event",
-    "eventType": "workshop",
-    "title": "Zeek Workshop Europe 2027",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "CERN Indico",
-    "startDate": "2027-03-17",
-    "endDate": "2027-03-18",
-    "sourceUrl": "https://indico.cern.ch/event/1742816/",
-    "directory": true,
-    "countryCode": "CH",
-    "country": "Switzerland",
-    "city": "Meyrin",
-    "timezone": "Europe/Zurich",
-    "startTime": "09:00",
-    "endTime": "17:00",
-    "subjectCodes": [
-      "460407"
     ]
   }
 ]

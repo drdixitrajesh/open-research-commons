@@ -47,7 +47,8 @@ async function readSnapshot() {
   }
   const events = JSON.parse(body + decoder.decode());
   if (!Array.isArray(events) || !events.every(validEntry)) throw new Error('Invalid organizer snapshot');
-  return events;
+  // A CDN may still serve a snapshot from before CERN switched to reference links.
+  return events.filter(entry => !entry.id.startsWith('directory-cern-'));
 }
 
 export async function loadOrganizerSnapshot(fallback) {

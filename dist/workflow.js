@@ -1,8 +1,9 @@
 import {
   activeRecords, announce, api, catalogKindLabel, countryOptions, esc, go, icon, lang, languageOptions, layout,
-  link, normalize, options, participationModes, recordUrl, refresh, showPreview, signIn, state, subjectLabel,
+  link, normalize, options, participationModes, recordUrl, refresh, showPreview, state, subjectLabel,
   subSubjectOptions, subjectGroupOptions, subjectMatches, t, txt, types, url
 } from './app.js';
+import { bindDashboardLogin, contributorSignIn, dashboardLogin, dashboardSignOut, emailLinkAction, mobileSettings } from './email-login.js';
 
 const editable = new Set(['draft','changes_requested']);
 const fields = new Map([
@@ -223,7 +224,7 @@ export async function submissionPage(params) {
   const key = editing(params);
   let note;
   if (id && draft?.key!==key) {
-    if (!state.session.user) return layout(txt('startSubmission'),`<p>${t('signedOut')}</p>${signIn()}`);
+    if (!state.session.user) return layout(txt('startSubmission'),`<p>${t('signedOut')}</p>${contributorSignIn()}`);
     try {
       const {submissions} = await api('submissions');
       const target = submissions.find(s=>s.id===id && editable.has(s.status));
@@ -245,7 +246,7 @@ export async function submissionPage(params) {
     <form id="submission-form" novalidate>
     ${r.type==='event' ? eventFields(r) : researchFields(r)}
     <output class="form-feedback" id="submission-feedback" role="alert"></output>
-    ${!state.session.user ? `<p>${signIn({label:'signedOut',className:'text-link'})}</p>` : ''}
+    ${!state.session.user ? `<p>${contributorSignIn({label:'signedOut',className:'text-link'})}</p>` : ''}
     <div class="form-actions"><button class="button secondary" name="action" value="draft"${canSave?'':' disabled'}>${t('saveDraft')}</button>
       <button class="button secondary" type="button" data-preview${draft.uploading?' disabled':''}>${t('preview')}</button>
       <button class="button" name="action" value="submit"${canSave?'':' disabled'}>${t('sendForReview')}</button>
@@ -545,18 +546,22 @@ function dashboardItem(item,review) {
 export async function dashboardPage(page) {
   const review = page==='review';
   const name=txt(review?'review':'account');
-  if (!state.session.user) return layout(name,`<p>${t('signedOut')}</p>${signIn()}`);
+  const login = !review && dashboardLogin(name);
+  if (login) return login;
+  if (!state.session.user) return layout(name,`<p>${t('signedOut')}</p>${contributorSignIn()}`);
   if (review && !state.session.user.isModerator) return layout(name,`<p>${t('noAccess')}</p>`);
   let list, problem=false;
   try { ({submissions:list}=await api(review?'submissions?queue=1':'submissions')); }
   catch { problem=true; list=[]; }
-  return layout(name,`<div class="form-panel"><p>${t('signedIn')} · <bdi>${esc(state.session.user.name)}</bdi> · <a href="/signout-with-chatgpt?return_to=%2F" target="_top">${t('signOut')}</a></p>
-    <div class="form-actions">${link('submit','startSubmission','class="button"')}${!review && state.session.user.isModerator?link('review','review','class="button secondary"'):''}</div>
+  return layout(name,`<div class="form-panel"><p>${t('signedIn')} · <bdi>${esc(state.session.user.name)}</bdi> · ${dashboardSignOut()}</p>
+    <div class="form-actions">${link('submit','startSubmission','class="button"')}${!review && state.session.user.isModerator?link('review','review','class="button secondary"'):''}${!review?emailLinkAction():''}</div>
+    ${!review ? mobileSettings() : ''}
     <div class="section">${problem?`<p class="empty">${t('serviceUnavailable')}</p>`:list.length?list.map(i=>dashboardItem(i,review)).join(''):`<p class="empty">${t('noSubmissions')}</p>`}</div>
   </div>`);
 }
 export function bindWorkflow(page) {
   if (page==='submit') bindSubmission();
+  if (page==='account' || page==='review') bindDashboardLogin();
   if (page!=='review') return;
   document.querySelectorAll('[data-moderate]').forEach(form=>form.addEventListener('submit',async e=>{
     e.preventDefault();

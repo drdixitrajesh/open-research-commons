@@ -68,6 +68,8 @@ const feeds = [
   },
   {
     key: 'cern', name: 'CERN Indico', origin: 'https://indico.cern.ch',
+    // Keep public calendar references while the organizer's /export crawler preference applies.
+    automatic: false,
     paths: ['/export/categ/6741.json', '/export/categ/6745.json'],
   },
 ];
@@ -262,8 +264,11 @@ try {
 } catch (error) {
   if (error.code !== 'ENOENT') throw error;
 }
+const activeFeeds = feeds.filter(feed => feed.automatic !== false);
+const referencePrefixes = feeds.filter(feed => feed.automatic === false).map(feed => 'directory-' + feed.key + '-');
+previous = previous.filter(event => !referencePrefixes.some(prefix => event.id.startsWith(prefix)));
 const [results, rss] = await Promise.all([
-  Promise.allSettled(feeds.map((feed) => feed.paths ? indico(feed) : localist(feed))),
+  Promise.allSettled(activeFeeds.map((feed) => feed.paths ? indico(feed) : localist(feed))),
   fetchOrganizerRss({ from, to }),
 ]);
 if (results.every(({ status }) => status === 'rejected') && !rss.successfulSources.length) {
@@ -274,7 +279,7 @@ if (results.every(({ status }) => status === 'rejected') && !rss.successfulSourc
 const keepUpcoming = key => previous.filter(event =>
   event.id.startsWith('directory-' + key + '-') && event.endDate >= from && event.startDate < to);
 const records = results.flatMap((result, i) => {
-  const { name, key } = feeds[i];
+  const { name, key } = activeFeeds[i];
   if (result.status === 'fulfilled') {
     console.log(name + ': ' + result.value.length + ' candidate listings');
     return result.value;

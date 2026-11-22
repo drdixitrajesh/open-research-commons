@@ -1,4 +1,5 @@
 import { ApiError, mintingConfig, normalizeDoi, publishDoi, validDoi, verifyExistingDoi } from "./doi.js";
+import { EmailAuthError, emailAuthEnabled, emailSession, handleEmailAuth, linkedLegacyUser } from "./email-auth.js";
 
 const maxUpload = 20 * 1024 * 1024;
 const maxJson = 120 * 1024;
@@ -195,7 +196,7 @@ function validateSubmission(record) {
   }
 }
 
-function siteUser(request, env) {
+function siteUser(request) {
   const id = request.headers.get("oai-authenticated-user-id");
   const email = request.headers.get("oai-authenticated-user-email");
   if (!id || !email) return null;
@@ -204,8 +205,29 @@ function siteUser(request, env) {
   if (header && request.headers.get("oai-authenticated-user-full-name-encoding") === "percent-encoded-utf-8") {
     try { name = decodeURIComponent(header); } catch { /* Use the email fallback. */ }
   }
+  return { id, name, email };
+}
+
+async function requestUser(request, env, nativeUser) {
+  const emailUser = await emailSession(request, env);
+  let user = emailUser && { ...emailUser, authMethod: "email" };
+  if (!user && nativeUser) {
+    const linked = await linkedLegacyUser(env, nativeUser);
+    user = { ...linked, email: nativeUser.email, name: nativeUser.name, authMethod: "chatgpt" };
+  }
+  if (!user) return null;
   const moderators = String(env.MODERATOR_EMAILS || "").toLowerCase().split(",").map(value => value.trim());
-  return { id, name, email, isModerator: moderators.includes(email.toLowerCase()) };
+  return { ...user, isModerator: moderators.includes(user.email.toLowerCase()), linkedEmail: Boolean(user.secondaryOwnerId) };
+}
+
+function sessionUser(user) {
+  if (!user) return null;
+  const { id, name, email, isModerator, authMethod, linkedEmail, needsProfile, hasMobile } = user;
+  return { id, name, email, isModerator, authMethod, linkedEmail, needsProfile, hasMobile };
+}
+
+function owns(user, ownerId) {
+  return Boolean(user && ownerId && (ownerId === user.id || ownerId === user.secondaryOwnerId));
 }
 
 function requireUser(user, moderator = false) {
@@ -343,9 +365,9 @@ async function publicRecords(db, url, id) {
 async function listSubmissions(db, url, user) {
   const queue = url.searchParams.get("queue") === "1";
   requireUser(user, queue);
-  const filter = queue ? "s.status IN ('submitted', 'registering', 'doi_failed', 'published')" : "s.owner_id = ?";
+  const filter = queue ? "s.status IN ('submitted', 'registering', 'doi_failed', 'published')" : "s.owner_id IN (?, ?)";
   const query = db.prepare(withFiles + " WHERE " + filter + " ORDER BY s.updated_at DESC LIMIT 100");
-  const { results } = await (queue ? query : query.bind(user.id)).all();
+  const { results } = await (queue ? query : query.bind(user.id, user.secondaryOwnerId || null)).all();
   return json({ submissions: results.map(submission) });
 }
 
@@ -376,8 +398,8 @@ async function checkFileOwners(db, ids, user, recordId) {
   if (!ids.length) return;
   const placeholders = ids.map(() => "?").join(",");
   const query = "SELECT u.id, a.submission_id FROM uploads u LEFT JOIN submission_uploads a ON a.upload_id = u.id" +
-    " WHERE u.owner_id = ? AND u.id IN (" + placeholders + ")";
-  const { results } = await db.prepare(query).bind(user.id, ...ids).all();
+    " WHERE u.owner_id IN (?, ?) AND u.id IN (" + placeholders + ")";
+  const { results } = await db.prepare(query).bind(user.id, user.secondaryOwnerId || null, ...ids).all();
   if (results.length !== ids.length || results.some(row => row.submission_id && row.submission_id !== recordId)) {
     invalid("attachmentIds", "One or more uploads are unavailable for this submission.", "invalid_upload");
   }
@@ -389,7 +411,7 @@ async function saveSubmission(db, input, user, subjects) {
   const existingId = text(input.id, 80);
   if (existingId && !uuid.test(existingId)) problem(404, "submission_not_found", "This submission could not be found.");
   const existing = existingId ? await recordById(db, existingId) : null;
-  if (existingId && (!existing || existing.owner_id !== user.id)) {
+  if (existingId && !owns(user, existing?.owner_id)) {
     problem(404, "submission_not_found", "This submission could not be found.");
   }
   if (existing && !editableStatuses.has(existing.status)) problem(409, "not_editable", "This submission cannot currently be edited.");
@@ -423,7 +445,7 @@ async function saveSubmission(db, input, user, subjects) {
   const save = existing
     ? db.prepare("UPDATE submissions SET record_json=?, status=?, updated_at=?, revision=revision+1, lease_token=? " +
       "WHERE id=? AND owner_id=? AND revision=? AND status IN ('draft', 'changes_requested')")
-      .bind(recordJson, status, updatedAt, lock, id, user.id, existing.revision)
+      .bind(recordJson, status, updatedAt, lock, id, existing.owner_id, existing.revision)
     : db.prepare("INSERT INTO submissions (id, owner_id, record_json, status, created_at, updated_at, lease_token) VALUES (?, ?, ?, ?, ?, ?, ?)")
       .bind(id, user.id, recordJson, status, updatedAt, updatedAt, lock);
   const containsLock = "EXISTS (SELECT 1 FROM submissions WHERE id = ? AND lease_token = ?)";
@@ -458,7 +480,7 @@ async function loadFile(db, bucket, id, user, head) {
   const query = "SELECT u.*, s.status, s.record_json FROM uploads u" +
     " LEFT JOIN submission_uploads a ON a.upload_id = u.id LEFT JOIN submissions s ON s.id = a.submission_id WHERE u.id = ?";
   const file = await db.prepare(query).bind(id).first();
-  if (!file || (!fileResponseAllowed(file) && file.owner_id !== user?.id && !user?.isModerator)) {
+  if (!file || (!fileResponseAllowed(file) && !owns(user, file.owner_id) && !user?.isModerator)) {
     problem(404, "file_not_found", "The file could not be found.");
   }
   if (!bucket) problem(503, "files_unavailable", "File storage is unavailable in this environment.");
@@ -639,15 +661,20 @@ export async function handleApi(request, env, subjects) {
   const url = new URL(request.url);
   const parts = url.pathname.split("/").slice(1);
   const [, route, id] = parts;
-  const user = siteUser(request, env);
   const method = request.method;
   try {
     if (parts.length > 3 || parts[0] !== "api") problem(404, "not_found", "This page could not be found.");
     if (method === "POST") sameOrigin(request, url, env);
-    if (route === "session" && method === "GET" && !id) {
-      return json({ user, persistent: Boolean(env.DB), files: Boolean(env.DB && env.BUCKET) });
-    }
     if (route === "records" && method === "GET") return await publicRecords(requireDb(env), url, id);
+    const nativeUser = siteUser(request);
+    if (route === "auth" && method === "POST" && ["start", "verify", "profile", "logout"].includes(id)) {
+      return await handleEmailAuth(request, env, id, id === "logout" ? {} : await requestJson(request), nativeUser);
+    }
+    const user = await requestUser(request, env, nativeUser);
+    if (route === "session" && method === "GET" && !id) {
+      return json({ user: sessionUser(user), persistent: Boolean(env.DB), files: Boolean(env.DB && env.BUCKET),
+        emailAuth: emailAuthEnabled(env), hasNative: Boolean(nativeUser) });
+    }
     if (route === "submissions" && !id && ["GET", "POST"].includes(method)) {
       requireUser(user, url.searchParams.get("queue") === "1");
       if (method === "GET") return await listSubmissions(requireDb(env), url, user);
@@ -666,7 +693,7 @@ export async function handleApi(request, env, subjects) {
     }
     problem(404, "not_found", "This page could not be found.");
   } catch (error) {
-    if (error instanceof ApiError) {
+    if (error instanceof ApiError || error instanceof EmailAuthError) {
       return json({ error: error.message, code: error.code, ...(error.field ? { field: error.field } : {}) }, error.status);
     }
     console.error("Repository request failed", route, error?.name || "Error");

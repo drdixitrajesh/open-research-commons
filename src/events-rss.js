@@ -15,14 +15,17 @@ function day(value) {
   return Number.isFinite(date.valueOf()) && date.toISOString().startsWith(value) ? value : '';
 }
 
-function sourceKey(record) {
+function sourceLink(record) {
   try {
     const url = new URL(record.sourceUrl);
-    if (url.protocol === 'https:' || url.protocol === 'http:') {
-      return url.hostname.replace(/^www\./, '') + url.pathname.replace(/\/+$/, '');
-    }
+    if (['https:', 'http:'].includes(url.protocol) && !url.username && !url.password) return url;
   } catch {}
-  return '';
+  return null;
+}
+
+function sourceKey(record) {
+  const url = sourceLink(record);
+  return url ? url.hostname.replace(/^www\./, '') + url.pathname.replace(/\/+$/, '') : '';
 }
 
 function visibleEvents(directoryRecords, publishedRecords, now) {
@@ -56,13 +59,16 @@ function feedItem(record) {
   const end = day(record.endDate);
   const dates = end && end !== record.startDate ? record.startDate + ' – ' + end : record.startDate;
   const summary = [dates, record.institution, record.description].filter(Boolean).join(' · ');
+  const source = sourceLink(record);
+  const sourceHtml = source ? '<br><a href="' + xml(source.href) + '">' +
+    (record.directory ? 'Official organizer page' : 'Source page') + '</a>' : '';
   const published = new Date(record.publishedAt || '');
   const pubDate = Number.isFinite(published.valueOf()) ? '<pubDate>' + published.toUTCString() + '</pubDate>' : '';
   // RSS readers may treat descriptions as HTML. Encode the plain text for both layers.
   return [
     '<item>', '<title>' + xml(record.title) + '</title>', '<link>' + xml(link.href) + '</link>',
     '<guid isPermaLink="true">' + xml(link.href) + '</guid>', pubDate,
-    '<description>' + xml(xml(summary)) + '</description>', '</item>'
+    '<description>' + xml(xml(summary) + sourceHtml) + '</description>', '</item>'
   ].filter(Boolean).join('\n');
 }
 
