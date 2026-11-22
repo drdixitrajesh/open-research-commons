@@ -93,7 +93,7 @@ subjectSearch|Search by subject name or code|विषय का नाम य�
 featuredSubjects|Explore subjects|विषय खोजें|Explorar disciplinas|Explorer les disciplines|استكشف التخصصات|Explore as áreas de pesquisa|探索学科|Обзор дисциплин
 allSubjects|All subjects|सभी विषय|Todas las disciplinas|Toutes les disciplines|كل التخصصات|Todas as áreas de pesquisa|全部学科|Все дисциплины
 subSubject|Stream of Research|शोध की शाखा|Línea de investigación|Axe de recherche|مسار البحث|Linha de pesquisa|研究方向|Направление исследований
-allSubSubjects|All streams of research|शोध की सभी शाखाएँ|Todas las líneas de investigación|Tous les axes de recherche|جميع مسارات البحث|Todas as linhas de pesquisa|全部研究方向|Все направления исследований
+allSubSubjects|All research streams|शोध की सभी शाखाएँ|Todas las líneas de investigación|Tous les axes de recherche|جميع مسارات البحث|Todas as linhas de pesquisa|全部研究方向|Все направления исследований
 officialLabel|Official English label|आधिकारिक अंग्रेज़ी नाम|Nombre oficial en inglés|Libellé officiel en anglais|التسمية الرسمية بالإنجليزية|Nome oficial em inglês|官方英文名称|Официальное название на английском языке
 platformTranslation|Platform translation|मंच द्वारा अनुवाद|Traducción de la plataforma|Traduction de la plateforme|ترجمة المنصة|Tradução da plataforma|平台译名|Перевод платформы
 expanded|Show more|और देखें|Mostrar más|Afficher plus|عرض المزيد|Mostrar mais|显示更多|Показать больше
