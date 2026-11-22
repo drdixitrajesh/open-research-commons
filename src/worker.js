@@ -1,8 +1,12 @@
+import classifications from "../dist/data/anzsrc-classifications.json" with { type: "json" };
 import { ApiError, mintingConfig, normalizeDoi, publishDoi, validDoi, verifyExistingDoi } from "./doi.js";
 import { EmailAuthError, emailAuthEnabled, emailSession, handleEmailAuth, linkedLegacyUser } from "./email-auth.js";
 
 const maxUpload = 20 * 1024 * 1024;
 const maxJson = 120 * 1024;
+const activityTypes = new Set(classifications.toa.map(({ code }) => code));
+const objectiveCodes = new Set(classifications.seo.map(({ code }) => code));
+const maxObjectives = 8;
 const editableStatuses = new Set(["draft", "changes_requested"]);
 const recordTypes = new Set(["event", "material", "thesis"]);
 const eventTypes = new Set(["conference", "seminar", "symposium", "workshop", "webinar"]);
@@ -104,7 +108,7 @@ function translations(value, originalLanguage) {
   return metadata;
 }
 
-function recordInput(source, subjects) {
+function recordInput(source, subjects, previous) {
   if (!source || typeof source !== "object" || Array.isArray(source)) invalid("record", "Enter the record details.");
   const record = Object.fromEntries(shortFields.map(field => [field, text(source[field])]));
   record.type = text(source.type);
@@ -125,6 +129,18 @@ function recordInput(source, subjects) {
   if (record.subjectCodes.some(code => !/^(?:\d{2}|\d{4}|\d{6})$/.test(code) || (subjects && !subjects.has(code)))) {
     invalid("subjectCodes", "Choose a valid ANZSRC 2020 subject.");
   }
+  // An older submission client may omit the new fields when editing a draft.
+  const activityType = Object.hasOwn(source, "activityType") ? source.activityType : previous?.activityType;
+  if (activityType != null && activityType !== "" && !activityTypes.has(activityType)) {
+    invalid("activityType", "Choose a valid ANZSRC 2020 type of activity.");
+  }
+  record.activityType = activityType ?? "";
+  const objectives = Object.hasOwn(source, "objectives") ? source.objectives : previous?.objectives;
+  if (objectives != null && (!Array.isArray(objectives) || objectives.length > maxObjectives ||
+      objectives.some(code => !objectiveCodes.has(code)))) {
+    invalid("objectives", "Choose up to eight valid ANZSRC 2020 socio-economic objectives.");
+  }
+  record.objectives = [...new Set(objectives ?? [])];
   record.doi = normalizeDoi(text(source.doi, 500));
   if (record.doi && !validDoi(record.doi)) invalid("doi", "Enter a valid DOI.", "invalid_doi");
   record.eventType = text(source.eventType);
@@ -306,7 +322,8 @@ function publicRecord(row) {
   const base = { id: row.id, doi: row.doi, doiSource: row.doi_source, publishedAt: row.published_at,
     landingUrl: row.landing_url || "/?record=" + row.id, status: row.status };
   if (row.status === "withdrawn") {
-    return { ...base, title: record.title, type: record.type, subjectCodes: record.subjectCodes, description: row.note,
+    return { ...base, title: record.title, type: record.type, subjectCodes: record.subjectCodes,
+      activityType: record.activityType, objectives: record.objectives, description: row.note,
       authors: record.authors, institution: record.institution, language: record.language, files: [], metadata: {} };
   }
   const embargoed = record.access === "embargoed" && !openFiles(record);
@@ -418,9 +435,9 @@ async function saveSubmission(db, input, user, subjects) {
   if (existing && input.revision != null && input.revision !== existing.revision) {
     problem(409, "revision_conflict", "The submission was updated in another session. Open it again.");
   }
-  const record = recordInput(input.record, subjects);
-  if (existing) {
-    const previous = JSON.parse(existing.record_json);
+  const previous = existing ? JSON.parse(existing.record_json) : null;
+  const record = recordInput(input.record, subjects, previous);
+  if (previous) {
     const changed = ["title", "description", "keywords", "metadataLanguage"].some(field =>
       JSON.stringify(previous[field]) !== JSON.stringify(record[field]));
     for (const [tag, current] of Object.entries(record.metadata)) {

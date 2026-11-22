@@ -16,6 +16,8 @@ const assets = new Map([
   ['/i18n.js','text/javascript; charset=utf-8'], ['/examples.js','text/javascript; charset=utf-8'],
   ['/mark.svg','image/svg+xml'], ['/images/field-notes.jpg','image/jpeg'],
   ['/data/subjects.json','application/json; charset=utf-8'], ['/data/subjects-license.txt','text/plain; charset=utf-8'],
+  ['/data/anzsrc-classifications.json','application/json; charset=utf-8'],
+  ['/data/anzsrc-definitions.json','application/json; charset=utf-8'],
   ['/data/countries.json','application/json; charset=utf-8'], ['/data/countries-license.txt','text/plain; charset=utf-8'],
   ['/data/events-directory.json','application/json; charset=utf-8'], ['/data/events-feed.json','application/json; charset=utf-8']
 ]);

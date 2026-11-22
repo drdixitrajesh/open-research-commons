@@ -1,6 +1,6 @@
 export const notSpecified = '_unspecified';
 export const eventPeriods = ['upcoming', 'ongoing', 'past', 'deadlines'];
-export const eventFacets = ['kind', 'subject', 'country', 'el', 'ml', 'mode'];
+export const eventFacets = ['kind', 'subject', 'country', 'el', 'ml', 'mode', 'toa', 'seo'];
 const dateFields = ['from', 'to'];
 const filterFields = [...eventFacets, ...dateFields];
 const inactiveStatuses = ['cancelled', 'postponed'];
@@ -72,18 +72,20 @@ export function indexEvents(records, countryCode, now = new Date()) {
     const opens = isoDay(record.callOpens);
     const deadline = isoDay(callDeadline(record));
     const period = eventPeriod(record, today);
-    const subjects = (record.subjectCodes || []).flatMap(code => {
-      const prefixes = [];
-      for (let length = 2; length <= code.length; length += 2) prefixes.push(code.slice(0, length));
-      return prefixes;
-    });
+    const prefixes = code => {
+      const values = [];
+      for (let length = 2; length <= code.length; length += 2) values.push(code.slice(0, length));
+      return values;
+    };
     return {
       record, period, start, end: isoDay(record.endDate) || start,
       openCall: record.callForPapers !== false && period !== 'past' && !inactiveStatuses.includes(record.eventStatus)
         && opens <= today && deadline >= today,
       values: {
         kind: facetValues([record.eventType]),
-        subject: facetValues(subjects),
+        subject: facetValues((record.subjectCodes || []).flatMap(prefixes)),
+        toa: facetValues([record.activityType]),
+        seo: facetValues((record.objectives || []).flatMap(prefixes)),
         country: facetValues([countryCode(record)]),
         el: facetValues(languageKeys(recordLanguageTags(record, 'el'))),
         ml: facetValues(languageKeys(recordLanguageTags(record, 'ml'))),

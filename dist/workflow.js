@@ -1,15 +1,17 @@
 import {
-  activeRecords, announce, api, catalogKindLabel, countryOptions, esc, go, icon, lang, languageOptions, layout,
-  link, normalize, options, participationModes, recordUrl, refresh, showPreview, state, subjectLabel,
-  subSubjectOptions, subjectGroupOptions, subjectMatches, t, txt, types, url
+  activeRecords, announce, anzsrcItem, api, catalogKindLabel, codedSubjectLabel, countryOptions, esc, go, icon,
+  lang, languageOptions, layout, link, normalize, options, participationModes, recordUrl, refresh, showPreview, state,
+  subjectLabel, subSubjectOptions, subjectGroupOptions, subjectMatches, t, txt, types, url
 } from './app.js';
 import { bindDashboardLogin, contributorSignIn, dashboardLogin, dashboardSignOut, emailLinkAction, mobileSettings } from './email-login.js';
 
 const editable = new Set(['draft','changes_requested']);
 const fields = new Map([
   ['eventType','eventForm'],['materialType','materialsForm'],['thesisType','thesisForm'],['language','languageTag'],
-  ['subjectCodes','primarySubject'],['attachmentIds','attachments'],['note','reviewNote'],['mode','format'],['countryCode','country']
+  ['activityType','activityType'],['objectives','objectives'],['subjectCodes','primarySubject'],['attachmentIds','attachments'],
+  ['note','reviewNote'],['mode','format'],['countryCode','country']
 ]);
+const objectiveLimit = 8;
 const eventStates = ['scheduled','held','postponed','cancelled'];
 const uploadErrors = new Set(['file_too_large','unsupported_file','invalid_upload']);
 const otherChoice = '__custom__';
@@ -140,6 +142,34 @@ function subjectPicker(r) {
     ${r.type==='event' ? search + disclosure('subjects',browse) : browse + search}
   </div>`;
 }
+function objectiveLabel(code) {
+  const item = anzsrcItem('seo',code);
+  return item ? codedSubjectLabel(item) : code;
+}
+function selectedObjectives(codes) {
+  return codes.map(code=>{
+    const label = objectiveLabel(code);
+    return `<button type="button" class="tag" data-drop-objective="${esc(code)}"
+      aria-label="${esc(txt('remove') + ' ' + label)}"><bdi>${esc(label)}</bdi> ×</button>`;
+  }).join('');
+}
+function classificationFields(record) {
+  const {toa,seo} = state.classifications;
+  if (!toa.length || !seo.length) return '';
+  const codes = record.objectives || [];
+  const type = field(record,'activityType',{choices:toa.map(({code,label})=>[code,label]),wide:true});
+  const search = `<div class="full" data-objective-picker role="group" aria-labelledby="objective-heading">
+    <p class="subject-summary" id="objective-heading">${t('objectives')}</p>
+    <label for="objective-picker-input" class="field">${t('objectiveSearch')}
+      <input type="search" id="objective-picker-input" autocomplete="off"></label>
+    <div data-objective-options class="subject-options"></div>
+    <p data-objective-empty class="muted" role="status" hidden>${t('noResults')}</p>
+    <div data-objective-selected class="pills" aria-live="polite">${selectedObjectives(codes)}</div>
+    <p data-objective-limit class="muted" role="status"${codes.length>=objectiveLimit?'':' hidden'}>${t('objectiveLimit')}</p>
+  </div>`;
+  return disclosure('extraClassification',`<div class="form-grid">${type}${search}</div>`,
+    {open:Boolean(record.activityType || codes.length)});
+}
 function translationRows(entries, offset=0) {
   return entries.map(([code,m],i)=>`<fieldset class="form-section full" data-translation>
     <legend>${t('translations')} ${offset+i+1}</legend>
@@ -207,14 +237,15 @@ function eventFields(r) {
   return section('eventBasics',recordTypeField('event',r) + metadataFields(r) + field(r,'institution',{required:true})
       + languageField(r,'language',{label:'eventLanguage',required:true}) + subjectPicker(r))
     + section('eventSchedule',schedule) + section('eventVerification',verification)
-    + disclosure('eventMoreDetails',`<div class="form-grid">${more}</div>`)
+    + classificationFields(r) + disclosure('eventMoreDetails',`<div class="form-grid">${more}</div>`)
     + disclosure('eventPublicationExtras',section('translations',translationFields(r))
       + section('doi',`<p class="full">${t('doiPolicy')}</p>${field(r,'doi')}`))
     + `<p>${authorityField(r)}</p>`;
 }
 function researchFields(r) {
   return section('original',metadataFields(r) + field(r,'keywords',{wide:true}))
-    + section('searchableDetails',searchableFields(r.type,r)) + section('details',typeFields(r.type,r))
+    + section('searchableDetails',searchableFields(r.type,r)) + classificationFields(r)
+    + section('details',typeFields(r.type,r))
     + section('translations',translationFields(r)) + section('files',filePicker(r)+links(r))
     + section('doi',`<p class="full">${t('doiPolicy')}</p>${field(r,'doi')}${field(r,'translationOf')}${authorityField(r)}`);
 }
@@ -314,6 +345,9 @@ function errors(error) {
   if (uploadErrors.has(error.code)) return txt('smallFile');
   if (error.code==='invalid_doi') return txt('invalidDoi');
   if (error.code==='date_order') return txt('invalidDates') + fieldName;
+  if (error.code==='invalid_field' && (error.field==='activityType' || error.field==='objectives')) {
+    return txt('invalidResearchClassification') + fieldName;
+  }
   if (error.status===422 && error.field) return txt('required') + fieldName;
   if (error.status>=500 && !error.error) return txt('serviceUnavailable');
   return lang==='en' && error.error ? error.error : txt('unknownError');
@@ -366,10 +400,57 @@ function bindEventFields(form) {
     draft.record = collect(form);
   });
 }
+function bindObjectivePicker(form) {
+  const picker = form.querySelector('[data-objective-picker]');
+  if (!picker) return;
+  const input = picker.querySelector('input');
+  const candidates = picker.querySelector('[data-objective-options]');
+  const selected = picker.querySelector('[data-objective-selected]');
+  const empty = picker.querySelector('[data-objective-empty]');
+  const limit = picker.querySelector('[data-objective-limit]');
+  const codes = () => draft.record.objectives || [];
+  function renderMatches() {
+    const words = normalize(input.value.trim()).split(/\s+/).filter(Boolean);
+    const current = new Set(codes());
+    const searching = words.length>0 && current.size<objectiveLimit;
+    const matches = searching
+      ? state.classifications.seo.filter(item=>!current.has(item.code) &&
+        words.every(word=>normalize(codedSubjectLabel(item)).includes(word))).slice(0,18)
+      : [];
+    empty.hidden = !searching || matches.length>0;
+    candidates.innerHTML = matches.map(item=>
+      `<button type="button" data-pick-objective="${esc(item.code)}"><bdi>${esc(codedSubjectLabel(item))}</bdi></button>`
+    ).join('');
+  }
+  function updateSelection(next) {
+    draft.record.objectives = next;
+    selected.innerHTML = selectedObjectives(next);
+    limit.hidden = next.length<objectiveLimit;
+    renderMatches();
+    input.focus();
+  }
+  input.addEventListener('input',renderMatches);
+  input.addEventListener('keydown',event=>{
+    if (event.key!=='Enter' || event.isComposing) return;
+    event.preventDefault();
+    candidates.querySelector('button')?.focus();
+  });
+  candidates.addEventListener('click',event=>{
+    const code = event.target.closest('[data-pick-objective]')?.dataset.pickObjective;
+    if (!code || codes().length>=objectiveLimit || codes().includes(code) || !anzsrcItem('seo',code)) return;
+    input.value = '';
+    updateSelection([...codes(),code]);
+  });
+  selected.addEventListener('click',event=>{
+    const code = event.target.closest('[data-drop-objective]')?.dataset.dropObjective;
+    if (code) updateSelection(codes().filter(value=>value!==code));
+  });
+}
 function bindSubmission() {
   const form = document.getElementById('submission-form');
   if (!form || !draft) return;
   bindChoiceFields(form);
+  bindObjectivePicker(form);
   if (draft.record.type==='event') bindEventFields(form);
   const pick = form.querySelector('#subject-picker-input');
   const picked = form.querySelector('#picked-subjects');
@@ -517,7 +598,8 @@ function bindSubmission() {
     } catch (error) {
       feedback(form,errors(error));
       const invalidInput = error.field==='subjectCodes' ? subjectInput : error.field==='attachmentIds' ? uploads
-        : form.elements.namedItem(error.field==='country' ? 'countryCode' : error.field);
+        : error.field==='objectives' ? form.querySelector('#objective-picker-input')
+          : form.elements.namedItem(error.field==='country' ? 'countryCode' : error.field);
       const target = invalidInput?.matches?.('[data-choice-select]') && invalidInput.value===otherChoice
         ? invalidInput.closest('[data-choice-field]').querySelector('[data-custom-value]') : invalidInput;
       focusField(target);
@@ -526,6 +608,10 @@ function bindSubmission() {
 }
 function dashboardItem(item,review) {
   const r=item.record;
+  const activity = anzsrcItem('toa',r.activityType)?.label || r.activityType;
+  const objectives = (r.objectives || []).map(code=>`<bdi>${esc(objectiveLabel(code))}</bdi>`).join(', ');
+  const classification = (activity ? `<p><strong>${t('activityType')}</strong> · <bdi>${esc(activity)}</bdi></p>` : '')
+    + (objectives ? `<p><strong>${t('objectives')}</strong> · ${objectives}</p>` : '');
   const published=item.status==='published';
   const note = `<label class="field">${t('reviewNote')}<input name="note" maxlength="1500"></label>`;
   const mod = (action,label,className='secondary') => `<button name="action" value="${action}" class="button ${className}">${t(label)}</button>`;
@@ -533,6 +619,7 @@ function dashboardItem(item,review) {
    <h3 dir="auto">${published?`<a href="${esc(recordUrl(item.id))}">${esc(r.title)}</a>`:esc(r.title || txt('draft'))}</h3>
    ${item.note?`<p dir="auto"><strong>${t('reviewNote')}</strong> · ${esc(item.note)}</p>`:''}
    ${review?`<p dir="auto">${esc(r.description)}</p><p><bdi>${esc(r.doi || '')}</bdi></p>
+      ${classification}
       ${r.files?.length?`<ul>${r.files.map(f=>`<li><a href="/api/files/${encodeURIComponent(f.id)}">${esc(f.name)}</a></li>`).join('')}</ul>`:''}
       <form data-moderate="${esc(item.id)}">${note}
       ${published && r.type==='event'?`<label class="field">${t('eventStatus')}<select name="eventStatus">${options(keyOptions(eventStates),r.eventStatus)}</select></label>`:''}
@@ -553,7 +640,7 @@ export async function dashboardPage(page) {
   let list, problem=false;
   try { ({submissions:list}=await api(review?'submissions?queue=1':'submissions')); }
   catch { problem=true; list=[]; }
-  return layout(name,`<div class="form-panel"><p>${t('signedIn')} · <bdi>${esc(state.session.user.name)}</bdi> · ${dashboardSignOut()}</p>
+  return layout(name,`<div class="form-panel"><p class="dashboard-session">${t('signedIn')} · <bdi>${esc(state.session.user.name)}</bdi> · ${dashboardSignOut()}</p>
     <div class="form-actions">${link('submit','startSubmission','class="button"')}${!review && state.session.user.isModerator?link('review','review','class="button secondary"'):''}${!review?emailLinkAction():''}</div>
     ${!review ? mobileSettings() : ''}
     <div class="section">${problem?`<p class="empty">${t('serviceUnavailable')}</p>`:list.length?list.map(i=>dashboardItem(i,review)).join(''):`<p class="empty">${t('noSubmissions')}</p>`}</div>

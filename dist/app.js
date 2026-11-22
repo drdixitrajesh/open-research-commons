@@ -14,6 +14,7 @@ const icons = {
   calendar:'<rect x="4.5" y="6" width="15" height="14" rx="1.7"/><path d="M8.5 4v4m7-4v4m-11 2h15"/>',
   file:'<path d="M7 3.5h7l4 4V20H7zM14 3.5v4.4h4M10 12h5m-5 3h5"/>',
   cap:'<path d="m2.5 9.5 9.5-5 9.5 5-9.5 5-9.5-5Zm4.1 2.3v4.3c3.2 2.4 7.6 2.4 10.8 0v-4.3m4.1-2.3v6"/>',
+  menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   rss:'<path d="M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14"/><circle cx="5.5" cy="18.5" r="1.1"/>'
 };
@@ -34,6 +35,7 @@ function preference(key, value) {
 export let lang = 'en';
 export const state = {
   subjects: [], index: new Map(), records: [], resolution: new Map(),
+  classifications: {toa:[], seo:[]},
   countries: [], countryIndex: new Map(), countryPages: new Map(),
   directory: [], directoryFailed:false,
   session: {user:null,persistent:false,files:false}, failed:false,
@@ -54,6 +56,28 @@ export const esc = (value = '') => String(value ?? '').replace(/[&<>"']/g, (c) =
 export const t = (key) => esc(txt(key));
 export const subjectLabel = (s) => s?.translations?.[lang] ?? s?.label ?? '';
 export const codedSubjectLabel = (subject) => subject.code+' '+subjectLabel(subject);
+const classificationKeys = {for:'fieldsOfResearch', toa:'activityType', seo:'objectives'};
+const anzsrcSource = 'https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/2020';
+let classificationsRequest;
+let definitionsRequest;
+let classificationsIndex = {toa:new Map(), seo:new Map()};
+export function anzsrcItem(scheme, code) {
+  return scheme === 'for' ? state.index.get(code) : classificationsIndex[scheme]?.get(code);
+}
+const anzsrcLabel = (scheme, item) => scheme === 'toa' ? item.label : codedSubjectLabel(item);
+function loadDefinitions() {
+  return definitionsRequest ??= catalogData('anzsrc-definitions').catch(() => {
+    definitionsRequest = undefined;
+    return {};
+  });
+}
+function loadClassifications() {
+  return classificationsRequest ??= catalogData('anzsrc-classifications').then(data => {
+    classificationsIndex = Object.fromEntries(['toa','seo'].map(scheme =>
+      [scheme,new Map(data[scheme].map(item=>[item.code,item]))]));
+    state.classifications = data;
+  }).catch(() => { classificationsRequest = undefined; });
+}
 export const languageName = (code) => {
   if (!code) return '';
   if (locales[code]?.name) return locales[code].name;
@@ -181,14 +205,30 @@ function chrome(page) {
   document.documentElement.lang = lang;
   document.documentElement.dir = locales[lang]?.dir || 'ltr';
   document.querySelector('.skip').textContent = txt('skip');
-  el('header').innerHTML = `<div class="wrap masthead">${brand()}
-    <nav aria-label="${t('browseRecords')}">${nav.map(([p,key])=>link(p,key,p===page?'aria-current="page"':'')).join('')}</nav>
+  const navigation = nav.map(([p, key]) => link(p, key, p === page ? 'aria-current="page"' : '')).join('');
+  const header = el('header');
+  header.innerHTML = `<div class="wrap masthead">${brand()}
+    <nav class="primary-navigation" aria-label="${t('browseRecords')}">${navigation}</nav>
+    <details class="mobile-navigation">
+      <summary>${icon('menu', 20)} ${t('mobileMenu')}</summary>
+      <nav aria-label="${t('browseRecords')}">${navigation}</nav>
+    </details>
     <div class="header-actions">
       <label class="language">${icon('globe')}<span class="visually-hidden">${t('interfaceLanguage')}</span><select id="interface-language">${options(languageOptions,lang)}</select></label>
       <a class="icon-link" href="${esc(url('account'))}" aria-label="${t('account')}" title="${t('account')}">${icon('user')}</a>
       ${link('submit','submit','class="button"')}
     </div>
   </div>`;
+  const mobileNavigation = header.querySelector('.mobile-navigation');
+  mobileNavigation.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || !mobileNavigation.open) return;
+    event.preventDefault();
+    mobileNavigation.open = false;
+    mobileNavigation.querySelector('summary').focus();
+  });
+  mobileNavigation.addEventListener('focusout', event => {
+    if (event.relatedTarget && !mobileNavigation.contains(event.relatedTarget)) mobileNavigation.open = false;
+  });
   el('footer').innerHTML = `<div class="wrap footer-inner">${brand()}<p>${t('free')}</p><div class="footer-links">
     ${link('about','about')} ${link('subjects','subjects')} ${link('institutions','institutions')} ${link('account','account')}
     ${state.session.user?.isModerator ? link('review','review') : ''}
@@ -318,7 +358,19 @@ export function catalogKindLabel(type) {
   return lang==='zh' ? txt(title)+'（'+names+'）' : txt(title)+' ('+names+')';
 }
 const subjectIncludes = (record,code) => (record.subjectCodes || []).some(subject=>subject.startsWith(code));
-const catalogFilterKeys = ['q','type','subject','kind','country','dial','el','dl','ml','mode','from','to','inst'];
+const catalogFilterKeys = ['q','type','subject','kind','country','dial','el','dl','ml','mode','from','to','inst','toa','seo'];
+function classificationSubjectNames(r) {
+  const activity = anzsrcItem('toa',r.activityType);
+  const objectives = (r.objectives || []).flatMap(code => {
+    const terms = [];
+    for (let length = 2; length <= code.length; length += 2) {
+      const item = anzsrcItem('seo',code.slice(0,length));
+      if (item) terms.push(item.code,item.label);
+    }
+    return terms;
+  });
+  return activity ? [activity.label,...objectives] : objectives;
+}
 let indexedCatalog;
 function describeRecord(r) {
   const country = countryFor(r);
@@ -333,7 +385,7 @@ function describeRecord(r) {
   const translations = Object.values(r.metadata || {});
   return {
     titles: [r.title,...translations.map(m=>m?.title)],
-    subjects,
+    subjects: [...subjects,...classificationSubjectNames(r)],
     keywords: [r.keywords,...translations.map(m=>m?.keywords)].flat(),
     contributors: [r.authors,r.institution].flat(),
     details: [r.description,r.country,r.city,r.startDate,r.endDate,r.year,r.releaseDate,recordKind(r),txt(recordKind(r)),
@@ -376,12 +428,36 @@ function subjectMenus(selected, eventFilter, filterCode) {
   return `<label class="field">${t('topic')}<select name="subject">${options(entries,group || filterCode || '')}${subjectGroupOptions(group)}</select></label>
     <label class="field">${t('subSubject')}<select name="subsubject"${group?.length===4?'':' disabled'}>${subSubjectOptions(group,selected?.code)}</select></label>`;
 }
+function seoOptions(division, selected) {
+  const seo = state.classifications.seo;
+  const groups = seo.filter(item=>item.parent===division);
+  return options([['',txt('all')]],selected) + groups.map(group => {
+    const children = seo.filter(item=>item.parent===group.code);
+    return `<optgroup label="${esc(anzsrcLabel('seo',group))}">${options([group,...children].map(subjectOption),selected)}</optgroup>`;
+  }).join('');
+}
+function classificationFilters(params) {
+  const {toa,seo} = state.classifications;
+  if (!toa.length || !seo.length) return '';
+  const selected = anzsrcItem('seo',params.get('seo'))?.code || '';
+  const division = selected.slice(0,2);
+  const activityType = params.get('toa') || '';
+  return `<details class="event-disclosure full"${division || activityType ? ' open' : ''}>
+    <summary>${t('researchFilters')}</summary>
+    <div class="event-disclosure-content form-grid">
+      <label class="field full">${t('activityType')}<select name="toa">${options([['',txt('all')],...toa.map(item=>[item.code,item.label])],activityType)}</select></label>
+      <label class="field">${t('objectiveDivision')}<select name="seoDivision">${options([['',txt('all')],...seo.filter(item=>!item.parent).map(subjectOption)],division)}</select></label>
+      <label class="field">${t('objectives')}<select name="seo"${division ? '' : ' disabled'}>${seoOptions(division,selected)}</select></label>
+    </div></details>`;
+}
 function bindCatalogFilters(form, eventIndex, period) {
   const subSubject = form.elements.namedItem('subsubject');
+  const seo = form.elements.namedItem('seo');
   const format = new Intl.NumberFormat(lang);
   function updateCounts() {
     const filters = new URLSearchParams(new FormData(form));
     filters.set('subject', filters.get('subsubject') || filters.get('subject') || '');
+    filters.set('seo', filters.get('seo') || filters.get('seoDivision') || '');
     const {counts, dates} = countEvents(eventIndex, filters, period);
     const setCount = (element, count) => {
       const label = element.dataset.label ??= element.textContent;
@@ -389,7 +465,14 @@ function bindCatalogFilters(form, eventIndex, period) {
     };
     for (const name of eventFacets) {
       const select = form.elements.namedItem(name);
-      for (const option of select.options) setCount(option, counts[name].get(option.value) || 0);
+      if (!select) continue;
+      for (const option of select.options) {
+        const value = name==='seo' && !option.value ? filters.get('seoDivision') || '' : option.value;
+        setCount(option, counts[name].get(value) || 0);
+      }
+    }
+    for (const option of form.elements.namedItem('seoDivision')?.options || []) {
+      setCount(option, counts.seo.get(option.value) || 0);
     }
     for (const group of form.querySelectorAll('optgroup[data-division]')) {
       const label = group.dataset.label ??= group.label;
@@ -407,6 +490,10 @@ function bindCatalogFilters(form, eventIndex, period) {
     if (target.name==='subject') {
       subSubject.innerHTML=subSubjectOptions(target.value);
       subSubject.disabled=subSubject.options.length===1;
+    }
+    if (target.name==='seoDivision' && seo) {
+      seo.innerHTML = seoOptions(target.value,'');
+      seo.disabled = !target.value;
     }
     if (eventIndex) updateCounts();
   });
@@ -467,6 +554,8 @@ function recordList(page, params, scope, loadFailed) {
   const eventCounts = eventIndex ? countEvents(eventIndex, filters, period) : null;
   const matches = eventCounts?.matches ?? candidates.filter(r => {
     if (subject && !subjectIncludes(r,subject)) return false;
+    if (filters.get('toa') && filters.get('toa') !== r.activityType) return false;
+    if (filters.get('seo') && !(r.objectives || []).some(code=>code.startsWith(filters.get('seo')))) return false;
     if (eventLanguage || documentLanguage) {
       if (r.type==='event' ? !(eventLanguage && matchesLanguage(r,'el',eventLanguage))
         : !(documentLanguage && matchesLanguage(r,'dl',documentLanguage))) return false;
@@ -498,7 +587,7 @@ function recordList(page, params, scope, loadFailed) {
     return menu(txt(label),facet,withUnspecified(entries),selected);
   }
   const number = new Intl.NumberFormat(lang);
-  const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${eventPeriods.map(p =>
+  const tabs = page==='events' ? `<nav class="tabs event-periods" aria-label="${t('events')}">${eventPeriods.map(p =>
     `<a class="tab"${p===period?' aria-current="page"':''} href="${esc(url(page,{...Object.fromEntries(params),period:p,view:''}))}">${t(p)} (${number.format(eventCounts.periods[p])})</a>`).join('')}
     <a class="text-link events-rss" href="/events.rss" type="application/rss+xml">${icon('rss',16)} ${t('eventsRss')}</a></nav>` : '';
   const selectedSubject = state.index.get(params.get('subject'));
@@ -510,6 +599,7 @@ function recordList(page, params, scope, loadFailed) {
     ${languageMenu('metadataLanguage','ml')}
     ${type==='event' || !type ? menu(txt('format'),'mode',withUnspecified(participationModes.map(v=>[v,txt(v)]))) : ''}
     ${eventFilter ? dateField('from','startDate') + dateField('to','endDate') : ''}
+    ${classificationFilters(params)}
     </div><div class="form-actions"><button class="button secondary">${t('filter')}</button>${link(page,'clear','class="text-link"',{type:page==='search'?type:'',period:requestedPeriod && period,q:query})}
     ${selectedSubject ? `<a class="tag" href="${esc(url('subjects',{subject:selectedSubject.code}))}">${esc(codedSubjectLabel(selectedSubject))}</a>` : ''}
   </div><output class="form-feedback" role="alert"></output></form>`;
@@ -524,19 +614,57 @@ function recordList(page, params, scope, loadFailed) {
   </div>`, '', heading);
   return {html, bind:()=>bindCatalogFilters(document.querySelector('form[data-filter]'),eventIndex,period)};
 }
-function subjectsPage(params) {
-  const item = state.index.get(params.get('subject'));
-  const parent = state.index.get(item?.parent);
-  const title = item ? subjectLabel(item) : txt('subjects');
-  const children = state.subjects.filter(s=>s.parent === (item?.code || null));
-  return layout(title, `${item ? `<p><bdi class="code">${item.code}</bdi> ${t('classification')}${item.translations?.[lang] ? `<br>${t('officialLabel')} · <span lang="en">${esc(item.label)}</span> · ${t('platformTranslation')}` : ''}</p>
-  <nav class="tabs">${[['events','upcoming',{period:'upcoming'}],['events','past',{period:'past'}],['proceedings','proceedings',{}],['theses','theses',{}]].map(([p,k,v])=>link(p,k,'class="tab"',{subject:item.code,...v})).join('')}</nav>
-  ${parent ? `<p><a class="text-link" href="${esc(url('subjects',{subject:parent.code}))}">${esc(codedSubjectLabel(parent))}</a></p>` : ''}` : `<p><a class="text-link" href="/data/subjects-license.txt" target="_blank" rel="noopener">${t('classification')}</a></p>`}
-  <label class="field subject-filter">${t('subjectSearch')}<input id="subject-query" type="search" autocomplete="off"></label>
-  <div id="subject-results">${subjectTree(children)}</div>`, item ? '' : txt('browseText'));
+const subjectScheme = params => ['toa','seo'].includes(params.get('scheme')) ? params.get('scheme') : 'for';
+const schemeItems = scheme => scheme === 'for' ? state.subjects : state.classifications[scheme];
+function schemeParams(scheme, code) {
+  return scheme === 'for' ? {subject:code} : {scheme,code};
 }
-function subjectTree(records) {
-  return records.length ? `<ul class="tree">${records.map(s=>`<li><a href="${esc(url('subjects',{subject:s.code}))}"><bdi class="code">${s.code}</bdi> ${esc(subjectLabel(s))}</a></li>`).join('')}</ul>` : empty();
+const officialWorkbook = scheme => anzsrcSource + '/anzsrc2020_' + scheme + '.xlsx';
+function classificationSources(scheme) {
+  const schemes = scheme ? [scheme] : Object.keys(classificationKeys);
+  return `<details class="event-sources classification-sources">
+    <summary>${t('classificationSources')}</summary>
+    <div><p>${t('classificationCredit')}</p><ul>
+      <li><a class="text-link" href="${anzsrcSource}" rel="noopener noreferrer">Australian Bureau of Statistics · ANZSRC 2020</a></li>
+      <li><a class="text-link" href="https://www.arc.gov.au/funding-research/applying-grant/classification-codes-rfcd-seo-and-anzsic-codes" rel="noopener noreferrer">Australian Research Council</a></li>
+      ${schemes.map(key=>`<li><a class="text-link" href="${officialWorkbook(key)}" rel="noopener noreferrer">${t(classificationKeys[key])} · ${t('classificationWorkbook')}</a></li>`).join('')}
+      <li><a class="text-link" href="/data/subjects-license.txt">CC BY 4.0 · ${t('classificationSources')}</a></li>
+    </ul></div>
+  </details>`;
+}
+function classificationDefinition(data) {
+  if (!data) return '';
+  const {definition,exclusions} = data;
+  return `<dl class="metadata classification-definition">
+    ${definition ? `<div><dt>${t('classificationDefinition')}</dt><dd lang="en" dir="ltr">${esc(definition)}</dd></div>` : ''}
+    ${exclusions ? `<div><dt>${t('classificationExclusions')}</dt><dd lang="en" dir="ltr">${esc(exclusions)}</dd></div>` : ''}
+  </dl>`;
+}
+async function subjectsPage(params) {
+  const scheme = subjectScheme(params);
+  const item = anzsrcItem(scheme,params.get(scheme==='for'?'subject':'code'));
+  const parent = anzsrcItem(scheme,item?.parent);
+  const title = item ? subjectLabel(item) : txt('subjects');
+  const children = schemeItems(scheme).filter(entry=>entry.parent === (item?.code || null));
+  const definitions = await loadDefinitions();
+  const notes = definitions.notes?.[scheme];
+  const filters = item ? {[scheme==='for'?'subject':scheme]:item.code} : {};
+  const browseTabs = `<nav class="tabs" aria-label="${t('anzsrc2020')}">${Object.entries(classificationKeys).map(([key,label]) =>
+    link('subjects',label,`class="tab"${key===scheme?' aria-current="page"':''}`,schemeParams(key))).join('')}</nav>`;
+  const itemDetails = item ? `<p>${scheme==='toa' ? '' : `<bdi class="code">${item.code}</bdi> `}${t(classificationKeys[scheme])}${item.translations?.[lang] ? `<br>${t('officialLabel')} · <span lang="en">${esc(item.label)}</span> · ${t('platformTranslation')}` : ''}</p>
+    ${classificationDefinition(definitions[scheme]?.[item.code])}
+    <nav class="tabs" aria-label="${t('browseRecords')}">${[['events','upcoming',{period:'upcoming'}],['events','past',{period:'past'}],['proceedings','proceedings',{}],['theses','theses',{}]].map(([p,k,v])=>link(p,k,'class="tab"',{...filters,...v})).join('')}</nav>
+    ${parent ? `<p><a class="text-link" href="${esc(url('subjects',schemeParams(scheme,parent.code)))}">${esc(anzsrcLabel(scheme,parent))}</a></p>` : ''}` : '';
+  const search = scheme === 'toa' ? 'activitySearch' : scheme === 'seo' ? 'objectiveSearch' : 'subjectSearch';
+  return layout(title, `${browseTabs}${itemDetails}
+    <label class="field subject-filter">${t(search)}<input id="subject-query" type="search" autocomplete="off"></label>
+    <div id="subject-results">${subjectTree(children,scheme,item)}</div>
+    ${notes?.length ? `<details class="event-sources classification-notes"><summary>${t('classificationNotes')}</summary><div lang="en" dir="ltr">${notes.map(note=>`<p>${esc(note)}</p>`).join('')}</div></details>` : ''}
+    ${classificationSources(scheme)}`, item ? '' : txt('classificationIntro'));
+}
+function subjectTree(records, scheme, item) {
+  if (!records.length) return item ? '' : empty();
+  return `<ul class="tree">${records.map(entry=>`<li><a href="${esc(url('subjects',schemeParams(scheme,entry.code)))}">${scheme==='toa'?'':`<bdi class="code">${entry.code}</bdi> `}${esc(subjectLabel(entry))}</a></li>`).join('')}</ul>`;
 }
 function institutionsPage(params) {
   const query = params.get('country') || '';
@@ -565,6 +693,12 @@ const doiHref = (doi) => doi ? 'https://doi.org/' + doi.split('/').map(encodeURI
 function citations(r,meta) {
   return [r.authors || r.institution,r.year || (r.releaseDate || r.startDate)?.slice(0,4),meta.title,r.doi ? doiHref(r.doi) : null].filter(Boolean).join('. ');
 }
+function classificationLinks(scheme, codes, preview) {
+  return codes.map(code=>anzsrcItem(scheme,code)).filter(Boolean).map(item=>{
+    const label = esc(anzsrcLabel(scheme,item));
+    return preview ? label : `<a href="${esc(url('subjects',schemeParams(scheme,item.code)))}">${label}</a>`;
+  }).join(' · ');
+}
 function detailsView(r, params, preview = false) {
   const selection = params.get('metadata') || lang;
   const originalLanguage = r.metadataLanguage || r.language;
@@ -578,6 +712,7 @@ function detailsView(r, params, preview = false) {
     ['country',country ? `<a href="${esc(url('search',{country:country.iso}))}">${esc(countryName(country))}</a>` : esc(r.country)],['dialingCode',esc(countryCodes(country))],['format',r.mode ? t(r.mode) : ''],['eventStatus',r.type==='event' && r.eventStatus ? t(r.eventStatus) : ''],['deadline',esc(day(r.deadline))],
     ['startTime',esc(r.startTime)],['endTime',esc(r.endTime)],['callOpens',esc(day(r.callOpens))],['paperDeadline',esc(day(r.paperDeadline))],['registrationDeadline',esc(day(r.registrationDeadline))],['attendanceFee',esc(r.attendanceFee)],
     ['degree',esc(r.degree)],['department',esc(r.department)],['supervisors',esc(r.supervisors)],['access',r.access ? t(r.access) : ''],['embargoUntil',esc(day(r.embargoUntil))],['license',esc(r.license)],['rightsHolder',esc(r.rightsHolder)],
+    ['activityType',classificationLinks('toa',[r.activityType],preview)], ['objectives',classificationLinks('seo',r.objectives || [],preview)],
     ['publicContact',esc(r.publicContact)],['doi',r.doi && !preview ? `<a href="${esc(doiHref(r.doi))}" rel="noopener"><bdi>${esc(r.doi)}</bdi></a>` : '']
   ];
   const files = r.files || [];
@@ -606,7 +741,8 @@ function aboutPage() {
     <details open><summary>${t('doi')}</summary><p>${t('doiPolicy')}</p></details>
     <details id="account-privacy"><summary>${t('accountPrivacy')}</summary><p>${t('accountPrivacyNote')}</p>
     ${state.session.emailAuth ? `<p>${t('accountEmailProvider')}</p><p>${t('loginMobilePrivacy')}</p>` : ''}</details>
-    <details><summary>${t('classification')}</summary><p>${t('browseText')}</p><p><a class="text-link" href="/data/subjects-license.txt">${t('classification')}</a></p></details>
+    <p>${link('subjects','anzsrc2020','class="text-link"')}</p>
+    ${classificationSources()}
     <details><summary>${t('startSubmission')}</summary><p>${t('submissionIntro')}</p><p>${link('submit','submit','class="button"')}</p></details>
     <details><summary>${t('examples')}</summary><p>${t('sampleContent')}</p></details>
   </div>`);
@@ -636,6 +772,10 @@ async function render(focus=false) {
   chrome(page);
   document.title = txt('brand') + (page === 'home' ? '' : ' · ' + txt(nav.find(([p])=>p===page)?.[1] || (page==='record'?'details':page)));
   let html, bindFilters;
+  if (!['home','countries','institutions','about'].includes(page)) {
+    await loadClassifications();
+    if (seq!==state.nav) return;
+  }
   if (page === 'record') {
     const id = params.get('record');
     if (!exactRecord(id) && !state.resolution.has(id) && !id.startsWith('directory-')) {
@@ -648,7 +788,7 @@ async function render(focus=false) {
     html = r?.status==='publication_pending' ? layout(txt('details'),empty('publication_pending')) : r ? detailsView(r,params) : layout(txt('details'),empty('recordMissing'));
     if (r?.title) document.title = selectedMetadata(r,params.get('metadata') || lang).title + ' · ' + txt('brand');
   } else if (page === 'home') html = homePage();
-  else if (page === 'subjects') html = subjectsPage(params);
+  else if (page === 'subjects') html = await subjectsPage(params);
   else if (page === 'countries') html = countriesPage();
   else if (page === 'institutions') html = institutionsPage(params);
   else if (['events','proceedings','theses','search'].includes(page)) {
@@ -740,9 +880,13 @@ document.addEventListener('input',(e)=>{
   }
   if (e.target.id!=='subject-query') return;
   const query = normalize(e.target.value.trim());
-  const parent = current().params.get('subject');
-  const rows = query ? state.subjects.filter(s=>subjectMatches(s,query)).slice(0,80) : state.subjects.filter(s=>s.parent===(parent || null));
-  el('subject-results').innerHTML=subjectTree(rows);
+  const {params} = current();
+  const scheme = subjectScheme(params);
+  const items = schemeItems(scheme);
+  const item = anzsrcItem(scheme,params.get(scheme==='for'?'subject':'code'));
+  const rows = query ? items.filter(entry=>subjectMatches(entry,query)).slice(0,80)
+    : items.filter(entry=>entry.parent===(item?.code || null));
+  el('subject-results').innerHTML=subjectTree(rows,scheme,query ? null : item);
 });
 document.addEventListener('submit',(e)=>{
   const form = e.target;
@@ -755,8 +899,11 @@ document.addEventListener('submit',(e)=>{
     const filters = document.querySelector('form[data-filter]');
     const chosen = filters ? Object.fromEntries(new FormData(filters)) : {};
     const values = {...Object.fromEntries(current().params),...chosen};
-    if (filters) values.subject = chosen.subsubject || chosen.subject;
-    delete values.subsubject;
+    if (filters) {
+      values.subject = chosen.subsubject || chosen.subject;
+      if (filters.elements.namedItem('seo')) values.seo = chosen.seo || chosen.seoDivision;
+    }
+    delete values.subsubject; delete values.seoDivision;
     values.q = el('query')?.value.trim() || '';
     if (page==='search') values.type = searchType;
     if (searching && !keepEvents) delete values.period;

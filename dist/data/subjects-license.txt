@@ -1,14 +1,28 @@
-ANZSRC 2020 Fields of Research
+Australian and New Zealand Standard Research Classification (ANZSRC), 2020
 
-Based on Australian Bureau of Statistics data. This work includes Stats NZ’s data, which Stats NZ licenses for reuse under the Creative Commons Attribution 4.0 International licence.
+Based on Australian Bureau of Statistics data. This work includes Stats NZ’s data which are licensed by Stats NZ for reuse under the Creative Commons Attribution 4.0 International licence.
 
-Australian Bureau of Statistics (2020), “ANZSRC 2020 FoR – structure, definitions and explanatory notes,” Table 3, revised 24 October 2025, accessed 20 November 2026.
+Australian Bureau of Statistics (2020), Australian and New Zealand Standard Research Classification (ANZSRC), 2020, accessed 21 November 2026.
 https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/2020
 
+Type of Activity (ToA), Table 1 and Explanatory Notes, released 30 June 2020.
+https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/2020/anzsrc2020_toa.xlsx
+© Commonwealth of Australia 2020
+© Crown Copyright New Zealand 2020
+
+Fields of Research (FoR), Tables 3 and 4 and Explanatory Notes, revised 24 October 2025.
+https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/2020/anzsrc2020_for.xlsx
 © Commonwealth of Australia 2025
 © Crown Copyright New Zealand 2025
+
+Socio-Economic Objectives (SEO), Tables 3 and 4 and Explanatory Notes, revised 24 October 2025.
+https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/2020/anzsrc2020_seo.xlsx
+© Commonwealth of Australia 2025
+© Crown Copyright New Zealand 2025
+
 Licence https://creativecommons.org/licenses/by/4.0/
 ABS copyright https://www.abs.gov.au/website-privacy-copyright-and-disclaimer
 Stats NZ copyright https://www.stats.govt.nz/about-us/copyright/
+Australian Research Council overview https://www.arc.gov.au/funding-research/applying-grant/classification-codes-rfcd-seo-and-anzsic-codes
 
-This JSON extract includes the codes, English labels, and parent relationships for all 23 divisions, 213 groups, and 1,967 fields. Division labels use sentence case. Open Research Commons added independent display translations for all divisions and selected groups and fields. The English label remains available in every record.
+The repository extracted the classifications, definitions, exclusions and explanatory notes from the spreadsheet tables and converted them to JSON. FoR and SEO division labels are shown in sentence case. FoR display translations were prepared independently by the repository. ToA has named categories. The repository assigned machine-readable IDs for storing them.
