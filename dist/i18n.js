@@ -80,10 +80,13 @@ mastersThesis|Master’s thesis|स्नातकोत्तर थीसि�
 dissertation|Postgraduate dissertation|स्नातकोत्तर शोधप्रबंध|Trabajo de posgrado|Mémoire de troisième cycle|بحث دراسات عليا|Trabalho de pós-graduação|研究生毕业论文|Выпускная работа по программе послевузовского образования
 free|Free to read and contribute|पढ़ना और योगदान करना निःशुल्क है|Consulta y depósito gratuitos|Consultation et dépôt gratuits|القراءة والمساهمة مجانًا|Leitura e depósito gratuitos|免费阅读和提交|Чтение и размещение бесплатны
 details|Details|विवरण|Detalles|Détails|التفاصيل|Detalhes|详情|Подробнее
+resultSingle|Result|परिणाम|Resultado|Résultat|نتيجة|Resultado|条结果|результат
 results|Results|परिणाम|Resultados|Résultats|النتائج|Resultados|搜索结果|Результаты
 loadingResults|Searching records…|रिकॉर्ड खोज रहे हैं…|Buscando registros…|Recherche de notices…|جارٍ البحث في السجلات…|Pesquisando registros…|正在搜索记录…|Поиск записей…
 partialResults|Some records could not be loaded. Results may be incomplete.|कुछ रिकॉर्ड लोड नहीं हो सके। परिणाम अधूरे हो सकते हैं।|No se pudieron cargar algunos registros. Los resultados pueden estar incompletos.|Certaines notices n’ont pas pu être chargées. Les résultats peuvent être incomplets.|تعذّر تحميل بعض السجلات. قد تكون النتائج غير مكتملة.|Alguns registros não puderam ser carregados. Os resultados podem estar incompletos.|部分记录加载失败，结果可能不完整。|Часть записей не удалось загрузить. Результаты могут быть неполными.
 noResults|No results found|कोई परिणाम नहीं मिला|No se encontraron resultados|Aucun résultat|لم يُعثر على نتائج|Nenhum resultado encontrado|未找到结果|Ничего не найдено
+eventFilters|Filters|फ़िल्टर|Filtros|Filtres|عوامل التصفية|Filtros|筛选条件|Фильтры
+broadenResearch|View all results in {subject}|{subject} में सभी परिणाम देखें|Ver todos los resultados de {subject}|Voir tous les résultats dans {subject}|اعرض كل النتائج في {subject}|Ver todos os resultados em {subject}|查看 {subject} 的所有结果|Показать все результаты в {subject}
 filter|Filter|फ़िल्टर|Filtrar|Filtrer|تصفية|Filtrar|筛选|Фильтры
 clear|Clear filters|फ़िल्टर हटाएँ|Borrar filtros|Effacer les filtres|امسح عوامل التصفية|Limpar filtros|清除筛选条件|Сбросить фильтры
 documentLanguage|Document language|दस्तावेज़ की भाषा|Idioma del documento|Langue du document|لغة الوثيقة|Idioma do documento|文献语言|Язык документа
@@ -122,6 +125,7 @@ subjectSearch|Search by subject name or code|विषय का नाम य�
 featuredSubjects|Explore subjects|विषय खोजें|Explorar disciplinas|Explorer les disciplines|استكشف التخصصات|Explore as áreas de pesquisa|探索学科|Обзор дисциплин
 allSubjects|All subjects|सभी विषय|Todas las disciplinas|Toutes les disciplines|كل التخصصات|Todas as áreas de pesquisa|全部学科|Все дисциплины
 subSubject|Stream of Research|शोध की शाखा|Línea de investigación|Axe de recherche|مسار البحث|Linha de pesquisa|研究方向|Направление исследований
+researchStreamSearch|Search streams by name or code|शोध की शाखा नाम या कोड से खोजें|Buscar líneas por nombre o código|Rechercher par nom ou code|ابحث عن المسار بالاسم أو الرمز|Pesquise linhas por nome ou código|按名称或代码搜索研究方向|Поиск направления по названию или коду
 selectSubjectFirst|Choose a subject first|पहले विषय चुनें|Elige primero una disciplina|Choisissez d’abord une discipline|اختر التخصص أولاً|Escolha uma área primeiro|请先选择学科|Сначала выберите дисциплину
 allResearchFields|All fields in this group|इस समूह के सभी शोध क्षेत्र|Todos los campos del grupo|Tous les domaines du groupe|جميع مجالات هذه المجموعة|Todos os campos do grupo|该组的所有研究领域|Все области в этой группе
 allSubSubjects|All research streams|शोध की सभी शाखाएँ|Todas las líneas de investigación|Tous les axes de recherche|جميع مسارات البحث|Todas as linhas de pesquisa|全部研究方向|Все направления исследований

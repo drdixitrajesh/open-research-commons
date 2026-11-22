@@ -349,6 +349,14 @@ export function subjectMatches(s, query) {
   return [s.code,s.label,...Object.values(s.translations || {})].some(v=>normalize(v).includes(query));
 }
 const catalogTypes = {events:'event',proceedings:'material',theses:'thesis'};
+const compactEventFilters = window.matchMedia('(max-width: 760px)');
+compactEventFilters.addEventListener('change', ({matches}) => {
+  const panel = document.querySelector('.event-filter-panel');
+  if (panel) panel.open = !matches;
+});
+function catalogResultTarget() {
+  return (compactEventFilters.matches ? el('event-results-count') : null) || el('catalog-results');
+}
 const kindsFor = (type) => types[type] || (type==='research' ? [...types.material,...types.thesis] : Object.values(types).flat());
 export function catalogKindLabel(type) {
   if (type==='material') return txt('proceedings');
@@ -421,15 +429,24 @@ export function subjectGroupOptions(selected='') {
     return `<optgroup label="${esc(codedSubjectLabel(division))}" data-division="${division.code}">${options(entries,selected)}</optgroup>`;
   }).join('');
 }
-function researchStreamOptions(division, selected = '') {
-  const groups = groupedSubjects(state.subjects).find(entry=>entry.division.code===division)?.groups;
-  if (!groups?.length) return options([['',txt('selectSubjectFirst')]],'');
-  return options([['',txt('allSubSubjects')]],selected) + groups.map(group => {
+const streamSearchWords = value => normalize(value).match(/[\p{L}\p{M}\p{N}]+/gu) || [];
+function researchStreamOptions(division, selected = '', query = '') {
+  const groups = groupedSubjects(state.subjects).find(entry=>entry.division.code===division)?.groups || [];
+  if (!groups.length) return {html:options([['',txt('selectSubjectFirst')]],''),enabled:false,hasMatches:false};
+  const words = streamSearchWords(query);
+  let hasMatches = false;
+  const matches = item => {
+    const found = words.every(word=>subjectMatches(item,word));
+    if (found) hasMatches = true;
+    return found || item.code===selected;
+  };
+  const groupedOptions = groups.map(group => {
     const groupLabel = codedSubjectLabel(group);
-    const entries = [[group.code,`${groupLabel} · ${txt('allResearchFields')}`],
-      ...subjectFields(state.subjects,group.code).map(subjectOption)];
-    return `<optgroup label="${esc(groupLabel)}">${options(entries,selected)}</optgroup>`;
+    const entries = matches(group) ? [[group.code,`${groupLabel} · ${txt('allResearchFields')}`]] : [];
+    entries.push(...subjectFields(state.subjects,group.code).filter(matches).map(subjectOption));
+    return entries.length ? `<optgroup label="${esc(groupLabel)}">${options(entries,selected)}</optgroup>` : '';
   }).join('');
+  return {html:options([['',txt('allSubSubjects')]],selected) + groupedOptions,enabled:true,hasMatches};
 }
 function subjectMenus(selected, eventFilter, filterCode) {
   const division = selected?.code.slice(0,2) || '';
@@ -437,8 +454,14 @@ function subjectMenus(selected, eventFilter, filterCode) {
   const entries = [['',txt('allSubjects')],...state.subjects.filter(item=>item.parent===null).map(subjectOption)];
   if (eventFilter) entries.push([notSpecified,txt('notSpecified')]);
   const selectedDivision = division || (eventFilter && filterCode===notSpecified ? notSpecified : '');
+  const choices = researchStreamOptions(division,stream);
+  const disabled = choices.enabled ? '' : ' disabled';
   return `<label class="field"><span>${t('topic')} <small dir="ltr">(ANZSRC 2020 FoR)</small></span><select name="subject">${options(entries,selectedDivision)}</select></label>
-    <label class="field">${t('subSubject')}<select name="subsubject"${division ? '' : ' disabled'}>${researchStreamOptions(division,stream)}</select></label>`;
+    <div class="research-stream-filter">
+      <label class="field">${t('researchStreamSearch')}<input type="search" data-stream-search aria-controls="research-stream-options" autocomplete="off"${disabled}></label>
+      <label class="field">${t('subSubject')}<select id="research-stream-options" name="subsubject"${disabled}>${choices.html}</select></label>
+      <p class="research-stream-status" role="status" hidden>${t('noResults')}</p>
+    </div>`;
 }
 function seoOptions(division, selected) {
   const seo = state.classifications.seo;
@@ -465,6 +488,8 @@ function classificationFilters(params) {
 function bindCatalogFilters(form, eventIndex, period) {
   const subject = form.elements.namedItem('subject');
   const subSubject = form.elements.namedItem('subsubject');
+  const streamSearch = form.querySelector('[data-stream-search]');
+  const streamStatus = form.querySelector('.research-stream-status');
   const seo = form.elements.namedItem('seo');
   const format = new Intl.NumberFormat(lang);
   function updateCounts() {
@@ -496,10 +521,35 @@ function bindCatalogFilters(form, eventIndex, period) {
       label.textContent = '(' + format.format(dates[label.dataset.dateCount]) + ')';
     }
   }
+  function rebuildStreams(selected) {
+    const choices = researchStreamOptions(subject.value,selected,streamSearch.value);
+    subSubject.innerHTML = choices.html;
+    streamSearch.disabled = subSubject.disabled = !choices.enabled;
+    streamStatus.hidden = !choices.enabled || choices.hasMatches;
+  }
+  streamSearch.addEventListener('input', () => {
+    rebuildStreams(subSubject.value);
+    if (eventIndex) updateCounts();
+  });
+  streamSearch.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' || event.isComposing) return;
+    event.preventDefault();
+    const search = streamSearchWords(streamSearch.value).join(' ');
+    const exact = [...subSubject.options].filter(option => {
+      const item = state.index.get(option.value);
+      return search && item && [item.code,item.label,codedSubjectLabel(item),...Object.values(item.translations || {})]
+        .some(value=>streamSearchWords(value).join(' ')===search);
+    });
+    if (exact.length===1) {
+      subSubject.value = exact[0].value;
+      if (eventIndex) updateCounts();
+    }
+    subSubject.focus();
+  });
   form.addEventListener('change', ({target})=>{
     if (target===subject) {
-      subSubject.innerHTML = researchStreamOptions(subject.value);
-      subSubject.disabled = subSubject.options.length === 1;
+      streamSearch.value = '';
+      rebuildStreams('');
     }
     if (target.name==='seoDivision' && seo) {
       seo.innerHTML = seoOptions(target.value,'');
@@ -532,6 +582,22 @@ function organizerSources() {
   </details>`;
 }
 
+function broaderEventResults(selectedSubject, counts, params, number) {
+  let parent = state.index.get(selectedSubject?.parent);
+  while (parent) {
+    const count = counts.get(parent.code) || 0;
+    if (count) {
+      const query = {...Object.fromEntries(params),view:'',subject:parent.code};
+      const label = txt('broadenResearch').replace('{subject}',() => codedSubjectLabel(parent));
+      return `<div class="empty event-results-empty">
+        <p>${t('noResults')}</p>
+        <a class="button secondary" data-results-link href="${esc(url('events',query))}">${esc(label)} (${number.format(count)})</a>
+      </div>`;
+    }
+    parent = state.index.get(parent.parent);
+  }
+  return empty();
+}
 function recordList(page, params, scope, loadFailed) {
   const scoped = state.countryPages.get(scope);
   const all = scoped ? mergeCatalog(scoped.records) : activeRecords();
@@ -600,7 +666,9 @@ function recordList(page, params, scope, loadFailed) {
   const tabs = page==='events' ? `<nav class="tabs event-periods" aria-label="${t('events')}">${eventPeriods.map(p =>
     `<a class="tab"${p===period?' aria-current="page"':''} href="${esc(url(page,{...Object.fromEntries(params),period:p,view:''}))}">${t(p)} (${number.format(eventCounts.periods[p])})</a>`).join('')}
     <a class="text-link events-rss" href="/events.rss" type="application/rss+xml">${icon('rss',16)} ${t('eventsRss')}</a></nav>` : '';
-  const selectedSubject = state.index.get(params.get('subject'));
+  const selectedSubject = state.index.get(subject);
+  const clearParams = {type:page==='search'?type:'',period:requestedPeriod && period,q:query};
+  const resultCount = number.format(matches.length) + ' ' + t(matches.length===1?'resultSingle':'results');
   const dateField = (name, label) => `<label class="field"><span>${t(label)} <small data-date-count="${name}"></small></span><input name="${name}" type="date" value="${esc(params.get(name) || '')}"></label>`;
   const controls = `<form data-filter="${page}"><div class="filter-grid">
     ${menu(kindLabel,'kind',kinds)}${subjectMenus(selectedSubject,eventFilter,subject)}${menu(txt('country'),'country',withUnspecified(countryOptions()))}
@@ -610,16 +678,30 @@ function recordList(page, params, scope, loadFailed) {
     ${type==='event' || !type ? menu(txt('format'),'mode',withUnspecified(participationModes.map(v=>[v,txt(v)]))) : ''}
     ${eventFilter ? dateField('from','startDate') + dateField('to','endDate') : ''}
     ${classificationFilters(params)}
-    </div><div class="form-actions"><button class="button secondary">${t('filter')}</button>${link(page,'clear','class="text-link"',{type:page==='search'?type:'',period:requestedPeriod && period,q:query})}
+    </div><div class="form-actions"><button class="button secondary">${t('filter')}</button>${link(page,'clear','class="text-link"',clearParams)}
     ${selectedSubject ? `<a class="tag" href="${esc(url('subjects',{subject:selectedSubject.code}))}">${esc(codedSubjectLabel(selectedSubject))}</a>` : ''}
   </div><output class="form-feedback" role="alert"></output></form>`;
+  const isEvents = page==='events';
+  const activeFilters = isEvents ? catalogFilterKeys.filter(key=>key!=='q' && key!=='type' && params.get(key)).length : 0;
+  const filterSummary = selectedSubject ? esc(codedSubjectLabel(selectedSubject)) : subject===notSpecified ? t('notSpecified') : '';
+  const filterPanel = isEvents ? `<div class="event-results-summary">
+      <p id="event-results-count" tabindex="-1">${resultCount}</p>
+      ${activeFilters ? link(page,'clear','class="text-link" data-results-link',clearParams) : ''}
+      ${filterSummary ? `<span class="tag">${filterSummary}</span>` : ''}
+    </div>
+    <details class="event-filter-panel"${compactEventFilters.matches ? '' : ' open'}>
+      <summary>${t('eventFilters')}${activeFilters ? ' (' + number.format(activeFilters) + ')' : ''}</summary>
+      ${controls}
+    </details>${organizerSources()}` : controls;
   const title = fixed ? txt(page) : txt('browseRecords');
-  const heading = page === 'events' ? catalogKindLabel('event') : title;
-  const html = layout(title, searchbox(page,query,type) + tabs + (page === 'events' ? organizerSources() : '') + controls + `<div class="section">
-    <p id="catalog-results" class="muted" tabindex="-1">${number.format(matches.length)} ${t('results')}</p>
+  const heading = isEvents ? catalogKindLabel('event') : title;
+  const examplesNotice = !isEvents || matches.length || !state.directory.length ? withExamples(matches) : '';
+  const noMatches = () => isEvents ? broaderEventResults(selectedSubject,eventCounts.counts.subject,params,number) : empty();
+  const html = layout(title, searchbox(page,query,type) + tabs + filterPanel + `<div class="section${isEvents?' event-results':''}">
+    <p id="catalog-results" class="muted" tabindex="-1">${resultCount}</p>
     ${matches.some(event=>event.directory) ? `<p class="page-description">${t('organizerDirectory')}</p>` : ''}
-    ${withExamples(matches)}${loadFailed ? empty('partialResults') : ''}
-    ${matches.length ? matches.map(r=>itemRow(r,period==='deadlines')).join('') : loadFailed ? '' : empty()}
+    ${examplesNotice}${loadFailed ? empty('partialResults') : ''}
+    ${matches.length ? matches.map(r=>itemRow(r,period==='deadlines')).join('') : loadFailed ? '' : noMatches()}
     ${(scoped ? scoped.next : state.next) ? `<button class="button secondary" type="button" data-next data-scope="${esc(scope)}">${t('next')}</button>` : ''}
   </div>`, '', heading);
   return {html, bind:()=>bindCatalogFilters(document.querySelector('form[data-filter]'),eventIndex,period)};
@@ -813,7 +895,7 @@ async function render(focus=false) {
       comprehensive && (scope ? state.countryPages.get(scope)?.next : state.next || state.failed);
     let loadFailed = state.failed && !scope;
     if (loadPending) {
-      const results = el('catalog-results');
+      const results = catalogResultTarget();
       if (results) {
         results.textContent = txt('loadingResults');
         results.setAttribute('aria-busy','true');
@@ -839,7 +921,7 @@ async function render(focus=false) {
   bindFilters?.();
   bindWorkflow(page,params);
   if (focus) {
-    const results = focus==='results' ? el('catalog-results') : null;
+    const results = focus==='results' ? catalogResultTarget() : null;
     if (results) results.scrollIntoView({block:'start'});
     else window.scrollTo(0,0);
     (results || el('main')).focus({preventScroll:true});
@@ -875,7 +957,7 @@ document.addEventListener('click',async (e)=>{
   const destination = new URL(anchor.href,location.href);
   if (destination.origin !== location.origin || destination.pathname !== '/' || destination.hash) return;
   e.preventDefault();
-  await go(destination);
+  await go(destination,anchor.hasAttribute('data-results-link') ? 'results' : true);
 });
 document.addEventListener('change',(e)=>{
   if (e.target.id!=='interface-language') return;

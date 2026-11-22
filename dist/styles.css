@@ -73,7 +73,10 @@ p { max-inline-size: 72ch; }
 .searchbox select { padding: .63rem .6rem; max-inline-size: 31%; border: 0; border-inline-start: 1px solid var(--line); background: var(--white); font-size: .9rem; }
 .searchbox .button { min-width: 7rem; }
 .section { padding-block: 3.4rem; }
-#catalog-results { scroll-margin-block-start: 1rem; }
+#catalog-results, #event-results-count { scroll-margin-block-start: 1rem; }
+.event-results-summary, .event-filter-panel > summary { display: none; }
+.event-results-empty p { margin-block-end: .65rem; }
+.event-results-empty a { min-block-size: 44px; text-align: start; overflow-wrap: anywhere; }
 .section + .section { border-top: 1px solid var(--line); }
 .section-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; margin-bottom: 1rem; }
 .section-heading h2 { margin: 0; }
@@ -152,6 +155,8 @@ footer { background: var(--navy); color: #e2e8fb; }
 .filter-grid, .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .8rem 1rem; }
 .filter-grid { grid-template-columns: repeat(3, minmax(0,1fr)); margin-block: .8rem 1.2rem; }
 .filter-grid > .field { justify-content: flex-end; }
+.research-stream-filter { display: grid; align-content: end; gap: .32rem; min-inline-size: 0; }
+.research-stream-status { margin: 0; font-size: .88rem; color: var(--muted); }
 label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 700; font-size: .92rem; }
 .field input, .field select, .field textarea, .select-search { border: 1px solid #a5acc2; border-radius: 4px; padding: .53rem .62rem; width: 100%; background: var(--white); color: var(--ink); font-size: .98rem; font-weight: 400; }
 .field input:disabled, .field select:disabled { background: #e9ebf1; }
@@ -294,6 +299,31 @@ label.field { display: flex; flex-direction: column; gap: .32rem; font-weight: 7
   .form-section { margin-inline: 0; }
   .tabs .tab { display: grid; place-items: center; min-block-size: 44px; text-align: center; }
   .events-rss, .event-sources summary { min-block-size: 44px; }
+  .event-results-summary {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto;
+    align-items: center;
+    gap: .35rem .8rem;
+    margin-block: .65rem .8rem;
+  }
+  .event-results-summary > p { margin: 0; font-weight: 700; }
+  .event-results-summary > .text-link { display: flex; align-items: center; min-block-size: 44px; }
+  .event-results-summary > .tag { grid-column: 1 / -1; max-inline-size: 100%; overflow-wrap: anywhere; }
+  .event-filter-panel > summary {
+    display: list-item;
+    min-block-size: 44px;
+    padding: .55rem .85rem;
+    color: var(--blue-deep);
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .event-filter-panel[open] > summary { background: var(--fog); }
+  .event-filter-panel + .event-sources { margin-block: .45rem .3rem; }
+  .section.event-results { padding-block-start: .75rem; }
+  .event-results #catalog-results { display: none; }
   .subject-options button { min-block-size: 44px; align-items: center; }
   :is([data-drop-objective], [data-drop-subject]) { min-block-size: 44px; max-inline-size: 100%; overflow-wrap: anywhere; }
   .hero-copy, [dir=rtl] .hero-copy { padding: 2rem 0 1.35rem; }
