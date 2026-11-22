@@ -56,7 +56,7 @@ export const esc = (value = '') => String(value ?? '').replace(/[&<>"']/g, (c) =
 export const t = (key) => esc(txt(key));
 export const subjectLabel = (s) => s?.translations?.[lang] ?? s?.label ?? '';
 export const codedSubjectLabel = (subject) => subject.code+' '+subjectLabel(subject);
-const classificationKeys = {for:'fieldsOfResearch', toa:'activityType', seo:'objectives'};
+const classificationKeys = {toa:'activityType', for:'fieldsOfResearch', seo:'objectives'};
 const anzsrcSource = 'https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/2020';
 let classificationsRequest;
 let definitionsRequest;
@@ -421,12 +421,24 @@ export function subjectGroupOptions(selected='') {
     return `<optgroup label="${esc(codedSubjectLabel(division))}" data-division="${division.code}">${options(entries,selected)}</optgroup>`;
   }).join('');
 }
+function researchStreamOptions(division, selected = '') {
+  const groups = groupedSubjects(state.subjects).find(entry=>entry.division.code===division)?.groups;
+  if (!groups?.length) return options([['',txt('selectSubjectFirst')]],'');
+  return options([['',txt('allSubSubjects')]],selected) + groups.map(group => {
+    const groupLabel = codedSubjectLabel(group);
+    const entries = [[group.code,`${groupLabel} · ${txt('allResearchFields')}`],
+      ...subjectFields(state.subjects,group.code).map(subjectOption)];
+    return `<optgroup label="${esc(groupLabel)}">${options(entries,selected)}</optgroup>`;
+  }).join('');
+}
 function subjectMenus(selected, eventFilter, filterCode) {
-  const group = selected?.code.length===6 ? selected.parent : selected?.code;
-  const entries = [['',txt('allSubjects')]];
+  const division = selected?.code.slice(0,2) || '';
+  const stream = selected?.code.length > 2 ? selected.code : '';
+  const entries = [['',txt('allSubjects')],...state.subjects.filter(item=>item.parent===null).map(subjectOption)];
   if (eventFilter) entries.push([notSpecified,txt('notSpecified')]);
-  return `<label class="field">${t('topic')}<select name="subject">${options(entries,group || filterCode || '')}${subjectGroupOptions(group)}</select></label>
-    <label class="field">${t('subSubject')}<select name="subsubject"${group?.length===4?'':' disabled'}>${subSubjectOptions(group,selected?.code)}</select></label>`;
+  const selectedDivision = division || (eventFilter && filterCode===notSpecified ? notSpecified : '');
+  return `<label class="field"><span>${t('topic')} <small dir="ltr">(ANZSRC 2020 FoR)</small></span><select name="subject">${options(entries,selectedDivision)}</select></label>
+    <label class="field">${t('subSubject')}<select name="subsubject"${division ? '' : ' disabled'}>${researchStreamOptions(division,stream)}</select></label>`;
 }
 function seoOptions(division, selected) {
   const seo = state.classifications.seo;
@@ -451,6 +463,7 @@ function classificationFilters(params) {
     </div></details>`;
 }
 function bindCatalogFilters(form, eventIndex, period) {
+  const subject = form.elements.namedItem('subject');
   const subSubject = form.elements.namedItem('subsubject');
   const seo = form.elements.namedItem('seo');
   const format = new Intl.NumberFormat(lang);
@@ -474,22 +487,19 @@ function bindCatalogFilters(form, eventIndex, period) {
     for (const option of form.elements.namedItem('seoDivision')?.options || []) {
       setCount(option, counts.seo.get(option.value) || 0);
     }
-    for (const group of form.querySelectorAll('optgroup[data-division]')) {
-      const label = group.dataset.label ??= group.label;
-      group.label = label + ' (' + format.format(counts.subject.get(group.dataset.division) || 0) + ')';
-    }
-    const parent = filters.get('subject') && form.elements.namedItem('subject').value;
-    for (const option of subSubject.options) {
-      setCount(option, counts.subject.get(option.value || parent || '') || 0);
+    if (!subSubject.disabled) {
+      for (const option of subSubject.options) {
+        setCount(option, counts.subject.get(option.value || subject.value) || 0);
+      }
     }
     for (const label of form.querySelectorAll('[data-date-count]')) {
       label.textContent = '(' + format.format(dates[label.dataset.dateCount]) + ')';
     }
   }
   form.addEventListener('change', ({target})=>{
-    if (target.name==='subject') {
-      subSubject.innerHTML=subSubjectOptions(target.value);
-      subSubject.disabled=subSubject.options.length===1;
+    if (target===subject) {
+      subSubject.innerHTML = researchStreamOptions(subject.value);
+      subSubject.disabled = subSubject.options.length === 1;
     }
     if (target.name==='seoDivision' && seo) {
       seo.innerHTML = seoOptions(target.value,'');
