@@ -14,6 +14,8 @@ function validEntry(entry) {
       !entry.id.startsWith('directory-') || typeof entry.title !== 'string' || !entry.title ||
       !validDate(entry.startDate) || !validDate(entry.endDate) || entry.endDate < entry.startDate ||
       typeof entry.sourceUrl !== 'string' || !URL.canParse(entry.sourceUrl)) return false;
+  if (entry.subjectCodes !== undefined && (!Array.isArray(entry.subjectCodes) ||
+      entry.subjectCodes.some(code => typeof code !== 'string' || !/^(?:\d{2}){1,3}$/.test(code)))) return false;
   const source = new URL(entry.sourceUrl);
   return source.protocol === 'https:' && !source.username && !source.password;
 }

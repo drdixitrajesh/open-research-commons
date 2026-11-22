@@ -16,6 +16,17 @@ const mps = {
   origin: 'https://www.mps.mpg.de',
   timezone: 'Europe/Berlin',
 };
+// Exact organizer venue names checked against their published addresses.
+const ucfOrlandoVenues = new Set([
+  'Kenneth G. Dixon Career Development Center: 121',
+  'National Entrepreneur Center: Venture Training Room',
+  'Rosen College of Hospitality Management: Darden Auditorium',
+  'Visual Arts Building: 215: Visual Arts',
+]);
+const mpsGoettingenVenues = new Set([
+  'Max-Planck-Institut für Sonnensystemforschung',
+  'Max Planck Institute for Solar System Research',
+]);
 const maxFeedBytes = 2_000_000;
 const day = 86_400_000;
 const months = new Map('Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ')
@@ -31,6 +42,7 @@ const itemPath = 'rss/channel/item';
 const commonFields = [
   ['title', 'title'],
   ['link', 'link'],
+  ['description', 'description'],
 ];
 const ucfFields = eventFields([
   ...commonFields,
@@ -40,7 +52,7 @@ const ucfFields = eventFields([
   ['ucf:location/ucf:name', 'venue'],
   ['ucf:location/ucf:virtualurl', 'virtualLocation'],
 ]);
-const mpsFields = eventFields([...commonFields, ['description', 'description']]);
+const mpsFields = eventFields(commonFields);
 
 function eventFields(paths) {
   return new Map(paths.map(([path, key]) => [itemPath + '/' + path, key]));
@@ -122,6 +134,28 @@ function clean(value, maxLength) {
   return (value || '').replace(/\s+/gu, ' ').trim().slice(0, maxLength);
 }
 
+const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
+const languages = new Map([
+  ...['ar', 'bn', 'de', 'en', 'es', 'fr', 'hi', 'it', 'ja', 'ko', 'nl', 'pl', 'pt', 'ru', 'tr', 'zh']
+    .map(code => [languageNames.of(code).toLowerCase(), code]),
+  ['bengali', 'bn'],
+  ['deutsch', 'de'],
+  ['mandarin', 'zh'],
+]);
+
+function declaredLanguageFields(description = '', explicitLanguage = '') {
+  const lines = description.replace(/<\/?(?:p|br|li|div)\b[^>]*>/gi, '\n').replace(/<[^>]*>/g, ' ');
+  const statements = lines.matchAll(/(?:^|[.\n!?])[ \t]*(?:(?:event|seminar|conference|workshop|webinar|talk|session|spoken) languages?[ \t]*:[ \t]*|(?:(?:this|the) )?(?:event|seminar|conference|workshop|webinar|talk|session) (?:is|will be) (?:held|presented|conducted|delivered) in )([^\n.!?]+)/gi);
+  const declared = new Set();
+  for (const value of [explicitLanguage, ...Array.from(statements, match => match[1])]) {
+    const names = clean(value, 200).toLowerCase().replace(/^both\s+/, '').split(/\s*,\s*(?:and\s+)?|\s+and\s+/);
+    const codes = names.map(name => languages.get(name));
+    if (codes.every(Boolean)) for (const code of codes) declared.add(code);
+  }
+  const [language, ...additional] = declared;
+  return language ? { language, ...(additional.length ? { languages: additional } : {}) } : {};
+}
+
 function organizerEvent(value, origin, pathPattern) {
   try {
     const url = new URL(value || '');
@@ -198,6 +232,7 @@ function ucfRecord(entry, category, fallback, from, to) {
   const venue = clean(entry.venue, 150);
   const online = onlineLocation(entry.virtualLocation?.trim());
   const mode = online ? (venue ? 'hybrid' : 'online') : (venue ? 'inPerson' : '');
+  const location = ucfOrlandoVenues.has(venue) ? { countryCode: 'US', country: 'United States', city: 'Orlando' } : {};
   return eventRecord(source, title, ucf, {
     eventType,
     startDate: start.date,
@@ -206,16 +241,22 @@ function ucfRecord(entry, category, fallback, from, to) {
     endTime: end.time,
     ...(venue ? { venue } : {}),
     ...(mode ? { mode } : {}),
+    ...location,
+    ...declaredLanguageFields(entry.description),
   });
 }
 
 function seminarMetadata(html = '') {
   const fields = new Map();
   for (const line of html.split(/<br\s*\/?\s*>/i)) {
-    const match = /^\s*<strong>(Date|Location|Room|Summary)<\/strong>:\s*([^<]*)/.exec(line);
+    const match = /^\s*<strong>(Date|Location|Room|Language|Summary)<\/strong>:\s*([^<]*)/.exec(line);
     if (!match) continue;
     if (match[1] === 'Summary') break;
-    if (fields.has(match[1])) return new Map();
+    if (fields.has(match[1])) {
+      if (match[1] !== 'Language') return new Map();
+      fields.set('Language', '');
+      continue;
+    }
     fields.set(match[1], match[2].trim());
   }
   return fields;
@@ -242,6 +283,8 @@ function mpsRecord(entry, from, to) {
   const online = onlineLocation(room);
   const venue = clean([location, online ? '' : room].filter(Boolean).join(', '), 150);
   const mode = online ? (venue ? 'hybrid' : 'online') : (venue ? 'inPerson' : '');
+  const geography = mpsGoettingenVenues.has(clean(location, 150).normalize('NFC'))
+    ? { countryCode: 'DE', country: 'Germany', city: 'Göttingen' } : {};
   return eventRecord(source, title, mps, {
     eventType: 'seminar',
     startDate: day,
@@ -250,6 +293,8 @@ function mpsRecord(entry, from, to) {
     endTime,
     ...(venue ? { venue } : {}),
     ...(mode ? { mode } : {}),
+    ...geography,
+    ...declaredLanguageFields(entry.description, fields.get('Language')),
   });
 }
 

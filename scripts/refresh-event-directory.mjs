@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { fetchOrganizerRss } from '../src/events-rss-import.js';
+import { organizerEventSubjectCodes } from '../src/organizer-event-subjects.js';
 
 const output = new URL('../dist/data/events-feed.json', import.meta.url);
 const defaultFrom = new Date().toISOString().slice(0, 10);
@@ -13,6 +14,7 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !Number.isFinite(parsedFrom.valueOf()) 
 
 const days = 120;
 const to = new Date(parsedFrom.valueOf() + days * 86_400_000).toISOString().slice(0, 10);
+const pastFrom = new Date(parsedFrom.valueOf() - 30 * 86_400_000).toISOString().slice(0, 10);
 const countries = new Intl.DisplayNames(['en'], { type: 'region' });
 const countryData = JSON.parse(await readFile(new URL('../dist/data/countries.json', import.meta.url), 'utf8'));
 const explicitCountries = new Map(countryData.flatMap(({ iso, name }) => [
@@ -286,6 +288,9 @@ for (const { id, name, error } of rss.failedSources) {
   records.push(...keepUpcoming(id));
 }
 records.push(...rss.records);
+const currentIds = new Set(records.map(entry => entry.id));
+records.push(...previous.filter(entry => entry.endDate >= pastFrom && entry.endDate < from &&
+  !currentIds.has(entry.id)));
 
 function order(a, b) {
   return a.startDate.localeCompare(b.startDate) || a.title.localeCompare(b.title, 'en') ||
@@ -297,9 +302,10 @@ const snapshot = [...new Map(records.sort(order).map((entry) => [
   entry.sourceUrl + '|' + entry.startDate, entry,
 ])).values()].map((entry) => {
   const prior = previousById.get(entry.id);
-  return prior?.title === entry.title && Array.isArray(prior.subjectCodes)
-    ? { ...entry, subjectCodes: prior.subjectCodes }
-    : entry;
+  const subjectCodes = prior?.title === entry.title && Array.isArray(prior.subjectCodes) && prior.subjectCodes.length
+    ? prior.subjectCodes
+    : organizerEventSubjectCodes(entry);
+  return subjectCodes.length ? { ...entry, subjectCodes } : entry;
 }).sort(order);
 const temporary = new URL('./.events-feed-' + randomUUID() + '.json', output);
 try {

@@ -13,7 +13,10 @@
     "directory": true,
     "timezone": "Europe/Zurich",
     "startTime": "08:00",
-    "endTime": "18:00"
+    "endTime": "18:00",
+    "subjectCodes": [
+      "5107"
+    ]
   },
   {
     "id": "directory-cern-1539812",
@@ -27,7 +30,10 @@
     "endDate": "2028-09-25",
     "sourceUrl": "https://indico.cern.ch/event/1539812/",
     "directory": true,
-    "timezone": "Europe/Warsaw"
+    "timezone": "Europe/Warsaw",
+    "subjectCodes": [
+      "510703"
+    ]
   },
   {
     "id": "directory-cern-1719434",
@@ -41,7 +47,10 @@
     "endDate": "2026-12-03",
     "sourceUrl": "https://indico.cern.ch/event/1719434/",
     "directory": true,
-    "timezone": "Europe/London"
+    "timezone": "Europe/London",
+    "subjectCodes": [
+      "511001"
+    ]
   },
   {
     "id": "directory-cern-1352282",
@@ -61,6 +70,49 @@
     "timezone": "Europe/Zurich",
     "startTime": "08:00",
     "endTime": "13:30"
+  },
+  {
+    "id": "directory-cern-1755753",
+    "type": "event",
+    "eventType": "seminar",
+    "title": "High Energy Physics Seminar",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "CERN Indico",
+    "startDate": "2026-11-20",
+    "endDate": "2026-11-20",
+    "sourceUrl": "https://indico.cern.ch/event/1755753/",
+    "directory": true,
+    "countryCode": "PL",
+    "country": "Poland",
+    "city": "Warsaw",
+    "timezone": "Europe/Warsaw",
+    "subjectCodes": [
+      "5107"
+    ]
+  },
+  {
+    "id": "directory-mit-54505456899967",
+    "type": "event",
+    "eventType": "seminar",
+    "title": "Richard P. Stanley Seminar in Combinatorics",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Massachusetts Institute of Technology",
+    "startDate": "2026-11-20",
+    "endDate": "2026-11-20",
+    "sourceUrl": "https://calendar.mit.edu/event/richard-p-stanley-seminar-in-combinatorics-6602",
+    "directory": true,
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Cambridge",
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "13:00",
+    "endTime": "14:50",
+    "subjectCodes": [
+      "490404"
+    ]
   },
   {
     "id": "directory-cern-1730735",
@@ -144,7 +196,13 @@
     "startTime": "13:00",
     "endTime": "14:00",
     "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "370604"
+    ]
   },
   {
     "id": "directory-mit-53737457175325",
@@ -209,7 +267,13 @@
     "startTime": "14:00",
     "endTime": "14:40",
     "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "510108"
+    ]
   },
   {
     "id": "directory-mps-46733",
@@ -227,7 +291,13 @@
     "startTime": "14:45",
     "endTime": "15:25",
     "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "510108"
+    ]
   },
   {
     "id": "directory-cern-1755487",
@@ -288,7 +358,10 @@
     "endDate": "2026-11-26",
     "startTime": "11:00",
     "endTime": "12:00",
-    "mode": "online"
+    "mode": "online",
+    "subjectCodes": [
+      "510108"
+    ]
   },
   {
     "id": "directory-mit-53982984825449",
@@ -377,7 +450,13 @@
     "startTime": "13:00",
     "endTime": "14:00",
     "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "3703"
+    ]
   },
   {
     "id": "directory-cern-1716817",
@@ -500,7 +579,10 @@
     "startTime": "16:00",
     "endTime": "17:00",
     "venue": "Kenneth G. Dixon Career Development Center: 121",
-    "mode": "hybrid"
+    "mode": "hybrid",
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Orlando"
   },
   {
     "id": "directory-mit-54568473333928",
@@ -655,7 +737,13 @@
     "startTime": "14:00",
     "endTime": "14:40",
     "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "510906"
+    ]
   },
   {
     "id": "directory-mit-54533226582145",
@@ -696,7 +784,10 @@
     "endDate": "2026-12-03",
     "startTime": "09:30",
     "endTime": "10:30",
-    "mode": "online"
+    "mode": "online",
+    "subjectCodes": [
+      "390303"
+    ]
   },
   {
     "id": "directory-mit-53974650696997",
@@ -855,7 +946,13 @@
     "startTime": "13:00",
     "endTime": "14:00",
     "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "510905"
+    ]
   },
   {
     "id": "directory-cern-1648300",
@@ -966,7 +1063,10 @@
     "startTime": "13:00",
     "endTime": "16:00",
     "venue": "National Entrepreneur Center: Venture Training Room",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Orlando"
   },
   {
     "id": "directory-mit-54036274479875",
@@ -1052,7 +1152,13 @@
     "startTime": "13:00",
     "endTime": "14:00",
     "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "510109"
+    ]
   },
   {
     "id": "directory-cern-1670772",
@@ -1134,7 +1240,13 @@
     "startTime": "14:00",
     "endTime": "14:40",
     "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "5109"
+    ]
   },
   {
     "id": "directory-ucf-4209871",
@@ -1169,7 +1281,13 @@
     "startTime": "08:00",
     "endTime": "17:00",
     "venue": "Rosen College of Hospitality Management: Darden Auditorium",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Orlando",
+    "subjectCodes": [
+      "4402"
+    ]
   },
   {
     "id": "directory-mit-54009921775291",
@@ -1210,7 +1328,13 @@
     "startTime": "10:00",
     "endTime": "13:00",
     "venue": "Visual Arts Building: 215: Visual Arts",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Orlando",
+    "subjectCodes": [
+      "3606"
+    ]
   },
   {
     "id": "directory-cern-1751965",
@@ -1248,7 +1372,13 @@
     "startTime": "14:00",
     "endTime": "14:40",
     "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
-    "mode": "inPerson"
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "510108"
+    ]
   },
   {
     "id": "directory-ucf-4209870",
