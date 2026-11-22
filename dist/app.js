@@ -14,7 +14,8 @@ const icons = {
   calendar:'<rect x="4.5" y="6" width="15" height="14" rx="1.7"/><path d="M8.5 4v4m7-4v4m-11 2h15"/>',
   file:'<path d="M7 3.5h7l4 4V20H7zM14 3.5v4.4h4M10 12h5m-5 3h5"/>',
   cap:'<path d="m2.5 9.5 9.5-5 9.5 5-9.5 5-9.5-5Zm4.1 2.3v4.3c3.2 2.4 7.6 2.4 10.8 0v-4.3m4.1-2.3v6"/>',
-  plus:'<path d="M12 5v14M5 12h14"/>'
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  rss:'<path d="M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14"/><circle cx="5.5" cy="18.5" r="1.1"/>'
 };
 export function icon(name, size = 19) {
   return `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">${icons[name] || icons.file}</svg>`;
@@ -466,7 +467,8 @@ function recordList(page, params, scope, loadFailed) {
   }
   const number = new Intl.NumberFormat(lang);
   const tabs = page==='events' ? `<nav class="tabs" aria-label="${t('events')}">${eventPeriods.map(p =>
-    `<a class="tab"${p===period?' aria-current="page"':''} href="${esc(url(page,{...Object.fromEntries(params),period:p,view:''}))}">${t(p)} (${number.format(eventCounts.periods[p])})</a>`).join('')}</nav>` : '';
+    `<a class="tab"${p===period?' aria-current="page"':''} href="${esc(url(page,{...Object.fromEntries(params),period:p,view:''}))}">${t(p)} (${number.format(eventCounts.periods[p])})</a>`).join('')}
+    <a class="text-link events-rss" href="/events.rss" type="application/rss+xml">${icon('rss',16)} ${t('eventsRss')}</a></nav>` : '';
   const selectedSubject = state.index.get(params.get('subject'));
   const dateField = (name, label) => `<label class="field"><span>${t(label)} <small data-date-count="${name}"></small></span><input name="${name}" type="date" value="${esc(params.get(name) || '')}"></label>`;
   const controls = `<form data-filter="${page}"><div class="filter-grid">
@@ -802,7 +804,8 @@ async function fetchDirectory() {
   }
 }
 function catalogData(name) {
-  return fetch(new URL('./data/'+name+'.json', import.meta.url)).then(response=>{
+  const path = name==='events-feed' ? '/data/events-feed.json' : new URL('./data/'+name+'.json', import.meta.url);
+  return fetch(path).then(response=>{
     if (!response.ok) throw new Error(name);
     return response.json();
   });

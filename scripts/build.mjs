@@ -28,12 +28,15 @@ const clientPrefix = '/_assets/' + clientDigest;
 const source = `
 ${cloudflare
   ? "import { cloudflareResponse } from './scripts/cloudflare-entry.js';"
-  : "import { handleApi } from './src/worker.js';"}
+  : "import { handleApi } from './src/worker.js';\nimport { eventsRssResponse, readPublishedEvents } from './src/events-rss.js';"}
+import { loadOrganizerSnapshot } from './src/organizer-snapshot.js';
 const assetMap = new Map(${JSON.stringify(entries)});
 const clientPaths = new Set(${JSON.stringify(clientAssets.map(([path]) => path))});
 const clientPrefix = ${JSON.stringify(clientPrefix)};
 const body = (base64) => Uint8Array.from(atob(base64), char => char.charCodeAt(0));
 const decoder = new TextDecoder();
+const packagedOrganizerEvents = JSON.parse(decoder.decode(body(assetMap.get('/data/events-feed.json')[1])));
+${cloudflare ? '' : "const curatedEvents = JSON.parse(decoder.decode(body(assetMap.get('/data/events-directory.json')[1])));"}
 ${cloudflare ? '' : "const subjects = new Map(JSON.parse(decoder.decode(body(assetMap.get('/data/subjects.json')[1]))).map(({code,label})=>[code,label]));"}
 const siteLanguages = ['en','hi','es','fr','ar','pt','zh','ru'];
 const originalPage = decoder.decode(body(assetMap.get('/index.html')[1]))
@@ -62,13 +65,31 @@ function landing(url) {
   return originalPage
     .replace('<html lang="en">','<html lang="'+code+'" dir="'+(code==='ar'?'rtl':'ltr')+'">')
     ${cloudflare ? `.replace('</head>','<meta name="repository-primary" content="${primary}"></head>')` : ''}
-    .replace('</head>','<link rel="canonical" href="'+pageEsc(canonical.href)+'">\\n'+siteName+alts+'\\n</head>');
+    .replace('</head>','<link rel="canonical" href="'+pageEsc(canonical.href)+'">\\n'
+      +'<link rel="alternate" type="application/rss+xml" title="Events RSS" href="https://conference.softinator.org/events.rss">\\n'
+      +siteName+alts+'\\n</head>');
 }
 export default {
   async fetch(request,env) {
     const url = new URL(request.url);
     ${cloudflare ? "const response = await cloudflareResponse(request, env); if (response) return response;" : "if (url.pathname.startsWith('/api/')) return handleApi(request,env,subjects);"}
     if (!['GET','HEAD'].includes(request.method)) return new Response(null,{status:405,headers:{Allow:'GET, HEAD'}});
+    if (url.pathname === '/data/events-feed.json') {
+      const data = request.method === 'HEAD' ? null : JSON.stringify(await loadOrganizerSnapshot(packagedOrganizerEvents));
+      return new Response(data, { headers: {
+        'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=300',
+        'X-Content-Type-Options': 'nosniff',
+      } });
+    }
+    if (url.pathname === '/events.rss') {
+      ${cloudflare ? "return Response.redirect('https://conference.softinator.org/events.rss', 302);" : `
+      const now = new Date();
+      const [organizerEvents, publishedEvents] = await Promise.all([
+        loadOrganizerSnapshot(packagedOrganizerEvents),
+        readPublishedEvents(env.DB, now).catch(() => []),
+      ]);
+      return eventsRssResponse(request, [...curatedEvents, ...organizerEvents], publishedEvents, now);`}
+    }
     const versioned = url.pathname.startsWith(clientPrefix + '/');
     const path = url.pathname === '/' ? '/index.html' : versioned ? url.pathname.slice(clientPrefix.length) : url.pathname;
     const item = assetMap.get(path);

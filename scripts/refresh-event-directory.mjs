@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { fetchOrganizerRss } from '../src/events-rss-import.js';
 
 const output = new URL('../dist/data/events-feed.json', import.meta.url);
 const defaultFrom = new Date().toISOString().slice(0, 10);
@@ -160,7 +161,7 @@ function indicoMode(title, description, countryCode) {
 }
 
 function record(feed, { key, title, start, end, sourceUrl, eventType, countryCode, city, mode, timezone, startTime, endTime, description }) {
-  if (!title || !sourceUrl || !eventType || !start || !end || start < from || start >= to || end < start ||
+  if (!title || !sourceUrl || !eventType || !start || !end || end < from || start >= to || end < start ||
       /\b(?:cancel(?:l)?ed|postponed|template|test event)\b/i.test(title)) return null;
   const entry = {
     id: 'directory-' + feed.key + '-' + key, type: 'event', eventType, title,
@@ -259,11 +260,17 @@ try {
 } catch (error) {
   if (error.code !== 'ENOENT') throw error;
 }
-const results = await Promise.allSettled(feeds.map((feed) => feed.paths ? indico(feed) : localist(feed)));
-if (results.every(({ status }) => status === 'rejected')) {
+const [results, rss] = await Promise.all([
+  Promise.allSettled(feeds.map((feed) => feed.paths ? indico(feed) : localist(feed))),
+  fetchOrganizerRss({ from, to }),
+]);
+if (results.every(({ status }) => status === 'rejected') && !rss.successfulSources.length) {
   for (const { reason } of results) console.error(reason.message);
+  for (const { name, error } of rss.failedSources) console.error(name + ': ' + error.message);
   throw new Error('All organizer feeds failed. The existing snapshot was preserved.');
 }
+const keepUpcoming = key => previous.filter(event =>
+  event.id.startsWith('directory-' + key + '-') && event.endDate >= from && event.startDate < to);
 const records = results.flatMap((result, i) => {
   const { name, key } = feeds[i];
   if (result.status === 'fulfilled') {
@@ -271,9 +278,14 @@ const records = results.flatMap((result, i) => {
     return result.value;
   }
   console.warn(name + ': ' + result.reason.message + '. Keeping still-upcoming listings from the previous snapshot.');
-  return previous.filter((event) =>
-    event.id.startsWith('directory-' + key + '-') && event.startDate >= from && event.startDate < to);
+  return keepUpcoming(key);
 });
+for (const { name, count } of rss.successfulSources) console.log(name + ': ' + count + ' RSS listings');
+for (const { id, name, error } of rss.failedSources) {
+  console.warn(name + ': ' + error.message + '. Keeping still-upcoming listings from the previous snapshot.');
+  records.push(...keepUpcoming(id));
+}
+records.push(...rss.records);
 
 function order(a, b) {
   return a.startDate.localeCompare(b.startDate) || a.title.localeCompare(b.title, 'en') ||

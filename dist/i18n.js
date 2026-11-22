@@ -15,6 +15,7 @@ brand|Global Conference & Research Repository|वैश्विक सम्म
 skip|Skip to content|मुख्य सामग्री पर जाएँ|Ir al contenido|Aller au contenu|انتقل إلى المحتوى|Ir para o conteúdo|跳转到主要内容|Перейти к содержанию
 home|Home|मुखपृष्ठ|Inicio|Accueil|الرئيسية|Início|首页|Главная
 events|Events|आयोजन|Eventos|Événements|الفعاليات|Eventos|学术活动|Мероприятия
+eventsRss|Events RSS feed|आयोजनों की RSS फ़ीड|Fuente RSS de eventos|Flux RSS des événements|خلاصة RSS للفعاليات|Feed RSS de eventos|活动 RSS 订阅|RSS-лента мероприятий
 proceedings|Proceedings & materials|सम्मेलन कार्यवाही और सामग्री|Actas y materiales|Actes et ressources|وقائع المؤتمرات والمواد المصاحبة|Anais e materiais|会议论文集与资料|Сборники и материалы
 theses|Theses & dissertations|थीसिस और शोधप्रबंध|Tesis y trabajos de posgrado|Thèses et mémoires|الأطروحات والرسائل الجامعية|Teses e dissertações|学位论文|Диссертации и выпускные работы
 subjects|Browse subjects|विषय देखें|Explorar disciplinas|Parcourir les disciplines|تصفّح التخصصات|Explorar áreas de pesquisa|浏览学科|Обзор дисциплин

@@ -1,0 +1,49 @@
+name: Refresh event directory
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+      timezone: America/Los_Angeles
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: event-directory-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main' && github.repository == 'drdixitrajesh/open-research-commons'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '11.25.0'
+      - name: Install the importer
+        run: pnpm install --prod --frozen-lockfile
+      - name: Refresh official organizer listings
+        run: node scripts/refresh-event-directory.mjs
+      - name: Publish the updated directory snapshot
+        run: |
+          if git diff --quiet -- dist/data/events-feed.json; then
+            echo 'The organizer snapshot is already current.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- dist/data/events-feed.json
+          git commit -m 'Refresh official organizer events'
+          if ! git push origin HEAD:main; then
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi

@@ -1,46 +1,66 @@
 [
   {
-    "id": "directory-cern-1755753",
+    "id": "directory-cern-1113000",
     "type": "event",
-    "eventType": "seminar",
-    "title": "High Energy Physics Seminar",
+    "eventType": "conference",
+    "title": "African Conference on High Energy Physics (ACHEP)",
     "description": "See the organizer’s event page for the program and participation details.",
     "metadataLanguage": "en",
     "institution": "CERN Indico",
-    "startDate": "2026-11-20",
-    "endDate": "2026-11-20",
-    "sourceUrl": "https://indico.cern.ch/event/1755753/",
+    "startDate": "2022-01-01",
+    "endDate": "2030-12-31",
+    "sourceUrl": "https://indico.cern.ch/event/1113000/",
     "directory": true,
-    "countryCode": "PL",
-    "country": "Poland",
-    "city": "Warsaw",
-    "timezone": "Europe/Warsaw",
-    "subjectCodes": [
-      "5107"
-    ]
+    "timezone": "Europe/Zurich",
+    "startTime": "08:00",
+    "endTime": "18:00"
   },
   {
-    "id": "directory-mit-54505456899967",
+    "id": "directory-cern-1539812",
     "type": "event",
-    "eventType": "seminar",
-    "title": "Richard P. Stanley Seminar in Combinatorics",
+    "eventType": "workshop",
+    "title": "Workshop on 𝛾𝛾 physics at lepton-hadron colliders",
     "description": "See the organizer’s event page for the program and participation details.",
     "metadataLanguage": "en",
-    "institution": "Massachusetts Institute of Technology",
-    "startDate": "2026-11-20",
-    "endDate": "2026-11-20",
-    "sourceUrl": "https://calendar.mit.edu/event/richard-p-stanley-seminar-in-combinatorics-6602",
+    "institution": "CERN Indico",
+    "startDate": "2025-09-25",
+    "endDate": "2028-09-25",
+    "sourceUrl": "https://indico.cern.ch/event/1539812/",
     "directory": true,
-    "countryCode": "US",
-    "country": "United States",
-    "city": "Cambridge",
-    "mode": "inPerson",
-    "timezone": "America/New_York",
-    "startTime": "13:00",
-    "endTime": "14:50",
-    "subjectCodes": [
-      "490404"
-    ]
+    "timezone": "Europe/Warsaw"
+  },
+  {
+    "id": "directory-cern-1719434",
+    "type": "event",
+    "eventType": "seminar",
+    "title": "UK Accelerator Institutes Seminar Series Autumn 2026 (Session 17)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "CERN Indico",
+    "startDate": "2026-10-15",
+    "endDate": "2026-12-03",
+    "sourceUrl": "https://indico.cern.ch/event/1719434/",
+    "directory": true,
+    "timezone": "Europe/London"
+  },
+  {
+    "id": "directory-cern-1352282",
+    "type": "event",
+    "eventType": "workshop",
+    "title": "9th High Power Targetry Workshop (HPTW2026)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "CERN Indico",
+    "startDate": "2026-11-16",
+    "endDate": "2026-11-21",
+    "sourceUrl": "https://indico.cern.ch/event/1352282/",
+    "directory": true,
+    "countryCode": "CH",
+    "country": "Switzerland",
+    "city": "Meyrin",
+    "timezone": "Europe/Zurich",
+    "startTime": "08:00",
+    "endTime": "13:30"
   },
   {
     "id": "directory-cern-1730735",
@@ -109,6 +129,24 @@
     ]
   },
   {
+    "id": "directory-mps-47018",
+    "type": "event",
+    "title": "PGS: Core-Mantle Coupling and Its Effects on Geodynamo Simulations (Illya Lohay)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/47018/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-11-23",
+    "endDate": "2026-11-23",
+    "startTime": "13:00",
+    "endTime": "14:00",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson"
+  },
+  {
     "id": "directory-mit-53737457175325",
     "type": "event",
     "eventType": "seminar",
@@ -156,6 +194,42 @@
     ]
   },
   {
+    "id": "directory-mps-46732",
+    "type": "event",
+    "title": "S3 Seminar: Excitation/damping of solar inertial modes (Muneeb Mushtaq)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/46732/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-11-25",
+    "endDate": "2026-11-25",
+    "startTime": "14:00",
+    "endTime": "14:40",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson"
+  },
+  {
+    "id": "directory-mps-46733",
+    "type": "event",
+    "title": "S3 Seminar: The effect of inertial modes on the evolution of the surface magnetic field of the Sun (Noemi Padar)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/46733/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-11-25",
+    "endDate": "2026-11-25",
+    "startTime": "14:45",
+    "endTime": "15:25",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson"
+  },
+  {
     "id": "directory-cern-1755487",
     "type": "event",
     "eventType": "seminar",
@@ -198,6 +272,23 @@
     "subjectCodes": [
       "3504"
     ]
+  },
+  {
+    "id": "directory-mps-47458",
+    "type": "event",
+    "title": "ESPOS: Investigating the effects of spatial and temporal dependence in mean-field dynamos (Jerry Wong)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/47458/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-11-26",
+    "endDate": "2026-11-26",
+    "startTime": "11:00",
+    "endTime": "12:00",
+    "mode": "online"
   },
   {
     "id": "directory-mit-53982984825449",
@@ -269,6 +360,24 @@
       "4602",
       "40"
     ]
+  },
+  {
+    "id": "directory-mps-47020",
+    "type": "event",
+    "title": "PGS: Searching for Earth’s missing building materials in meteorites (Shengyu Tian)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/47020/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-11-30",
+    "endDate": "2026-11-30",
+    "startTime": "13:00",
+    "endTime": "14:00",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson"
   },
   {
     "id": "directory-cern-1716817",
@@ -374,6 +483,24 @@
       "390109",
       "390303"
     ]
+  },
+  {
+    "id": "directory-ucf-4205817",
+    "type": "event",
+    "title": "Preparing a Research Poster",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "University of Central Florida",
+    "timezone": "America/New_York",
+    "sourceUrl": "https://events.ucf.edu/event/4205817/preparing-a-research-poster/",
+    "directory": true,
+    "eventType": "workshop",
+    "startDate": "2026-12-01",
+    "endDate": "2026-12-01",
+    "startTime": "16:00",
+    "endTime": "17:00",
+    "venue": "Kenneth G. Dixon Career Development Center: 121",
+    "mode": "hybrid"
   },
   {
     "id": "directory-mit-54568473333928",
@@ -513,6 +640,24 @@
     ]
   },
   {
+    "id": "directory-mps-46728",
+    "type": "event",
+    "title": "S3 Seminar: FPGA-based Real-Time Onboard Processing for High-SNR Spectropolarimetry with ESA’s Vigil/PMI (Deepa Muraleedharan)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/46728/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-12-02",
+    "endDate": "2026-12-02",
+    "startTime": "14:00",
+    "endTime": "14:40",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson"
+  },
+  {
     "id": "directory-mit-54533226582145",
     "type": "event",
     "eventType": "workshop",
@@ -535,6 +680,23 @@
       "360505",
       "4602"
     ]
+  },
+  {
+    "id": "directory-ucf-4175359",
+    "type": "event",
+    "title": "Publishing Your Undergraduate Research",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "University of Central Florida",
+    "timezone": "America/New_York",
+    "sourceUrl": "https://events.ucf.edu/event/4175359/publishing-your-undergraduate-research/",
+    "directory": true,
+    "eventType": "workshop",
+    "startDate": "2026-12-03",
+    "endDate": "2026-12-03",
+    "startTime": "09:30",
+    "endTime": "10:30",
+    "mode": "online"
   },
   {
     "id": "directory-mit-53974650696997",
@@ -678,6 +840,24 @@
     ]
   },
   {
+    "id": "directory-mps-47019",
+    "type": "event",
+    "title": "PGS: Forming the first planetesimals in the solar system at the water ice line (Nerea Gurrutxaga)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/47019/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-12-07",
+    "endDate": "2026-12-07",
+    "startTime": "13:00",
+    "endTime": "14:00",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson"
+  },
+  {
     "id": "directory-cern-1648300",
     "type": "event",
     "eventType": "workshop",
@@ -771,6 +951,24 @@
     ]
   },
   {
+    "id": "directory-ucf-4027653",
+    "type": "event",
+    "title": "SBA Workshop: Federal Surplus Property Program for 8(a) and Veteran-Owned Firms",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "University of Central Florida",
+    "timezone": "America/New_York",
+    "sourceUrl": "https://events.ucf.edu/event/4027653/sba-workshop-federal-surplus-property-program-for-8a-and-veteran-owned-firms/",
+    "directory": true,
+    "eventType": "workshop",
+    "startDate": "2026-12-09",
+    "endDate": "2026-12-09",
+    "startTime": "13:00",
+    "endTime": "16:00",
+    "venue": "National Entrepreneur Center: Venture Training Room",
+    "mode": "inPerson"
+  },
+  {
     "id": "directory-mit-54036274479875",
     "type": "event",
     "eventType": "seminar",
@@ -839,6 +1037,24 @@
     ]
   },
   {
+    "id": "directory-mps-47021",
+    "type": "event",
+    "title": "PGS: The role of fragmentation in close-in planet formation around late M dwarfs (Mariana Sanchez)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/47021/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-12-14",
+    "endDate": "2026-12-14",
+    "startTime": "13:00",
+    "endTime": "14:00",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson"
+  },
+  {
     "id": "directory-cern-1670772",
     "type": "event",
     "eventType": "workshop",
@@ -903,6 +1119,59 @@
     ]
   },
   {
+    "id": "directory-mps-46735",
+    "type": "event",
+    "title": "S3 Seminar: Investigating the performance of the stereoscopic disambiguation method under various observational configurations (Xiang Li)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/46735/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2027-01-13",
+    "endDate": "2027-01-13",
+    "startTime": "14:00",
+    "endTime": "14:40",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson"
+  },
+  {
+    "id": "directory-ucf-4209871",
+    "type": "event",
+    "title": "Community and Industry Partnerships for Innovation Research: CCIE Virtual Research Circle",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "University of Central Florida",
+    "timezone": "America/New_York",
+    "sourceUrl": "https://events.ucf.edu/event/4209871/community-and-industry-partnerships-for-innovation-research-ccie-virtual-research-circle/",
+    "directory": true,
+    "eventType": "workshop",
+    "startDate": "2027-01-20",
+    "endDate": "2027-01-20",
+    "startTime": "12:00",
+    "endTime": "13:00",
+    "mode": "online"
+  },
+  {
+    "id": "directory-ucf-4215769",
+    "type": "event",
+    "title": "19th Annual Human Trafficking Awareness Conference",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "University of Central Florida",
+    "timezone": "America/New_York",
+    "sourceUrl": "https://events.ucf.edu/event/4215769/19th-annual-human-trafficking-awareness-conference/",
+    "directory": true,
+    "eventType": "conference",
+    "startDate": "2027-01-21",
+    "endDate": "2027-01-21",
+    "startTime": "08:00",
+    "endTime": "17:00",
+    "venue": "Rosen College of Hospitality Management: Darden Auditorium",
+    "mode": "inPerson"
+  },
+  {
     "id": "directory-mit-54009921775291",
     "type": "event",
     "eventType": "seminar",
@@ -926,6 +1195,24 @@
     ]
   },
   {
+    "id": "directory-ucf-4251809",
+    "type": "event",
+    "title": "RISO@SVAD: Risograph Basics Workshop",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "University of Central Florida",
+    "timezone": "America/New_York",
+    "sourceUrl": "https://events.ucf.edu/event/4251809/risosvad-risograph-basics-workshop/",
+    "directory": true,
+    "eventType": "workshop",
+    "startDate": "2027-01-23",
+    "endDate": "2027-01-23",
+    "startTime": "10:00",
+    "endTime": "13:00",
+    "venue": "Visual Arts Building: 215: Visual Arts",
+    "mode": "inPerson"
+  },
+  {
     "id": "directory-cern-1751965",
     "type": "event",
     "eventType": "workshop",
@@ -944,6 +1231,41 @@
       "510703",
       "511002"
     ]
+  },
+  {
+    "id": "directory-mps-46736",
+    "type": "event",
+    "title": "S3 Seminar: Investigating high-speed outflows from a coronal hole with UV spectroscopy (Mario Roco Moraleda)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/46736/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2027-01-27",
+    "endDate": "2027-01-27",
+    "startTime": "14:00",
+    "endTime": "14:40",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson"
+  },
+  {
+    "id": "directory-ucf-4209870",
+    "type": "event",
+    "title": "Research Practice Partnerships: CCIE Virtual Research Circle",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "University of Central Florida",
+    "timezone": "America/New_York",
+    "sourceUrl": "https://events.ucf.edu/event/4209870/research-practice-partnerships-ccie-virtual-research-circle/",
+    "directory": true,
+    "eventType": "workshop",
+    "startDate": "2027-02-03",
+    "endDate": "2027-02-03",
+    "startTime": "12:00",
+    "endTime": "13:00",
+    "mode": "online"
   },
   {
     "id": "directory-cern-1731883",
@@ -1012,6 +1334,23 @@
     ]
   },
   {
+    "id": "directory-ucf-4209874",
+    "type": "event",
+    "title": "International Engagement: CCIE Virtual Research Circle",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "University of Central Florida",
+    "timezone": "America/New_York",
+    "sourceUrl": "https://events.ucf.edu/event/4209874/international-engagement-ccie-virtual-research-circle/",
+    "directory": true,
+    "eventType": "workshop",
+    "startDate": "2027-02-17",
+    "endDate": "2027-02-17",
+    "startTime": "12:00",
+    "endTime": "13:00",
+    "mode": "online"
+  },
+  {
     "id": "directory-stanford-53880716348747",
     "type": "event",
     "eventType": "workshop",
@@ -1057,6 +1396,23 @@
     "subjectCodes": [
       "350202"
     ]
+  },
+  {
+    "id": "directory-ucf-4209868",
+    "type": "event",
+    "title": "Interdisciplinary Perspectives for Policy Relevant Research: CCIE Virtual Research Circle",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "University of Central Florida",
+    "timezone": "America/New_York",
+    "sourceUrl": "https://events.ucf.edu/event/4209868/interdisciplinary-perspectives-for-policy-relevant-research-ccie-virtual-research-circle/",
+    "directory": true,
+    "eventType": "workshop",
+    "startDate": "2027-03-03",
+    "endDate": "2027-03-03",
+    "startTime": "12:00",
+    "endTime": "13:00",
+    "mode": "online"
   },
   {
     "id": "directory-stanford-53994406476584",

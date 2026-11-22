@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "esbuild": "0.25.12"
+  },
+  "dependencies": {
+    "saxes": "6.0.0"
   }
 }
