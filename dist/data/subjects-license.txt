@@ -25,4 +25,10 @@ ABS copyright https://www.abs.gov.au/website-privacy-copyright-and-disclaimer
 Stats NZ copyright https://www.stats.govt.nz/about-us/copyright/
 Australian Research Council overview https://www.arc.gov.au/funding-research/applying-grant/classification-codes-rfcd-seo-and-anzsic-codes
 
-The repository extracted the classifications, definitions, exclusions and explanatory notes from the spreadsheet tables and converted them to JSON. FoR and SEO division labels are shown in sentence case. FoR display translations were prepared independently by the repository. ToA has named categories. The repository assigned machine-readable IDs for storing them.
+The repository converted the classifications, FoR and SEO definitions and exclusions, and explanatory notes from the spreadsheet tables to JSON. FoR and SEO division labels use sentence case. The repository prepared FoR display translations independently and assigned machine-readable identifiers to the four named ToA categories.
+
+The ToA descriptions are summaries written by the repository. Consult the original ABS ToA workbook above for official definitions. ANZSRC draws on the OECD Frascati Manual 2015, available separately under OECD terms.
+OECD (2015), Frascati Manual 2015, https://doi.org/10.1787/9789264239012-en
+OECD terms https://www.oecd.org/en/about/terms-conditions.html
+
+See the ABS and Stats NZ copyright pages above for their notices and disclaimers. The repository is independently operated.

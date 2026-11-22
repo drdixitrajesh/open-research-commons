@@ -1,16 +1,16 @@
 {
   "toa": {
     "pure-basic-research": {
-      "definition": "Pure basic research is basic research carried out for the advancement of knowledge, without seeking long-term economic or social benefits or making any effort to apply the results to practical problems or to transfer the results to sectors responsible for their application."
+      "summary": "Explores foundational questions to expand understanding, without a practical application in view."
     },
     "strategic-basic-research": {
-      "definition": "Strategic basic research is experimental and theoretical work undertaken to acquire new knowledge directed into specified broad areas in the expectation of practical discoveries. It provides the broad base of knowledge necessary for the solution of recognised practical problems."
+      "summary": "Builds foundational knowledge in a chosen area because it may help solve a recognised practical problem in the future."
     },
     "applied-research": {
-      "definition": "Applied research is original investigation undertaken in order to acquire new knowledge. It is, however, directed primarily towards a specific, practical aim or objective."
+      "summary": "Investigates a defined practical problem to develop new knowledge that can help address it."
     },
     "experimental-development": {
-      "definition": "Experimental development is systematic work, drawing on knowledge gained from research and practical experience and producing additional knowledge, which is directed to producing new products or processes or to improving existing products or processes."
+      "summary": "Uses research findings and hands-on experience to develop or improve products or processes and generate new knowledge along the way."
     }
   },
   "for": {

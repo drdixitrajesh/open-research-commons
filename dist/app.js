@@ -620,6 +620,7 @@ function schemeParams(scheme, code) {
   return scheme === 'for' ? {subject:code} : {scheme,code};
 }
 const officialWorkbook = scheme => anzsrcSource + '/anzsrc2020_' + scheme + '.xlsx';
+const frascatiManual = 'https://doi.org/10.1787/9789264239012-en';
 function classificationSources(scheme) {
   const schemes = scheme ? [scheme] : Object.keys(classificationKeys);
   return `<details class="event-sources classification-sources">
@@ -628,14 +629,17 @@ function classificationSources(scheme) {
       <li><a class="text-link" href="${anzsrcSource}" rel="noopener noreferrer">Australian Bureau of Statistics · ANZSRC 2020</a></li>
       <li><a class="text-link" href="https://www.arc.gov.au/funding-research/applying-grant/classification-codes-rfcd-seo-and-anzsic-codes" rel="noopener noreferrer">Australian Research Council</a></li>
       ${schemes.map(key=>`<li><a class="text-link" href="${officialWorkbook(key)}" rel="noopener noreferrer">${t(classificationKeys[key])} · ${t('classificationWorkbook')}</a></li>`).join('')}
+      ${schemes.includes('toa') ? `<li><a class="text-link" href="${frascatiManual}" rel="noopener noreferrer">OECD · Frascati Manual 2015</a></li>` : ''}
       <li><a class="text-link" href="/data/subjects-license.txt">CC BY 4.0 · ${t('classificationSources')}</a></li>
     </ul></div>
   </details>`;
 }
 function classificationDefinition(data) {
   if (!data) return '';
-  const {definition,exclusions} = data;
+  const {summary,definition,exclusions} = data;
   return `<dl class="metadata classification-definition">
+    ${summary ? `<div><dt>${t('repositorySummary')}</dt><dd lang="en" dir="ltr">${esc(summary)}</dd>
+      <dd><a class="text-link" href="${officialWorkbook('toa')}" rel="noopener noreferrer">${t('classificationWorkbook')}</a></dd></div>` : ''}
     ${definition ? `<div><dt>${t('classificationDefinition')}</dt><dd lang="en" dir="ltr">${esc(definition)}</dd></div>` : ''}
     ${exclusions ? `<div><dt>${t('classificationExclusions')}</dt><dd lang="en" dir="ltr">${esc(exclusions)}</dd></div>` : ''}
   </dl>`;
