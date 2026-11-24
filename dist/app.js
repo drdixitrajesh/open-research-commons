@@ -1,6 +1,7 @@
 import { locales, messages } from './i18n.js';
 import { buildCatalogIndex } from './catalog-search.js';
 import { eventSchedule } from './event-calendar.js';
+import { eventPlannerContent, bindEventPlanner } from './event-planner.js';
 import { groupedSubjects, subjectFields } from './catalog-subjects.js';
 import { callDeadline, countEvents, eventFacets, eventPeriods, indexEvents,
   languageKeys, languageSelection, matchesLanguage, notSpecified, recordLanguageTags } from './event-filters.js';
@@ -42,7 +43,7 @@ export const state = {
   session: {user:null,persistent:false,files:false}, failed:false,
   examples: preference(keyExamples) !== 'hide', next:null, nav:0
 };
-const nav = [['home','home'],['events','events'],['proceedings','proceedings'],['theses','theses'],['subjects','subjects'],['countries','countries']];
+const nav = [['home','home'],['events','events'],['planner','eventPlanner'],['proceedings','proceedings'],['theses','theses'],['subjects','subjects'],['countries','countries']];
 export const types = {
   event:['seminar','symposium','conference','workshop','webinar'],
   material:['proceedingsVolume','paper','abstractBook','abstract','presentation','poster','report','recording','supportingMaterial'],
@@ -431,13 +432,38 @@ export function subjectGroupOptions(selected='') {
   }).join('');
 }
 const streamSearchWords = value => normalize(value).match(/[\p{L}\p{M}\p{N}]+/gu) || [];
-function researchStreamOptions(division, selected = '', query = '') {
-  const groups = groupedSubjects(state.subjects).find(entry=>entry.division.code===division)?.groups || [];
-  if (!groups.length) return {html:options([['',txt('selectSubjectFirst')]],''),enabled:false,hasMatches:false};
+function researchStreamKeywords(records) {
+  const byCode = new Map();
+  for (const record of records) {
+    const localized = Object.values(record.metadata || {});
+    const keywords = [record.keywords,...localized.map(item=>item?.keywords)].flat().map(normalize).filter(Boolean);
+    if (!keywords.length) continue;
+    for (const code of record.subjectCodes || []) {
+      for (let length = 4; length <= code.length; length += 2) {
+        const stream = code.slice(0,length);
+        if (!byCode.has(stream)) byCode.set(stream,new Set());
+        for (const keyword of keywords) byCode.get(stream).add(keyword);
+      }
+    }
+  }
+  return new Map([...byCode].map(([code,keywords])=>[code,[...keywords]]));
+}
+function researchStreamOptions(division, selected = '', query = '', definitions, keywords) {
   const words = streamSearchWords(query);
+  const divisions = groupedSubjects(state.subjects);
+  const selectedDivision = division || (!words.length && selected.slice(0,2));
+  const groups = selectedDivision ? divisions.find(entry=>entry.division.code===selectedDivision)?.groups || []
+    : words.length ? divisions.flatMap(entry=>entry.groups) : [];
+  const searchable = division ? groups.length > 0 : divisions.some(entry=>entry.groups.length);
+  if (!groups.length) {
+    const hint = searchable ? 'searchOrChooseSubject' : 'selectSubjectFirst';
+    return {html:options([['',txt(hint)]],''),searchable,enabled:false,hasMatches:false};
+  }
   let hasMatches = false;
   const matches = item => {
-    const found = words.every(word=>subjectMatches(item,word));
+    const definition = normalize(definitions?.[item.code]?.definition);
+    const terms = keywords?.get(item.code);
+    const found = words.every(word=>subjectMatches(item,word) || definition.includes(word) || terms?.some(term=>term.includes(word)));
     if (found) hasMatches = true;
     return found || item.code===selected;
   };
@@ -447,7 +473,7 @@ function researchStreamOptions(division, selected = '', query = '') {
     entries.push(...subjectFields(state.subjects,group.code).filter(matches).map(subjectOption));
     return entries.length ? `<optgroup label="${esc(groupLabel)}">${options(entries,selected)}</optgroup>` : '';
   }).join('');
-  return {html:options([['',txt('allSubSubjects')]],selected) + groupedOptions,enabled:true,hasMatches};
+  return {html:options([['',txt('allSubSubjects')]],selected) + groupedOptions,searchable,enabled:true,hasMatches};
 }
 function subjectMenus(selected, eventFilter, filterCode) {
   const division = selected?.code.slice(0,2) || '';
@@ -455,12 +481,11 @@ function subjectMenus(selected, eventFilter, filterCode) {
   const entries = [['',txt('allSubjects')],...state.subjects.filter(item=>item.parent===null).map(subjectOption)];
   if (eventFilter) entries.push([notSpecified,txt('notSpecified')]);
   const selectedDivision = division || (eventFilter && filterCode===notSpecified ? notSpecified : '');
-  const choices = researchStreamOptions(division,stream);
-  const disabled = choices.enabled ? '' : ' disabled';
+  const choices = researchStreamOptions(selectedDivision,stream);
   return `<label class="field"><span>${t('topic')} <small dir="ltr">(ANZSRC 2020 FoR)</small></span><select name="subject">${options(entries,selectedDivision)}</select></label>
     <div class="research-stream-filter">
-      <label class="field">${t('researchStreamSearch')}<input type="search" data-stream-search aria-controls="research-stream-options" autocomplete="off"${disabled}></label>
-      <label class="field"><span>${t('subSubject')} <small dir="ltr">(FoR)</small></span><select id="research-stream-options" name="subsubject"${disabled}>${choices.html}</select></label>
+      <label class="field">${t('researchStreamSearch')}<input type="search" data-stream-search aria-controls="research-stream-options" autocomplete="off"${choices.searchable ? '' : ' disabled'}></label>
+      <label class="field"><span>${t('subSubject')} <small dir="ltr">(FoR)</small></span><select id="research-stream-options" name="subsubject"${choices.enabled ? '' : ' disabled'}>${choices.html}</select></label>
       <p class="research-stream-status" role="status" hidden>${t('noResults')}</p>
     </div>`;
 }
@@ -486,13 +511,14 @@ function classificationFilters(params) {
       <label class="field">${t('objectives')}<select name="seo"${division ? '' : ' disabled'}>${seoOptions(division,selected)}</select></label>
     </div></details>`;
 }
-function bindCatalogFilters(form, eventIndex, period) {
+function bindCatalogFilters(form, eventIndex, period, candidates, streamDefinitions) {
   const subject = form.elements.namedItem('subject');
   const subSubject = form.elements.namedItem('subsubject');
   const streamSearch = form.querySelector('[data-stream-search]');
   const streamStatus = form.querySelector('.research-stream-status');
   const seo = form.elements.namedItem('seo');
   const format = new Intl.NumberFormat(lang);
+  let keywords;
   function updateCounts() {
     const filters = new URLSearchParams(new FormData(form));
     filters.set('subject', filters.get('subsubject') || filters.get('subject') || '');
@@ -523,9 +549,12 @@ function bindCatalogFilters(form, eventIndex, period) {
     }
   }
   function rebuildStreams(selected) {
-    const choices = researchStreamOptions(subject.value,selected,streamSearch.value);
+    const query = streamSearch.value;
+    if (query.trim()) keywords ??= researchStreamKeywords(candidates);
+    const choices = researchStreamOptions(subject.value,selected,query,streamDefinitions,keywords);
     subSubject.innerHTML = choices.html;
-    streamSearch.disabled = subSubject.disabled = !choices.enabled;
+    streamSearch.disabled = !choices.searchable;
+    subSubject.disabled = !choices.enabled;
     streamStatus.hidden = !choices.enabled || choices.hasMatches;
   }
   streamSearch.addEventListener('input', () => {
@@ -599,7 +628,7 @@ function broaderEventResults(selectedSubject, counts, params, number) {
   }
   return empty();
 }
-function recordList(page, params, scope, loadFailed) {
+function recordList(page, params, scope, loadFailed, streamDefinitions) {
   const scoped = state.countryPages.get(scope);
   const all = scoped ? mergeCatalog(scoped.records) : activeRecords();
   const fixed = catalogTypes[page];
@@ -705,7 +734,7 @@ function recordList(page, params, scope, loadFailed) {
     ${matches.length ? matches.map(r=>itemRow(r,period==='deadlines')).join('') : loadFailed ? '' : noMatches()}
     ${(scoped ? scoped.next : state.next) ? `<button class="button secondary" type="button" data-next data-scope="${esc(scope)}">${t('next')}</button>` : ''}
   </div>`, '', heading);
-  return {html, bind:()=>bindCatalogFilters(document.querySelector('form[data-filter]'),eventIndex,period)};
+  return {html, bind:()=>bindCatalogFilters(document.querySelector('form[data-filter]'),eventIndex,period,candidates,streamDefinitions)};
 }
 const subjectScheme = params => ['toa','seo'].includes(params.get('scheme')) ? params.get('scheme') : 'for';
 const schemeItems = scheme => scheme === 'for' ? state.subjects : state.classifications[scheme];
@@ -899,9 +928,11 @@ async function render(focus=false) {
   lang = Object.hasOwn(locales,requestedLang) ? requestedLang : 'en';
   chrome(page);
   document.title = txt('brand') + (page === 'home' ? '' : ' · ' + txt(nav.find(([p])=>p===page)?.[1] || (page==='record'?'details':page)));
-  let html, bindFilters;
-  if (!['home','countries','institutions','about'].includes(page)) {
-    await loadClassifications();
+  let html, bindPage, streamDefinitions;
+  const catalogPage = ['events','proceedings','theses','search'].includes(page);
+  if (!['home','planner','countries','institutions','about'].includes(page)) {
+    const [, definitions] = await Promise.all([loadClassifications(),catalogPage ? loadDefinitions() : undefined]);
+    streamDefinitions = definitions?.for;
     if (seq!==state.nav) return;
   }
   if (page === 'record') {
@@ -916,10 +947,15 @@ async function render(focus=false) {
     html = r?.status==='publication_pending' ? layout(txt('details'),empty('publication_pending')) : r ? detailsView(r,params) : layout(txt('details'),empty('recordMissing'));
     if (r?.title) document.title = selectedMetadata(r,params.get('metadata') || lang).title + ' · ' + txt('brand');
   } else if (page === 'home') html = homePage();
+  else if (page === 'planner') {
+    const submitUrl = url('submit',{type:'event'});
+    html = layout(txt('eventPlanner'),eventPlannerContent(lang,submitUrl));
+    bindPage = () => bindEventPlanner(el('main'),lang,submitUrl);
+  }
   else if (page === 'subjects') html = await subjectsPage(params);
   else if (page === 'countries') html = countriesPage();
   else if (page === 'institutions') html = institutionsPage(params);
-  else if (['events','proceedings','theses','search'].includes(page)) {
+  else if (catalogPage) {
     const eventFilter = (catalogTypes[page] || params.get('type')) === 'event';
     const scope = eventFilter ? '' : catalogScope(params);
     const comprehensive = eventFilter || catalogFilterKeys.some(key=>params.get(key));
@@ -941,16 +977,16 @@ async function render(focus=false) {
       if (seq!==state.nav) return;
       el('announcement').textContent='';
     }
-    const catalog = recordList(page,params,scope,loadFailed || (eventFilter && state.directoryFailed));
+    const catalog = recordList(page,params,scope,loadFailed || (eventFilter && state.directoryFailed),streamDefinitions);
     html = catalog.html;
-    bindFilters = catalog.bind;
+    bindPage = catalog.bind;
   }
   else if (page === 'submit') html = await submissionPage(params);
   else if (page === 'account' || page === 'review') html = await dashboardPage(page);
   else html = aboutPage();
   if (seq!==state.nav) return;
   el('main').innerHTML = html;
-  bindFilters?.();
+  bindPage?.();
   bindWorkflow(page,params);
   if (focus) {
     const results = focus==='results' ? catalogResultTarget() : null;

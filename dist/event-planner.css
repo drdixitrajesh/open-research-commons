@@ -1,0 +1,261 @@
+.event-planner {
+  max-inline-size: 58rem;
+  min-inline-size: 0;
+}
+
+.planner-intro {
+  margin-block-end: 1.15rem;
+}
+
+.planner-toolbar,
+.planner-listing,
+.planner-conference {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .7rem 1rem;
+  padding: .8rem 1rem;
+  background: var(--fog);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.planner-toolbar p,
+.planner-listing p,
+.planner-conference p {
+  flex: 1 1 18rem;
+  margin: 0;
+}
+
+.planner-draft,
+.planner-conference p {
+  color: var(--muted);
+  font-size: .92rem;
+}
+
+.planner-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .18rem 1.2rem;
+  margin-block: .8rem 0;
+}
+
+.planner-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 42px;
+}
+
+.planner-section {
+  border-block-start: 1px solid var(--line);
+  padding-block: 1.4rem 1.6rem;
+  scroll-margin-block-start: 1.2rem;
+}
+
+.planner-section h2 {
+  font-size: 2.4rem;
+  line-height: 1.08;
+  margin-block-end: .45rem;
+  text-wrap: initial;
+}
+
+.planner-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .1rem .9rem;
+}
+
+.planner-section-heading p {
+  margin-block-end: .45rem;
+  color: var(--blue-deep);
+  font-size: .92rem;
+  font-weight: 700;
+}
+
+.planner-brief {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .85rem 1rem;
+}
+
+.event-planner .field input,
+.event-planner .field select {
+  min-block-size: 44px;
+  min-inline-size: 0;
+}
+
+.event-planner input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.planner-feedback {
+  margin-block: .6rem 0;
+  color: #9c2c2a;
+  font-weight: 700;
+}
+
+.event-planner [aria-invalid=true] {
+  border-color: #9c2c2a;
+}
+
+.planner-phases {
+  border-block-end: 1px solid var(--line);
+}
+
+.planner-phase {
+  border-block-start: 1px solid var(--line);
+}
+
+.planner-phase summary {
+  cursor: pointer;
+  padding-block: .68rem;
+  font-weight: 700;
+}
+
+.planner-phase summary:hover {
+  color: var(--blue-deep);
+}
+
+.planner-milestone {
+  display: inline-block;
+  color: var(--muted);
+  margin-inline-start: .7rem;
+  font-size: .9rem;
+  font-weight: 500;
+}
+
+.planner-tasks {
+  margin-block: 0 .7rem;
+  padding: 0;
+  list-style: none;
+}
+
+.planner-tasks label {
+  display: flex;
+  align-items: baseline;
+  gap: .65rem;
+  min-block-size: 42px;
+  padding: .34rem .7rem;
+  cursor: pointer;
+}
+
+.planner-tasks label:hover {
+  background: var(--fog);
+}
+
+.planner-tasks input {
+  flex: none;
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  margin: 0;
+  accent-color: var(--blue);
+  align-self: start;
+  margin-block-start: .14rem;
+}
+
+.planner-conference {
+  margin-block-start: 1rem;
+  scroll-margin-block-start: 1.2rem;
+}
+
+.planner-conference > div {
+  flex: 1 1 21rem;
+}
+
+.planner-conference h3 {
+  margin-block-end: .28rem;
+}
+
+.planner-conference .field {
+  flex: 1 1 100%;
+}
+
+.planner-row {
+  display: grid;
+  align-items: end;
+  gap: .65rem .8rem;
+  margin-block: 0 .7rem;
+  padding-block: .75rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.planner-row--agenda {
+  grid-template-columns: minmax(7rem, .8fr) minmax(5rem, .6fr) minmax(0, 1.6fr) minmax(0, 1.2fr) auto;
+}
+
+.planner-row--budget {
+  grid-template-columns: minmax(0, 1.75fr) repeat(2, minmax(0, 1fr)) auto;
+}
+
+.planner-remove {
+  min-block-size: 44px;
+}
+
+.planner-remove:hover {
+  color: var(--ink);
+}
+
+.planner-currency {
+  max-inline-size: 21rem;
+  margin-block-end: .8rem;
+}
+
+.planner-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 2rem;
+  padding-block-start: .9rem;
+  border-block-start: 1px solid var(--line);
+  margin-block: 1.1rem 0;
+}
+
+.planner-totals dt {
+  color: var(--muted);
+  font-size: .92rem;
+}
+
+.planner-totals dd {
+  margin-inline-start: 0;
+  color: var(--navy);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.planner-listing {
+  margin-block-start: .4rem;
+}
+
+@media (max-width: 790px) {
+  .planner-row--agenda {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+@media (max-width: 560px) {
+  .planner-brief,
+  .planner-row--budget {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .planner-section h2 {
+    font-size: 2.05rem;
+  }
+
+  .planner-toolbar,
+  .planner-listing,
+  .planner-conference {
+    padding: .75rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .planner-row--agenda {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -3,11 +3,18 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { extname, resolve, sep } from 'node:path';
 import { calendarRecordId, eventCalendarResponse } from '../src/event-calendar-response.js';
+import { mergeOrganizerEvents } from '../src/organizer-snapshot.js';
 import { examples } from '../dist/examples.js';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const types = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.jpg':'image/jpeg','.svg':'image/svg+xml','.txt':'text/plain'};
 const port = Number(process.env.REPOSITORY_PREVIEW_PORT || 4321);
+const readData = name => readFile(resolve(root,'data',name+'.json'),'utf8').then(JSON.parse);
+async function readOrganizerEvents() {
+  const [years, current] = await Promise.all([readData('events-archive-index'), readData('events-feed')]);
+  const past = await Promise.all([...years].sort().map(year => readData('events-archive-' + year)));
+  return mergeOrganizerEvents([...past, current]);
+}
 createServer(async (req,res)=>{
   const url = new URL(req.url,'http://127.0.0.1');
   const path = url.pathname;
@@ -16,8 +23,7 @@ createServer(async (req,res)=>{
     try {
       let record = examples.find(item=>item.id===calendarId);
       if (!record && calendarId.startsWith('directory-')) {
-        const read = name => readFile(resolve(root,'data',name+'.json'),'utf8').then(JSON.parse);
-        const [curated, imported] = await Promise.all([read('events-directory'),read('events-feed')]);
+        const [curated, imported] = await Promise.all([readData('events-directory'),readOrganizerEvents()]);
         record = [...curated,...imported].find(item=>item.id===calendarId);
       }
       const response = eventCalendarResponse(new Request(url,{method:req.method}),record);
@@ -26,6 +32,14 @@ createServer(async (req,res)=>{
     } catch {
       res.writeHead(500).end();
     }
+    return;
+  }
+  if (path==='/data/events-feed.json') {
+    try {
+      const records = await readOrganizerEvents();
+      res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});
+      res.end(req.method === 'HEAD' ? undefined : JSON.stringify(records));
+    } catch { res.writeHead(500).end(); }
     return;
   }
   if (path==='/api/session' || path==='/api/records') {

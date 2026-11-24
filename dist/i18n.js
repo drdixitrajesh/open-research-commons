@@ -15,6 +15,7 @@ brand|Global Conference & Research Repository|वैश्विक सम्म
 skip|Skip to content|मुख्य सामग्री पर जाएँ|Ir al contenido|Aller au contenu|انتقل إلى المحتوى|Ir para o conteúdo|跳转到主要内容|Перейти к содержанию
 home|Home|मुखपृष्ठ|Inicio|Accueil|الرئيسية|Início|首页|Главная
 events|Events|आयोजन|Eventos|Événements|الفعاليات|Eventos|学术活动|Мероприятия
+eventPlanner|Event planner|आयोजन योजना|Planificador de eventos|Planificateur d’événements|مخطط الفعاليات|Planejador de eventos|活动规划|Планировщик мероприятий
 eventsRss|Events RSS feed|आयोजनों की RSS फ़ीड|Fuente RSS de eventos|Flux RSS des événements|خلاصة RSS للفعاليات|Feed RSS de eventos|活动 RSS 订阅|RSS-лента мероприятий
 eventSources|Sources|स्रोत|Fuentes|Sources|المصادر|Fontes|来源|Источники
 eventSourcesNote|Official organizer calendars and RSS feeds. Check the organizer’s page for current dates and registration.|आयोजकों के आधिकारिक कैलेंडर और RSS फ़ीड। नवीनतम तारीखों और पंजीकरण के लिए आयोजक का पृष्ठ देखें।|Calendarios y fuentes RSS oficiales. Consulta al organizador para ver las fechas y la inscripción actualizadas.|Calendriers et flux RSS officiels. Consultez le site de l’organisateur pour les dates et les inscriptions à jour.|التقويمات الرسمية وخلاصات RSS. راجع صفحة المنظّم للاطّلاع على المواعيد والتسجيل.|Calendários e feeds RSS oficiais. Veja datas e inscrição atualizadas na página do organizador.|主办方官方日历和 RSS 订阅源。请在主办方网站查看最新日期及报名信息。|Официальные календари и RSS-ленты. Актуальные даты и регистрация доступны на сайте организатора.
@@ -125,7 +126,8 @@ subjectSearch|Search by subject name or code|विषय का नाम य�
 featuredSubjects|Explore subjects|विषय खोजें|Explorar disciplinas|Explorer les disciplines|استكشف التخصصات|Explore as áreas de pesquisa|探索学科|Обзор дисциплин
 allSubjects|All subjects|सभी विषय|Todas las disciplinas|Toutes les disciplines|كل التخصصات|Todas as áreas de pesquisa|全部学科|Все дисциплины
 subSubject|Stream of Research|शोध की शाखा|Línea de investigación|Axe de recherche|مسار البحث|Linha de pesquisa|研究方向|Направление исследований
-researchStreamSearch|Search streams by name or code|शोध की शाखा नाम या कोड से खोजें|Buscar líneas por nombre o código|Rechercher par nom ou code|ابحث عن المسار بالاسم أو الرمز|Pesquise linhas por nome ou código|按名称或代码搜索研究方向|Поиск направления по названию или коду
+researchStreamSearch|Search streams by name, code, or keyword|शोध की शाखा नाम, कोड या कीवर्ड से खोजें|Buscar líneas por nombre, código o palabra clave|Rechercher par nom, code ou mot-clé|ابحث عن المسار بالاسم أو الرمز أو كلمة مفتاحية|Pesquise linhas por nome, código ou palavra-chave|按名称、代码或关键词搜索研究方向|Поиск направления по названию, коду или ключевому слову
+searchOrChooseSubject|Search above or choose a subject|ऊपर खोजें या विषय चुनें|Busca arriba o elige una disciplina|Recherchez ci-dessus ou choisissez une discipline|ابحث أعلاه أو اختر تخصصًا|Pesquise acima ou escolha uma área|在上方搜索或选择学科|Введите запрос выше или выберите дисциплину
 selectSubjectFirst|Choose a subject first|पहले विषय चुनें|Elige primero una disciplina|Choisissez d’abord une discipline|اختر التخصص أولاً|Escolha uma área primeiro|请先选择学科|Сначала выберите дисциплину
 allResearchFields|All fields in this group|इस समूह के सभी शोध क्षेत्र|Todos los campos del grupo|Tous les domaines du groupe|جميع مجالات هذه المجموعة|Todos os campos do grupo|该组的所有研究领域|Все области в этой группе
 allSubSubjects|All research streams|शोध की सभी शाखाएँ|Todas las líneas de investigación|Tous les axes de recherche|جميع مسارات البحث|Todas as linhas de pesquisa|全部研究方向|Все направления исследований

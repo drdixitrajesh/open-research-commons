@@ -6,12 +6,16 @@ import { messages } from '../dist/i18n.js';
 
 const cloudflare = process.argv.includes('--cloudflare');
 const primary = 'https://open-research-commons.softinator.chatgpt.site';
+const archiveIndex = '/data/events-archive-index.json';
+const archiveYears = JSON.parse(await readFile(new URL('../dist' + archiveIndex, import.meta.url), 'utf8'));
+const jsonMime = 'application/json; charset=utf-8';
 const assets = new Map([
   ['/index.html','text/html; charset=utf-8'], ['/styles.css','text/css; charset=utf-8'],
   ['/app.js','text/javascript; charset=utf-8'], ['/workflow.js','text/javascript; charset=utf-8'],
   ['/email-login.js','text/javascript; charset=utf-8'],
   ['/catalog-search.js','text/javascript; charset=utf-8'],
   ['/catalog-subjects.js','text/javascript; charset=utf-8'],
+  ['/event-planner.js','text/javascript; charset=utf-8'], ['/event-planner.css','text/css; charset=utf-8'],
   ['/event-filters.js','text/javascript; charset=utf-8'],
   ['/event-calendar.js','text/javascript; charset=utf-8'],
   ['/i18n.js','text/javascript; charset=utf-8'], ['/examples.js','text/javascript; charset=utf-8'],
@@ -20,7 +24,8 @@ const assets = new Map([
   ['/data/anzsrc-classifications.json','application/json; charset=utf-8'],
   ['/data/anzsrc-definitions.json','application/json; charset=utf-8'],
   ['/data/countries.json','application/json; charset=utf-8'], ['/data/countries-license.txt','text/plain; charset=utf-8'],
-  ['/data/events-directory.json','application/json; charset=utf-8'], ['/data/events-feed.json','application/json; charset=utf-8']
+  ['/data/events-directory.json',jsonMime], ['/data/events-feed.json',jsonMime], [archiveIndex,jsonMime],
+  ...archiveYears.map(year => [`/data/events-archive-${year}.json`, jsonMime]),
 ]);
 const entries = await Promise.all([...assets].map(async ([path, mime]) => [
   path, [mime,(await readFile(new URL('../dist' + path,import.meta.url))).toString('base64')]
@@ -40,13 +45,18 @@ const clientPaths = new Set(${JSON.stringify(clientAssets.map(([path]) => path))
 const clientPrefix = ${JSON.stringify(clientPrefix)};
 const body = (base64) => Uint8Array.from(atob(base64), char => char.charCodeAt(0));
 const decoder = new TextDecoder();
-const packagedOrganizerEvents = JSON.parse(decoder.decode(body(assetMap.get('/data/events-feed.json')[1])));
+const jsonAsset = (path) => JSON.parse(decoder.decode(body(assetMap.get(path)[1])));
+const packagedOrganizerSnapshot = {
+  current: jsonAsset('/data/events-feed.json'),
+  archives: new Map(${JSON.stringify(archiveYears)}.map(year => [year, jsonAsset('/data/events-archive-' + year + '.json')])),
+};
 ${cloudflare ? '' : "const curatedEvents = JSON.parse(decoder.decode(body(assetMap.get('/data/events-directory.json')[1])));"}
 ${cloudflare ? '' : "const subjects = new Map(JSON.parse(decoder.decode(body(assetMap.get('/data/subjects.json')[1]))).map(({code,label})=>[code,label]));"}
 const siteLanguages = ['en','hi','es','fr','ar','pt','zh','ru'];
 const originalPage = decoder.decode(body(assetMap.get('/index.html')[1]))
   .replace('src="/app.js"', 'src="' + clientPrefix + '/app.js"')
-  .replace('href="/styles.css"', 'href="' + clientPrefix + '/styles.css"');
+  .replace('href="/styles.css"', 'href="' + clientPrefix + '/styles.css"')
+  .replace('href="/event-planner.css"', 'href="' + clientPrefix + '/event-planner.css"');
 const pageEsc = (value) => value.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 function landing(url) {
   const language = url.searchParams.get('lang');
@@ -87,7 +97,7 @@ export default {
         record = examples.find(item => item.id === calendarId);
       } else if (calendarId.startsWith('directory-')) {
         record = curatedEvents.find(item => item.id === calendarId)
-          || (await loadOrganizerSnapshot(packagedOrganizerEvents)).find(item => item.id === calendarId);
+          || (await loadOrganizerSnapshot(packagedOrganizerSnapshot)).find(item => item.id === calendarId);
       } else {
         const apiUrl = new URL('/api/records/' + calendarId,url);
         const result = await handleApi(new Request(apiUrl),env,subjects);
@@ -97,7 +107,7 @@ export default {
       return eventCalendarResponse(request,record);
     }`}
     if (url.pathname === '/data/events-feed.json') {
-      const data = request.method === 'HEAD' ? null : JSON.stringify(await loadOrganizerSnapshot(packagedOrganizerEvents));
+      const data = request.method === 'HEAD' ? null : JSON.stringify(await loadOrganizerSnapshot(packagedOrganizerSnapshot));
       return new Response(data, { headers: {
         'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'public, max-age=300',
         'X-Content-Type-Options': 'nosniff',
@@ -107,7 +117,7 @@ export default {
       ${cloudflare ? "return Response.redirect('https://conference.softinator.org/events.rss', 302);" : `
       const now = new Date();
       const [organizerEvents, publishedEvents] = await Promise.all([
-        loadOrganizerSnapshot(packagedOrganizerEvents),
+        loadOrganizerSnapshot(packagedOrganizerSnapshot, { includeArchive: false }),
         readPublishedEvents(env.DB, now).catch(() => []),
       ]);
       return eventsRssResponse(request, [...curatedEvents, ...organizerEvents], publishedEvents, now);`}

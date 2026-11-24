@@ -1,0 +1,73 @@
+[
+  {
+    "id": "directory-mit-54505456899967",
+    "type": "event",
+    "eventType": "seminar",
+    "title": "Richard P. Stanley Seminar in Combinatorics",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Massachusetts Institute of Technology",
+    "startDate": "2026-11-20",
+    "endDate": "2026-11-20",
+    "sourceUrl": "https://calendar.mit.edu/event/richard-p-stanley-seminar-in-combinatorics-6602",
+    "directory": true,
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Cambridge",
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "13:00",
+    "endTime": "14:50",
+    "subjectCodes": [
+      "490404"
+    ]
+  },
+  {
+    "id": "directory-mit-53982984371273",
+    "type": "event",
+    "eventType": "seminar",
+    "title": "Algebraic Topology Seminar",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Massachusetts Institute of Technology",
+    "startDate": "2026-11-23",
+    "endDate": "2026-11-23",
+    "sourceUrl": "https://calendar.mit.edu/event/algebraic-topology-seminar-2194",
+    "directory": true,
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Cambridge",
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:30",
+    "endTime": "17:30",
+    "subjectCodes": [
+      "490412",
+      "490402"
+    ]
+  },
+  {
+    "id": "directory-mps-47018",
+    "type": "event",
+    "title": "PGS: Core-Mantle Coupling and Its Effects on Geodynamo Simulations (Illya Lohay)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/47018/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-11-23",
+    "endDate": "2026-11-23",
+    "startTime": "13:00",
+    "endTime": "14:00",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "370604"
+    ]
+  }
+]

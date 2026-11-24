@@ -4,6 +4,8 @@ import { fetchOrganizerRss } from '../src/events-rss-import.js';
 import { organizerEventSubjectCodes } from '../src/organizer-event-subjects.js';
 
 const output = new URL('../dist/data/events-feed.json', import.meta.url);
+const archiveIndex = new URL('./events-archive-index.json', output);
+const archiveFile = year => new URL(`./events-archive-${year}.json`, output);
 const defaultFrom = new Date().toISOString().slice(0, 10);
 const from = process.argv.find((arg) => arg.startsWith('--from='))?.slice(7) ?? defaultFrom;
 const parsedFrom = new Date(from);
@@ -14,7 +16,7 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !Number.isFinite(parsedFrom.valueOf()) 
 
 const days = 120;
 const to = new Date(parsedFrom.valueOf() + days * 86_400_000).toISOString().slice(0, 10);
-const pastFrom = new Date(parsedFrom.valueOf() - 30 * 86_400_000).toISOString().slice(0, 10);
+const overlapFrom = new Date(parsedFrom.valueOf() - 86_400_000).toISOString().slice(0, 10);
 const countries = new Intl.DisplayNames(['en'], { type: 'region' });
 const countryData = JSON.parse(await readFile(new URL('../dist/data/countries.json', import.meta.url), 'utf8'));
 const explicitCountries = new Map(countryData.flatMap(({ iso, name }) => [
@@ -257,16 +259,30 @@ async function indico(feed) {
   return records;
 }
 
-let previous = [];
-try {
-  previous = JSON.parse(await readFile(output, 'utf8'));
-  if (!Array.isArray(previous)) throw new Error('The existing feed snapshot must be an array.');
-} catch (error) {
-  if (error.code !== 'ENOENT') throw error;
+async function readArray(path, optional = false) {
+  try {
+    const data = JSON.parse(await readFile(path, 'utf8'));
+    if (!Array.isArray(data)) throw new Error(`${path.pathname} must contain an array.`);
+    return data;
+  } catch (error) {
+    if (optional && error.code === 'ENOENT') return [];
+    throw error;
+  }
 }
+
+const [previousSnapshot, archiveYears] = await Promise.all([
+  readArray(output, true), readArray(archiveIndex, true),
+]);
+if (!archiveYears.every(year => typeof year === 'string' && /^\d{4}$/.test(year)) ||
+    new Set(archiveYears).size !== archiveYears.length) {
+  throw new Error('The event archive index must contain unique four-digit years.');
+}
+const archives = new Map(await Promise.all(archiveYears.map(async year => [
+  year, new Map((await readArray(archiveFile(year))).map(entry => [entry.id, entry])),
+])));
 const activeFeeds = feeds.filter(feed => feed.automatic !== false);
 const referencePrefixes = feeds.filter(feed => feed.automatic === false).map(feed => 'directory-' + feed.key + '-');
-previous = previous.filter(event => !referencePrefixes.some(prefix => event.id.startsWith(prefix)));
+const previous = previousSnapshot.filter(event => !referencePrefixes.some(prefix => event.id.startsWith(prefix)));
 const [results, rss] = await Promise.all([
   Promise.allSettled(activeFeeds.map((feed) => feed.paths ? indico(feed) : localist(feed))),
   fetchOrganizerRss({ from, to }),
@@ -294,7 +310,8 @@ for (const { id, name, error } of rss.failedSources) {
 }
 records.push(...rss.records);
 const currentIds = new Set(records.map(entry => entry.id));
-records.push(...previous.filter(entry => entry.endDate >= pastFrom && entry.endDate < from &&
+// Keep listings through the day they end even if an organizer has already removed them.
+records.push(...previous.filter(entry => entry.endDate <= from &&
   !currentIds.has(entry.id)));
 
 function order(a, b) {
@@ -302,7 +319,11 @@ function order(a, b) {
     a.sourceUrl.localeCompare(b.sourceUrl) || a.id.localeCompare(b.id);
 }
 
-const previousById = new Map(previous.map((entry) => [entry.id, entry]));
+const previousById = new Map();
+for (const [, archive] of [...archives].sort(([a], [b]) => a.localeCompare(b))) {
+  for (const [id, entry] of archive) previousById.set(id, entry);
+}
+for (const entry of previous) previousById.set(entry.id, entry);
 const snapshot = [...new Map(records.sort(order).map((entry) => [
   entry.sourceUrl + '|' + entry.startDate, entry,
 ])).values()].map((entry) => {
@@ -312,11 +333,38 @@ const snapshot = [...new Map(records.sort(order).map((entry) => [
     : organizerEventSubjectCodes(entry);
   return subjectCodes.length ? { ...entry, subjectCodes } : entry;
 }).sort(order);
-const temporary = new URL('./.events-feed-' + randomUUID() + '.json', output);
-try {
-  await writeFile(temporary, JSON.stringify(snapshot, null, 2) + '\n');
-  await rename(temporary, output);
-} finally {
-  await rm(temporary, { force: true });
+
+const current = [];
+const changedYears = new Set();
+for (const entry of snapshot) {
+  // Keep just-ended listings in both files for one day while the CDN updates them.
+  const inOverlap = entry.endDate >= overlapFrom;
+  if (inOverlap) current.push(entry);
+  if (entry.endDate >= from) continue;
+  const year = entry.endDate.slice(0, 4);
+  if (!archives.has(year)) archives.set(year, new Map());
+  const archive = archives.get(year);
+  // After a missed refresh, keep the first published copy in both files as well.
+  if (!inOverlap && !archive.has(entry.id)) current.push(entry);
+  archive.set(entry.id, entry);
+  changedYears.add(year);
 }
-console.log('Wrote ' + snapshot.length + ' filtered listings to dist/data/events-feed.json.');
+
+async function writeSnapshot(path, data) {
+  const temporary = new URL('./.events-snapshot-' + randomUUID() + '.json', path);
+  try {
+    await writeFile(temporary, JSON.stringify(data, null, 2) + '\n');
+    await rename(temporary, path);
+  } finally {
+    await rm(temporary, { force: true });
+  }
+}
+
+// Make each archive available before removing its records from the current snapshot.
+for (const year of changedYears) {
+  await writeSnapshot(archiveFile(year), [...archives.get(year).values()].sort(order));
+}
+await writeSnapshot(archiveIndex, [...archives.keys()].sort().reverse());
+await writeSnapshot(output, current);
+const archiveCount = [...archives.values()].reduce((count, archive) => count + archive.size, 0);
+console.log(`Wrote ${current.length} current and kept ${archiveCount} archived organizer listings.`);

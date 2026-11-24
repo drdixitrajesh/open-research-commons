@@ -1,7 +1,6 @@
-const snapshotUrl = 'https://raw.githubusercontent.com/drdixitrajesh/open-research-commons/main/dist/data/events-feed.json';
-const maxSnapshotBytes = 2 * 1024 * 1024;
-let cached;
-let refreshAfter = 0;
+const snapshotBase = 'https://raw.githubusercontent.com/drdixitrajesh/open-research-commons/main/dist/data/';
+const maxSnapshotBytes = 8 * 1024 * 1024;
+const cachedFiles = new Map();
 
 function validDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -20,8 +19,8 @@ function validEntry(entry) {
   return source.protocol === 'https:' && !source.username && !source.password;
 }
 
-async function readSnapshot() {
-  const response = await fetch(snapshotUrl, {
+async function readJson(path, maxBytes) {
+  const response = await fetch(new URL(path, snapshotBase), {
     redirect: 'error',
     signal: AbortSignal.timeout(3500),
   });
@@ -36,7 +35,7 @@ async function readSnapshot() {
       const { value, done } = await reader.read();
       if (done) break;
       bytes += value.byteLength;
-      if (bytes > maxSnapshotBytes) throw new Error('Organizer snapshot too large');
+      if (bytes > maxBytes) throw new Error('Organizer snapshot too large');
       body += decoder.decode(value, { stream: true });
     }
   } catch (error) {
@@ -45,20 +44,56 @@ async function readSnapshot() {
   } finally {
     reader.releaseLock();
   }
-  const events = JSON.parse(body + decoder.decode());
+  return JSON.parse(body + decoder.decode());
+}
+
+async function readEvents(path, year) {
+  const events = await readJson(path, maxSnapshotBytes);
   if (!Array.isArray(events) || !events.every(validEntry)) throw new Error('Invalid organizer snapshot');
+  if (year && events.some(event => !event.endDate.startsWith(year + '-'))) throw new Error('Invalid organizer archive year');
   // A CDN may still serve a snapshot from before CERN switched to reference links.
   return events.filter(entry => !entry.id.startsWith('directory-cern-'));
 }
 
-export async function loadOrganizerSnapshot(fallback) {
-  if (Date.now() >= refreshAfter) {
-    try {
-      cached = await readSnapshot();
-      refreshAfter = Date.now() + 5 * 60_000;
-    } catch {
-      refreshAfter = Math.max(refreshAfter, Date.now() + 60_000);
-    }
+async function readArchiveIndex(path) {
+  const years = await readJson(path, 128 * 1024);
+  if (!Array.isArray(years) || !years.every(year => typeof year === 'string' && /^\d{4}$/.test(year)) ||
+      years.length !== new Set(years).size) throw new Error('Invalid organizer archive index');
+  return years;
+}
+
+async function loadFile(path, read, fallback) {
+  const cached = cachedFiles.get(path);
+  if (cached && Date.now() < cached.refreshAfter) return cached.value ?? fallback;
+  try {
+    const value = await read(path);
+    cachedFiles.set(path, { value, refreshAfter: Date.now() + 5 * 60_000 });
+    return value;
+  } catch {
+    const value = cachedFiles.get(path)?.value;
+    cachedFiles.set(path, { value, refreshAfter: Date.now() + 60_000 });
+    return value ?? fallback;
   }
-  return cached ?? fallback;
+}
+
+export function mergeOrganizerEvents(snapshots) {
+  const events = new Map();
+  for (const snapshot of snapshots) {
+    for (const event of snapshot) events.set(event.id, event);
+  }
+  return [...events.values()];
+}
+
+export async function loadOrganizerSnapshot({ current, archives }, { includeArchive = true } = {}) {
+  const currentRequest = loadFile('events-feed.json', readEvents, current);
+  if (!includeArchive) return currentRequest;
+
+  const bundledYears = [...archives.keys()];
+  const hostedYears = await loadFile('events-archive-index.json', readArchiveIndex, bundledYears);
+  const years = [...new Set([...bundledYears, ...hostedYears])].sort();
+  const past = await Promise.all(years.map(async year => {
+    const remote = await loadFile(`events-archive-${year}.json`, path => readEvents(path, year), []);
+    return mergeOrganizerEvents([archives.get(year) ?? [], remote]);
+  }));
+  return mergeOrganizerEvents([...past, await currentRequest]);
 }
