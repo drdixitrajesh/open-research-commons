@@ -19,6 +19,8 @@ const assets = new Map([
   ['/planner-classification.js','text/javascript; charset=utf-8'],
   ['/planner-proceedings.js','text/javascript; charset=utf-8'], ['/planner-proceedings.css','text/css; charset=utf-8'],
   ['/planner-website.js','text/javascript; charset=utf-8'], ['/planner-website.css','text/css; charset=utf-8'],
+  ['/planner-registration.js','text/javascript; charset=utf-8'], ['/planner-registration.css','text/css; charset=utf-8'],
+  ['/participant-registration.js','text/javascript; charset=utf-8'], ['/participant-registration.css','text/css; charset=utf-8'],
   ['/event-filters.js','text/javascript; charset=utf-8'],
   ['/event-calendar.js','text/javascript; charset=utf-8'],
   ['/i18n.js','text/javascript; charset=utf-8'], ['/examples.js','text/javascript; charset=utf-8'],
@@ -61,7 +63,9 @@ const originalPage = decoder.decode(body(assetMap.get('/index.html')[1]))
   .replace('href="/styles.css"', 'href="' + clientPrefix + '/styles.css"')
   .replace('href="/event-planner.css"', 'href="' + clientPrefix + '/event-planner.css"')
   .replace('href="/planner-proceedings.css"', 'href="' + clientPrefix + '/planner-proceedings.css"')
-  .replace('href="/planner-website.css"', 'href="' + clientPrefix + '/planner-website.css"');
+  .replace('href="/planner-website.css"', 'href="' + clientPrefix + '/planner-website.css"')
+  .replace('href="/planner-registration.css"', 'href="' + clientPrefix + '/planner-registration.css"')
+  .replace('href="/participant-registration.css"', 'href="' + clientPrefix + '/participant-registration.css"');
 const pageEsc = (value) => value.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 function landing(url) {
   const language = url.searchParams.get('lang');

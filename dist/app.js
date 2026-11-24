@@ -5,6 +5,8 @@ import { eventPlannerContent, bindEventPlanner, readPlannerEvent } from './event
 import { plannerClassificationSnapshot } from './planner-classification.js';
 import { renderProceedings, bindProceedings } from './planner-proceedings.js';
 import { eventWebsiteContent, bindEventWebsite } from './planner-website.js';
+import { registrationManagerContent, bindRegistrationManager } from './planner-registration.js';
+import { participantRegistrationContent, bindParticipantRegistration } from './participant-registration.js';
 import { groupedSubjects, subjectFields } from './catalog-subjects.js';
 import { callDeadline, countEvents, eventFacets, eventPeriods, indexEvents,
   languageKeys, languageSelection, matchesLanguage, notSpecified, recordLanguageTags } from './event-filters.js';
@@ -47,7 +49,9 @@ export const state = {
   examples: preference(keyExamples) !== 'hide', next:null, nav:0
 };
 const nav = [['home','home'],['events','events'],['planner','eventPlanner'],['proceedings','proceedings'],['theses','theses'],['subjects','subjects'],['countries','countries']];
-const plannerBuilderPages = { 'event-proceedings':'plannerProceedings', 'event-website':'plannerWebsite' };
+const plannerBuilderPages = {
+  'event-proceedings':'plannerProceedings', 'event-website':'plannerWebsite', 'event-registration':'plannerRegistration',
+};
 export const types = {
   event:['seminar','symposium','conference','workshop','webinar'],
   material:['proceedingsVolume','paper','abstractBook','abstract','presentation','poster','report','recording','supportingMaterial'],
@@ -185,6 +189,8 @@ function scrollToPlannerSection() {
   return true;
 }
 const primary = document.querySelector('meta[name="repository-primary"]')?.content;
+const registrationOrigin = 'https://conference.softinator.org';
+const registrationIdPattern = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 const protectedViews = new Set(['submit','account','review']);
 export const signIn = ({label='signIn',className='button'}={}) => `<a class="${esc(className)}" href="/signin-with-chatgpt?return_to=${encodeURIComponent(returnPath())}" target="_top">${t(label)}</a>`;
 
@@ -209,6 +215,29 @@ function eventWebsiteActions(type) {
     publish:(record,{siteId} = {}) => save({ action:'publish', consent:true, siteId, record }),
     unpublish:siteId => save({ action:'unpublish', siteId }),
     listPublished:() => api('event-websites?type=' + encodeURIComponent(type)),
+  };
+}
+
+function postJson(path, data) {
+  return api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+}
+
+const registrationManagerUrl = type => url('event-registration',{type});
+const publicRegistrationUrl = id => new URL(url('participant-registration',{id}),registrationOrigin).href;
+
+function registrationManagerActions(type) {
+  if (primary) return {primaryUrl:new URL(registrationManagerUrl(type),registrationOrigin).href};
+  if (!state.session.user) return {signInUrl:state.session.emailAuth
+    ? url('account',{return_to:returnPath()})
+    : '/signin-with-chatgpt?return_to=' + encodeURIComponent(returnPath())};
+  if (!state.session.persistent) return {unavailable:true};
+  return {
+    publicUrl:publicRegistrationUrl,
+    websiteUrl:id => url('event-website',{type,registration:id}),
+    listForms:(type,cursor) => api('event-registrations?' + new URLSearchParams({type,...(cursor ? {cursor} : {})})),
+    saveForm:data => postJson('event-registrations',data),
+    listParticipants:(id,cursor) => api('event-registrations/' + encodeURIComponent(id) + '/participants'
+      + (cursor ? '?' + new URLSearchParams({cursor}) : '')),
   };
 }
 
@@ -752,7 +781,11 @@ function recordList(page, params, scope, loadFailed, streamDefinitions) {
   const heading = isEvents ? catalogKindLabel('event') : title;
   const examplesNotice = !isEvents || matches.length || !state.directory.length ? withExamples(matches) : '';
   const noMatches = () => isEvents ? broaderEventResults(selectedSubject,eventCounts.counts.subject,params,number) : empty();
-  const html = layout(title, searchbox(page,query,type) + tabs + filterPanel + `<div class="section${isEvents?' event-results':''}">
+  const candidateAction = page === 'proceedings'
+    ? link('submit','submitProceedings','class="button secondary"',{type:'material',candidate:1})
+    : page === 'theses' ? link('submit','submitThesis','class="button secondary"',{type:'thesis',candidate:1}) : '';
+  const deposit = candidateAction ? `<div class="catalog-deposit">${candidateAction}</div>` : '';
+  const html = layout(title, deposit + searchbox(page,query,type) + tabs + filterPanel + `<div class="section${isEvents?' event-results':''}">
     <p id="catalog-results" class="muted" tabindex="-1">${resultCount}</p>
     ${matches.some(event=>event.directory) ? `<p class="page-description">${t('organizerDirectory')}</p>` : ''}
     ${examplesNotice}${loadFailed ? empty('partialResults') : ''}
@@ -954,11 +987,13 @@ async function render(focus=false) {
   const requestedLang = params.get('lang') || (params.has('lang') ? 'en' : preference(keyLanguage));
   lang = Object.hasOwn(locales,requestedLang) ? requestedLang : 'en';
   const plannerBuilder = Object.hasOwn(plannerBuilderPages,page) ? plannerBuilderPages[page] : '';
+  const publicRegistration = page === 'participant-registration';
   chrome(plannerBuilder ? 'planner' : page);
-  document.title = txt('brand') + (page === 'home' ? '' : ' · ' + txt(plannerBuilder || nav.find(([p])=>p===page)?.[1] || (page==='record'?'details':page)));
+  const pageTitle = plannerBuilder || (publicRegistration ? 'participantRegistration' : nav.find(([p])=>p===page)?.[1]);
+  document.title = txt('brand') + (page === 'home' ? '' : ' · ' + txt(pageTitle || (page==='record'?'details':page)));
   let html, bindPage, streamDefinitions;
   const catalogPage = ['events','proceedings','theses','search'].includes(page);
-  if (!plannerBuilder && !['home','planner','countries','institutions','about'].includes(page)) {
+  if (!plannerBuilder && !publicRegistration && !['home','planner','countries','institutions','about'].includes(page)) {
     const [, definitions] = await Promise.all([loadClassifications(),catalogPage ? loadDefinitions() : undefined]);
     streamDefinitions = definitions?.for;
     if (seq!==state.nav) return;
@@ -986,9 +1021,15 @@ async function render(focus=false) {
         type, subjects, countries, plannerUrl,
         proceedingsUrl:type => url('event-proceedings',{type}),
         websiteUrl:type => url('event-website',{type}),
+        registrationUrl:registrationManagerUrl,
       };
       html = layout(txt('eventPlanner'),eventPlannerContent(lang,submitUrl,settings));
       bindPage = () => bindEventPlanner(el('main'),lang,submitUrl,settings);
+    } else if (page === 'event-registration') {
+      const settings = {eventType:type,plannerDraft:event,plannerUrl:plannerUrl(type),managerUrl:registrationManagerUrl,
+        ...registrationManagerActions(type)};
+      html = layout(txt(plannerBuilder),registrationManagerContent(lang,settings));
+      bindPage = () => bindRegistrationManager(el('main'),lang,settings);
     } else {
       const classification = plannerClassificationSnapshot(event.classification,{subjects,countries,language:lang});
       if (page === 'event-proceedings') {
@@ -998,11 +1039,24 @@ async function render(focus=false) {
         html = layout(txt(plannerBuilder),back + renderProceedings(settings));
         bindPage = () => bindProceedings(el('main'),settings);
       } else {
-        const settings = {eventType:type,plannerDraft:event,classification,plannerUrl:plannerUrl(type),...eventWebsiteActions(type)};
+        const registrationId = params.get('registration') || '';
+        const settings = {eventType:type,plannerDraft:event,classification,plannerUrl:plannerUrl(type),
+          registrationManagerUrl:registrationManagerUrl(type),
+          participantFormUrl:registrationIdPattern.test(registrationId) ? publicRegistrationUrl(registrationId) : '',
+          ...eventWebsiteActions(type)};
         html = layout(txt(plannerBuilder),eventWebsiteContent(lang,settings));
         bindPage = () => bindEventWebsite(el('main'),lang,settings);
       }
     }
+  }
+  else if (publicRegistration) {
+    const id = params.get('id') || '';
+    const pathFor = formId => 'event-registration/' + encodeURIComponent(formId);
+    html = layout(txt(pageTitle),participantRegistrationContent(lang,{id}));
+    bindPage = () => bindParticipantRegistration(el('main'),lang,{id,countries:state.countries,
+      loadForm:formId => api(pathFor(formId)),
+      submitRegistration:(formId,data) => postJson(pathFor(formId),data),
+    });
   }
   else if (page === 'subjects') html = await subjectsPage(params);
   else if (page === 'countries') html = countriesPage();

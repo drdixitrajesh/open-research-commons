@@ -1,0 +1,65 @@
+.participant-registration {
+  inline-size: min(100%, 44rem);
+  margin-block: 1.15rem 0;
+}
+
+.participant-registration-event,
+.participant-registration-status h2 {
+  font-size: 2.3rem;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+  margin-block-end: .35rem;
+}
+
+.participant-registration-meta {
+  margin-block-end: .9rem;
+  font-weight: 700;
+}
+
+.participant-registration [name="website"] {
+  display: none;
+}
+
+.participant-registration .field {
+  min-inline-size: 0;
+}
+
+.participant-registration .field input,
+.participant-registration .field select,
+.participant-registration .button {
+  min-block-size: 44px;
+}
+
+.participant-registration-actions {
+  border-block-start: 1px solid var(--line);
+  margin-block-start: 1rem;
+  padding-block-start: 1rem;
+}
+
+.participant-registration-actions [role="alert"] {
+  color: #9c2c2a;
+  font-weight: 700;
+  margin-block: .6rem 0;
+}
+
+.participant-registration [aria-invalid="true"] {
+  border-color: #9c2c2a;
+}
+
+.participant-registration-status {
+  padding-block-start: .95rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.participant-registration-status-event {
+  color: var(--navy);
+  font-weight: 700;
+  margin-block-end: .45rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 550px) {
+  .participant-registration .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

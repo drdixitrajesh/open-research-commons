@@ -1,0 +1,203 @@
+.registration-manager {
+  min-inline-size: 0;
+}
+
+.registration-intro {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .45rem 1.1rem;
+  margin-block-end: .85rem;
+}
+
+.registration-intro p,
+.registration-manager .notice p {
+  margin: 0;
+}
+
+.registration-plan {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.registration-plan bdi {
+  color: var(--ink);
+  font-weight: 700;
+  margin-inline-start: .4rem;
+}
+
+.registration-layout {
+  display: grid;
+  grid-template-columns: minmax(15rem, .65fr) minmax(0, 1fr);
+  gap: 1.35rem clamp(1.35rem, 4vw, 3rem);
+  align-items: start;
+}
+
+.registration-pane {
+  min-inline-size: 0;
+  padding-block-start: 1.1rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.registration-pane h2 {
+  margin-block: 0 .7rem;
+  font-size: clamp(1.75rem, 3vw, 2.65rem);
+  line-height: 1.1;
+}
+
+.registration-manager [hidden] {
+  display: none;
+}
+
+.registration-manager [data-reg-forms-status] {
+  margin-block: .75rem 0;
+}
+
+.registration-manager [role="status"]:empty {
+  display: none;
+}
+
+.registration-forms {
+  margin: .8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.registration-manager [data-reg-more-forms] {
+  margin-block-start: .65rem;
+}
+
+.registration-forms li + li {
+  border-block-start: 1px solid var(--line);
+}
+
+.registration-form-choice {
+  display: grid;
+  gap: .08rem;
+  width: 100%;
+  padding: .5rem .6rem;
+  border: 0;
+  background: transparent;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.registration-form-choice bdi {
+  font-weight: 700;
+}
+
+.registration-form-choice small {
+  color: var(--muted);
+}
+
+.registration-form-choice:hover,
+.registration-form-choice[aria-current="true"] {
+  background: var(--fog);
+}
+
+.registration-form-choice[aria-current="true"] bdi {
+  color: var(--blue-deep);
+}
+
+.registration-manager fieldset {
+  display: grid;
+  gap: .7rem;
+  min-inline-size: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.registration-manager .button,
+.registration-manager .text-button,
+.registration-manager .field input,
+.registration-manager .field select {
+  min-block-size: 44px;
+}
+
+.registration-manager .field input,
+.registration-manager .field select {
+  min-inline-size: 0;
+}
+
+.registration-accept {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  gap: .55rem;
+  cursor: pointer;
+}
+
+.registration-accept input {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  margin: 0;
+  accent-color: var(--blue);
+}
+
+.registration-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem min(3vw, 1.05rem);
+}
+
+.registration-share {
+  margin-block-start: 1rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.registration-share .field {
+  margin-block-end: .55rem;
+}
+
+.registration-manager [data-reg-copy-status],
+.registration-manager [data-reg-status],
+.registration-error {
+  margin: .4rem 0 0;
+}
+
+.registration-error {
+  color: #9c2c2a;
+  font-weight: 700;
+}
+
+.registration-attendees {
+  margin-block-start: 1.7rem;
+}
+
+.registration-table-wrap {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  margin-block: 0 .7rem;
+}
+
+.registration-table {
+  inline-size: 100%;
+  min-inline-size: 42rem;
+  border-collapse: collapse;
+  text-align: start;
+}
+
+.registration-table th,
+.registration-table td {
+  padding: .6rem .7rem;
+  border-block-end: 1px solid var(--line);
+  text-align: start;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.registration-table thead th {
+  color: var(--muted);
+  font-size: .88rem;
+  font-weight: 700;
+}
+
+@media (max-width: 670px) {
+  .registration-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

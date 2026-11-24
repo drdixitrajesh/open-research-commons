@@ -85,6 +85,7 @@ afterDays|{number} days after the event|आयोजन के {number} दि�
 useAgenda|Use suggested agenda|सुझाया हुआ कार्यक्रम अपनाएं
 proceedings|Prepare proceedings|कार्यवाही तैयार करें
 eventWebsite|Build event website|आयोजन की वेबसाइट बनाएं
+registrationForm|Participant registration|प्रतिभागी पंजीकरण
 brief|Event brief|आयोजन का विवरण
 classification|Research and location|शोध और स्थान
 subjectCode|Subject (FoR)|विषय (FoR)
@@ -381,13 +382,13 @@ function currencyOptions(draft, locale) {
 }
 
 export function eventPlannerContent(language, submitUrl, {
-  type: requestedType, plannerUrl, proceedingsUrl, websiteUrl, subjects = [], countries = [],
+  type: requestedType, plannerUrl, proceedingsUrl, websiteUrl, registrationUrl, subjects = [], countries = [],
 } = {}) {
   const { locale, t } = textFor(language);
   const type = resolvePlannerType(requestedType);
   const { draft, available } = readDraft(locale, type);
   const format = formats[type];
-  const toolLinks = [['proceedings', proceedingsUrl], ['eventWebsite', websiteUrl]]
+  const toolLinks = [['registrationForm', registrationUrl], ['proceedings', proceedingsUrl], ['eventWebsite', websiteUrl]]
     .filter(([, buildUrl]) => typeof buildUrl === 'function')
     .map(([label, buildUrl]) => `<a href="${safeText(buildUrl(type))}" class="text-link">${t(label)}</a>`).join('');
   const submit = safeText(submitUrl);

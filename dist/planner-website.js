@@ -22,6 +22,9 @@ online|Online|ऑनलाइन
 hybrid|Hybrid|हाइब्रिड
 choose|Select a mode|तरीका चुनें
 registrationUrl|Public registration link|सार्वजनिक पंजीकरण लिंक
+manageRegistration|Manage participant registration|प्रतिभागी पंजीकरण प्रबंधित करें
+attachRegistration|Use the selected participant form|चुना हुआ प्रतिभागी फ़ॉर्म लगाएँ
+registrationAttached|The participant form link was added to this website draft.|इस वेबसाइट के मसौदे में प्रतिभागी फ़ॉर्म का लिंक जोड़ दिया गया है।
 contactEmail|Contact email|संपर्क ईमेल
 contactOptIn|Show the contact email on the public page and in the download.|सार्वजनिक पेज और डाउनलोड में संपर्क ईमेल दिखाएँ।
 contact|Contact the organizer|आयोजक से संपर्क करें
@@ -422,6 +425,10 @@ export function eventWebsiteContent(language, options = {}) {
   const draft = readDraft(options);
   const classification = classificationMarkup(draft.classification, t);
   const plannerUrl = escape(options.plannerUrl ?? '?view=planner');
+  const registration = options.registrationManagerUrl ? `<div class="form-actions">
+    <a class="text-link" href="${escape(options.registrationManagerUrl)}">${t('manageRegistration')}</a>
+    ${httpsUrl(options.participantFormUrl) ? `<button class="text-button" type="button" data-website-registration>${t('attachRegistration')}</button>` : ''}
+  </div>` : '';
   return `<div class="website-builder" data-event-website lang="${locale}" dir="ltr">
     <div class="website-builder-intro">
       <p class="page-description">${t('intro')}</p>
@@ -432,7 +439,9 @@ export function eventWebsiteContent(language, options = {}) {
       <form class="website-builder-editor" data-website-editor novalidate>
         <section class="website-builder-section">
           <h2>${t('details')}</h2>
-          <div class="form-grid">${Object.keys(limits).filter(key => key !== 'contactEmail').map(key => field(key, draft.details[key], t)).join('')}</div>
+          <div class="form-grid">${Object.keys(limits).filter(key => !['contactEmail','registrationUrl'].includes(key)).map(key => field(key, draft.details[key], t)).join('')}
+            <div class="full">${field('registrationUrl', draft.details.registrationUrl, t)}${registration}</div>
+          </div>
           <label class="website-builder-consent"><input type="checkbox" data-website-contact${draft.contactPublic ? ' checked' : ''}>${t('contactOptIn')}</label>
           <div data-website-contact-field${draft.contactPublic ? '' : ' hidden'}>${field('contactEmail', draft.details.contactEmail, t)}</div>
           <button class="text-button" type="button" data-website-import>${t('importPlan')}</button>
@@ -644,6 +653,14 @@ export function bindEventWebsite(root, language, options = {}) {
       updateForm();
       saveEdits();
       status.textContent = t('imported');
+    } else if (button.matches('[data-website-registration]')) {
+      const registrationUrl = httpsUrl(options.participantFormUrl);
+      if (!registrationUrl) return;
+      draft.details.registrationUrl = registrationUrl;
+      const input = form.elements.namedItem('registrationUrl');
+      input.value = registrationUrl;
+      input.focus();
+      if (saveEdits()) status.textContent = t('registrationAttached');
     } else if (button.matches('[data-website-download]')) {
       const record = validPublicRecord();
       if (!record) return;

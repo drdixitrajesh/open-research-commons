@@ -33,7 +33,7 @@ export function emailAuthEnabled(env) {
     typeof env.AUTH_RESEND_API_KEY === 'string' && Boolean(env.AUTH_EMAIL_FROM.trim() && env.AUTH_RESEND_API_KEY.trim());
 }
 
-function normalizedEmail(value) {
+export function normalizedEmail(value) {
   if (typeof value !== 'string') return '';
   const email = value.trim().toLowerCase();
   const [local, domain, extra] = email.split('@');
@@ -60,7 +60,7 @@ function normalizedMobile(value) {
 
 const sha256 = value => crypto.subtle.digest('SHA-256', encoding.encode(value)).then(hex);
 
-async function hmac(secret, scope, value) {
+export async function hmac(secret, scope, value) {
   const key = await crypto.subtle.importKey('raw', encoding.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   return hex(await crypto.subtle.sign('HMAC', key, encoding.encode(scope + '\0' + value)));
 }
@@ -145,10 +145,16 @@ async function reserveSend(request, env, email, now) {
   if (ip && ip.length <= 64 && /^[0-9a-f.:]+$/i.test(ip)) {
     limits.push(['ip-hour', await hmac(env.AUTH_SECRET, 'email-auth:ip-limit', ip), hour, 20]);
   }
+  if (!(await reserveRateLimits(env.DB, now, limits))) {
+    throw new EmailAuthError(429, 'rate_limited', 'Please wait before requesting another code.');
+  }
+}
+
+export async function reserveRateLimits(db, now, limits) {
   const values = limits.flatMap(([scope, identifier, period, quota]) =>
     [scope, identifier, (Math.floor(now / period) + 1) * period, quota]);
   const placeholders = limits.map(() => '(?, ?, ?, ?)').join(', ');
-  const { results } = await env.DB.prepare(`
+  const { results } = await db.prepare(`
     WITH requested(scope, identifier, reset_at, quota) AS MATERIALIZED (VALUES ${placeholders}),
     allowed(ok) AS MATERIALIZED (
       SELECT NOT EXISTS (
@@ -162,7 +168,7 @@ async function reserveSend(request, env, email, now) {
     ON CONFLICT (scope, identifier, reset_at) DO UPDATE SET request_count = request_count + 1
     RETURNING scope
   `).bind(...values).all();
-  if (!results.length) throw new EmailAuthError(429, 'rate_limited', 'Please wait before requesting another code.');
+  return results.length > 0;
 }
 
 async function sendCode(env, email, challenge, code) {

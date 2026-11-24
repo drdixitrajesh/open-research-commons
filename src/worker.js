@@ -2,10 +2,13 @@ import classifications from "../dist/data/anzsrc-classifications.json" with { ty
 import { ApiError, mintingConfig, normalizeDoi, publishDoi, validDoi, verifyExistingDoi } from "./doi.js";
 import { EmailAuthError, emailAuthEnabled, emailSession, handleEmailAuth, linkedLegacyUser } from "./email-auth.js";
 import { listEventWebsites, writeEventWebsite } from "./event-website-store.js";
+import { getPublicRegistration, listEventRegistrations, listRegistrationParticipants,
+  registerParticipant, saveEventRegistration } from "./event-registration-store.js";
 
 const maxUpload = 20 * 1024 * 1024;
 const maxJson = 120 * 1024;
 const maxWebsiteJson = 256 * 1024;
+const maxRegistrationJson = 4 * 1024;
 const activityTypes = new Set(classifications.toa.map(({ code }) => code));
 const objectiveCodes = new Set(classifications.seo.map(({ code }) => code));
 const maxObjectives = 8;
@@ -679,12 +682,20 @@ async function moderate(db, env, input, user, subjects) {
 export async function handleApi(request, env, subjects) {
   const url = new URL(request.url);
   const parts = url.pathname.split("/").slice(1);
-  const [, route, id] = parts;
+  const [, route, id, tail] = parts;
   const method = request.method;
   try {
-    if (parts.length > 3 || parts[0] !== "api") problem(404, "not_found", "This page could not be found.");
+    const participantsRoute = parts.length === 4 && route === "event-registrations" && id && tail === "participants";
+    if ((parts.length > 3 && !participantsRoute) || parts[0] !== "api") {
+      problem(404, "not_found", "This page could not be found.");
+    }
     if (method === "POST") sameOrigin(request, url, env);
     if (route === "records" && method === "GET") return await publicRecords(requireDb(env), url, id);
+    if (route === "event-registration" && id && ["GET", "POST"].includes(method)) {
+      const db = requireDb(env);
+      return json(method === "GET" ? await getPublicRegistration(db, id)
+        : await registerParticipant(env, request, id, await requestJson(request, maxRegistrationJson)));
+    }
     const nativeUser = siteUser(request);
     if (route === "auth" && method === "POST" && ["start", "verify", "profile", "logout"].includes(id)) {
       return await handleEmailAuth(request, env, id, id === "logout" ? {} : await requestJson(request), nativeUser);
@@ -701,6 +712,16 @@ export async function handleApi(request, env, subjects) {
       return json(method === "GET"
         ? await listEventWebsites(db,user,url.searchParams.get("type"),origin)
         : await writeEventWebsite(db,user,await requestJson(request,maxWebsiteJson),origin));
+    }
+    if (route === "event-registrations" && !id && ["GET", "POST"].includes(method)) {
+      requireUser(user);
+      const db = requireDb(env);
+      return json(method === "GET" ? await listEventRegistrations(db, user, url)
+        : await saveEventRegistration(db, user, await requestJson(request, maxRegistrationJson)));
+    }
+    if (participantsRoute && method === "GET") {
+      requireUser(user);
+      return json(await listRegistrationParticipants(requireDb(env), user, id, url));
     }
     if (route === "submissions" && !id && ["GET", "POST"].includes(method)) {
       requireUser(user, url.searchParams.get("queue") === "1");

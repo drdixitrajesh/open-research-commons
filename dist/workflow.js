@@ -29,7 +29,10 @@ const academicChoices = { 'In progress':'academicInProgress', Submitted:'submitt
 const standardLicenses = ['CC0 1.0','CC BY 4.0','CC BY-SA 4.0','CC BY-ND 4.0','CC BY-NC 4.0','CC BY-NC-SA 4.0','CC BY-NC-ND 4.0'];
 const commonDegrees = ['PhD','DPhil','EdD','EngD','MA','MSc','MPhil','MRes','MBA','MEng'];
 let draft;
-const editing = params => params.get('id') || [params.get('type'),params.get('plannerType')].filter(Boolean).join('/');
+function submissionKind(type,kind) {
+  const research = type==='material' || type==='thesis';
+  return research && types[type].includes(kind) ? kind : '';
+}
 const keyOptions = (names) => names.map(key=>[key,txt(key)]);
 const labeledOptions = (labels) => Object.entries(labels).map(([value,key])=>[value,txt(key)]);
 const val = (record,name) => Array.isArray(record[name]) ? record[name].join(', ') : record[name] ?? '';
@@ -94,11 +97,11 @@ function countryField(r, required) {
   const code=r.countryCode || state.countries.find(c=>normalize(c.name)===normalize(r.country))?.iso;
   return field({...r,countryCode:code},'countryCode',{label:'country',choices:countryOptions(),required});
 }
-function recordTypeField(type,r) {
-  return field(r,type+'Type',{labelText:catalogKindLabel(type),choices:keyOptions(types[type]),required:true,wide:true});
+function recordTypeField(type,r,labelText=catalogKindLabel(type)) {
+  return field(r,type+'Type',{labelText,choices:keyOptions(types[type]),required:true,wide:true});
 }
 function searchableFields(type,r) {
-  return recordTypeField(type,r) + subjectPicker(r)
+  return subjectPicker(r)
     + countryField(r,type==='thesis')
     + languageField(r,'language',{label:'documentLanguage',required:true})
     + languageField(r,'metadataLanguage',{help:'metadataLanguageHelp'});
@@ -259,9 +262,10 @@ function eventFields(r) {
       + section('doi',`<p class="full">${t('doiPolicy')}</p>${field(r,'doi')}`))
     + `<p>${authorityField(r)}</p>`;
 }
-function researchFields(r) {
-  return section('original',metadataFields(r) + field(r,'keywords',{wide:true}))
-    + section('searchableDetails',searchableFields(r.type,r)) + classificationFields(r)
+function researchFields(r,candidate) {
+  const kind = recordTypeField(r.type,r,candidate ? txt('contentType') : undefined);
+  return section('original',(candidate ? kind : '') + metadataFields(r) + field(r,'keywords',{wide:true}))
+    + section('searchableDetails',(candidate ? '' : kind) + searchableFields(r.type,r)) + classificationFields(r)
     + section('details',typeFields(r.type,r))
     + section('translations',translationFields(r)) + section('files',filePicker(r)+links(r))
     + section('doi',`<p class="full">${t('doiPolicy')}</p>${field(r,'doi')}${field(r,'translationOf')}${authorityField(r)}`);
@@ -269,7 +273,9 @@ function researchFields(r) {
 export async function submissionPage(params) {
   const type = params.get('type');
   const id = params.get('id');
-  const key = editing(params);
+  const plannerType = params.get('plannerType');
+  const kind = submissionKind(type,params.get('kind'));
+  const key = id || [type,plannerType,kind].join('/');
   let note;
   if (id && draft?.key!==key) {
     if (!state.session.user) return layout(txt('startSubmission'),`<p>${t('signedOut')}</p>${contributorSignIn()}`);
@@ -280,25 +286,32 @@ export async function submissionPage(params) {
       draft = {key,id,record:target.record,note:target.note,status:target.status,revision:target.revision};
     } catch { return layout(txt('startSubmission'),`<p class="empty">${t('serviceUnavailable')}</p>`); }
   }
-  if (!id && !types[type]) return choices(params);
-  if (draft?.key!==key) draft={key,record:plannedSubmission(type,params.get('plannerType'))};
+  if (!id && !Object.hasOwn(types,type)) return choices(params);
+  if (draft?.key!==key) {
+    const record = plannedSubmission(type,plannerType);
+    if (kind) record[`${type}Type`] = kind;
+    draft = {key,record};
+  }
   const r = draft.record;
   note = draft.note;
   const canWrite = state.session.user && state.session.persistent;
   const canSave = canWrite && !draft.uploading;
-  const title = txt(typeHeading(r.type));
+  const candidateTitle = params.get('candidate')==='1'
+    && ({material:'candidateProceedingsForm',thesis:'candidateThesisForm'})[r.type];
+  const title = txt(candidateTitle || typeHeading(r.type));
   const heading = r.type==='event' ? txt('eventSubmitHeading').replace('{event}',catalogKindLabel(r.type)) : title;
   return layout(title,`<div class="form-panel">
     ${state.session.user && !canWrite ? `<p class="empty">${t('serviceUnavailable')}</p>` : ''}
+    ${candidateTitle && !state.session.user ? `<p>${contributorSignIn()}</p>` : ''}
     ${note ? `<div class="notice"><span>${t('reviewNote')} · <bdi>${esc(note)}</bdi></span></div>` : ''}
     <form id="submission-form" novalidate>
-    ${r.type==='event' ? eventFields(r) : researchFields(r)}
+    ${r.type==='event' ? eventFields(r) : researchFields(r,Boolean(candidateTitle))}
     <output class="form-feedback" id="submission-feedback" role="alert"></output>
-    ${!state.session.user ? `<p>${contributorSignIn({label:'signedOut',className:'text-link'})}</p>` : ''}
+    ${!candidateTitle && !state.session.user ? `<p>${contributorSignIn({label:'signedOut',className:'text-link'})}</p>` : ''}
     <div class="form-actions"><button class="button secondary" name="action" value="draft"${canSave?'':' disabled'}>${t('saveDraft')}</button>
       <button class="button secondary" type="button" data-preview${draft.uploading?' disabled':''}>${t('preview')}</button>
       <button class="button" name="action" value="submit"${canSave?'':' disabled'}>${t('sendForReview')}</button>
-    </div></form></div>`, '', heading);
+    </div></form></div>`, candidateTitle && !state.session.user ? txt('candidateSubmissionIntro') : '', heading);
 }
 function collect(form) {
   const {record:previous} = draft;
@@ -658,7 +671,7 @@ export async function dashboardPage(page) {
   try { ({submissions:list}=await api(review?'submissions?queue=1':'submissions')); }
   catch { problem=true; list=[]; }
   return layout(name,`<div class="form-panel"><p class="dashboard-session">${t('signedIn')} · <bdi>${esc(state.session.user.name)}</bdi> · ${dashboardSignOut()}</p>
-    <div class="form-actions">${link('submit','startSubmission','class="button"')}${!review && state.session.user.isModerator?link('review','review','class="button secondary"'):''}${!review?emailLinkAction():''}</div>
+    <div class="form-actions">${link('submit','startSubmission','class="button"')}${!review?link('event-registration','plannerRegistration','class="button secondary"'):''}${!review && state.session.user.isModerator?link('review','review','class="button secondary"'):''}${!review?emailLinkAction():''}</div>
     ${!review ? mobileSettings() : ''}
     <div class="section">${problem?`<p class="empty">${t('serviceUnavailable')}</p>`:list.length?list.map(i=>dashboardItem(i,review)).join(''):`<p class="empty">${t('noSubmissions')}</p>`}</div>
   </div>`);

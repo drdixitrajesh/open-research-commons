@@ -22,7 +22,7 @@ function returnDestination() {
     const target = new URL(path,location.origin);
     const view = target.searchParams.get('view');
     if (target.origin === location.origin && target.pathname === '/' && !target.hash &&
-        !target.searchParams.has('record') && ['submit','review'].includes(view)) return target;
+        !target.searchParams.has('record') && ['submit','review','event-registration'].includes(view)) return target;
   } catch {}
   return url('account');
 }
