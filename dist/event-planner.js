@@ -1,5 +1,6 @@
 const storageKey = 'open-research-commons:event-planner:v1';
 const conferencingUrl = 'https://conferencesdirectory.com/conferencing-app/';
+const briefLimits = { notes: 3000, meetingLink: 2048 };
 const rowLimit = 100;
 const eventTypes = ['seminar', 'symposium', 'conference', 'workshop', 'webinar', 'other'];
 const eventModes = ['inPerson', 'online', 'hybrid'];
@@ -95,10 +96,12 @@ removeAgenda|Remove session {number}|सत्र {number} हटाएं
 removeBudget|Remove cost item {number}|खर्च की मद {number} हटाएं
 exportTitle|Event plan|आयोजन की योजना
 listed|Post an event listing when the public details are ready.|सार्वजनिक विवरण तैयार होने पर आयोजन की सूची भेजें।
-conferencing|Open conferencing app|कॉन्फ़्रेंसिंग ऐप खोलें
-conferencingHelp|Use the conferencing app to set up or run an online or hybrid session. A sign-in prompt may appear. Copy the meeting link back into your plan when it is ready.|ऑनलाइन या मिश्रित सत्र सेट करने या चलाने के लिए कॉन्फ़्रेंसिंग ऐप का उपयोग करें। साइन इन करने का संदेश आ सकता है। मीटिंग लिंक तैयार होने पर उसे अपनी योजना में कॉपी करें।
-onlineMeeting|Online meeting|ऑनलाइन बैठक
+conferencing|Open video conferencing|वीडियो कॉन्फ़्रेंसिंग खोलें
+conferencingHelp|Set up or host an online or hybrid session in the conferencing app. Sign in there when prompted, then paste the joining link below.|ऑनलाइन या हाइब्रिड सत्र कॉन्फ़्रेंसिंग ऐप में बनाएं या चलाएं। ज़रूरत पड़ने पर वहाँ साइन इन करें, फिर जुड़ने का लिंक नीचे डालें।
+onlineMeeting|Video conferencing|वीडियो कॉन्फ़्रेंसिंग
 meetingLink|Meeting link|मीटिंग लिंक
+joinMeeting|Join saved meeting|सहेजी गई मीटिंग में जुड़ें
+meetingLinkInvalid|Enter a valid HTTPS meeting link.|एक सही HTTPS मीटिंग लिंक डालें।
 newTab|Opens in a new tab.|नए टैब में खुलेगा।
 `.trim().split('\n');
 const copy = Object.fromEntries(words.map(line => {
@@ -131,7 +134,7 @@ function draftText(value, max = 240) {
 
 function cleanDraft(value, locale) {
   const brief = Object.fromEntries(briefFields.map(field => [
-    field, draftText(value?.brief?.[field], field === 'notes' ? 3000 : 240),
+    field, draftText(value?.brief?.[field], briefLimits[field]),
   ]));
   if (!eventTypes.includes(brief.eventType)) brief.eventType = '';
   if (!eventModes.includes(brief.mode)) brief.mode = '';
@@ -167,11 +170,12 @@ function briefInput(field, t, value) {
     </select></label>`;
   }
   if (field === 'notes') {
-    return `<label class="field full">${t(field)}<textarea data-brief="${field}" maxlength="3000" dir="auto">${safeText(value)}</textarea></label>`;
+    return `<label class="field full">${t(field)}<textarea data-brief="${field}" maxlength="${briefLimits.notes}" dir="auto">${safeText(value)}</textarea></label>`;
   }
   const type = field.endsWith('Date') ? 'date' : ['registration', 'meetingLink'].includes(field) ? 'url' : 'text';
   const hint = field === 'timezone' ? ` placeholder="${safeText(t('timezoneExample'))}"` : '';
-  return `<label class="field${field === 'title' ? ' full' : ''}">${t(field)}<input data-brief="${field}" type="${type}" value="${safeText(value)}" maxlength="240" dir="auto"${hint}></label>`;
+  const length = briefLimits[field] ?? 240;
+  return `<label class="field${field === 'title' ? ' full' : ''}">${t(field)}<input data-brief="${field}" type="${type}" value="${safeText(value)}" maxlength="${length}" dir="auto"${hint}></label>`;
 }
 
 function rowInput(field, value, label) {
@@ -242,8 +246,12 @@ export function eventPlannerContent(language, submitUrl) {
           <h3 id="planner-conference-title">${t('onlineMeeting')}</h3>
           <p>${t('conferencingHelp')}</p>
         </div>
-        <a class="button secondary" href="${conferencingUrl}" target="_blank" rel="noopener noreferrer">${t('conferencing')}<span class="visually-hidden">. ${t('newTab')}</span></a>
-        ${briefInput('meetingLink', t, draft.brief.meetingLink)}
+        <a class="button" href="${conferencingUrl}" target="_blank" rel="noopener noreferrer">${t('conferencing')}<span class="visually-hidden">. ${t('newTab')}</span></a>
+        <div class="planner-meeting-entry">
+          ${briefInput('meetingLink', t, draft.brief.meetingLink)}
+          <a class="button secondary" data-planner-join target="_blank" rel="noopener noreferrer" hidden>${t('joinMeeting')}<span class="visually-hidden">. ${t('newTab')}</span></a>
+          <p class="planner-feedback" id="planner-meeting-error" role="status" hidden>${t('meetingLinkInvalid')}</p>
+        </div>
       </section>
     </section>
     <section id="planner-agenda" class="planner-section" aria-labelledby="planner-agenda-title">
@@ -271,6 +279,16 @@ export function eventPlannerContent(language, submitUrl) {
 function amount(value) {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 && number <= 1_000_000_000 ? number : 0;
+}
+
+function httpsMeetingUrl(text) {
+  if (!/^https:\/\//i.test(text)) return null;
+  try {
+    const url = new URL(text);
+    return url.protocol === 'https:' && !url.username && !url.password ? url : null;
+  } catch {
+    return null;
+  }
 }
 
 function budgetTotals(draft, locale) {
@@ -329,6 +347,9 @@ export function bindEventPlanner(root, language, submitUrl) {
   const { draft } = readDraft(locale);
   const get = selector => planner.querySelector(selector);
   const dates = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' });
+  const meetingField = get('[data-brief="meetingLink"]');
+  const joinMeeting = get('[data-planner-join]');
+  const meetingError = get('#planner-meeting-error');
 
   function save() {
     const value = { ...draft, checked: [...draft.checked] };
@@ -356,6 +377,23 @@ export function bindEventPlanner(root, language, submitUrl) {
     get('[data-planner-progress]').textContent = t('progress', { done: draft.checked.size, total: taskIds.length });
   }
 
+  function updateMeetingLink() {
+    const value = meetingField.value.trim();
+    const url = httpsMeetingUrl(value);
+    if (url) joinMeeting.href = url.href;
+    else joinMeeting.removeAttribute('href');
+    joinMeeting.hidden = !url;
+    const invalid = Boolean(value && !url);
+    meetingError.hidden = !invalid;
+    if (invalid) {
+      meetingField.setAttribute('aria-invalid', 'true');
+      meetingField.setAttribute('aria-describedby', meetingError.id);
+    } else {
+      meetingField.removeAttribute('aria-invalid');
+      meetingField.removeAttribute('aria-describedby');
+    }
+  }
+
   function updateBudget() {
     const totals = budgetTotals(draft, locale);
     for (const field of ['estimate', 'actual']) get(`[data-planner-total="${field}"]`).textContent = totals[field];
@@ -373,6 +411,7 @@ export function bindEventPlanner(root, language, submitUrl) {
   updateDates();
   updateProgress();
   updateBudget();
+  updateMeetingLink();
   for (const group of ['agenda', 'budget']) get(`[data-add="${group}"]`).disabled = draft[group].length >= rowLimit;
 
   planner.addEventListener('input', event => {
@@ -380,6 +419,7 @@ export function bindEventPlanner(root, language, submitUrl) {
     if (field.dataset.brief) {
       draft.brief[field.dataset.brief] = field.value;
       if (field.type === 'date') updateDates();
+      if (field === meetingField) updateMeetingLink();
     } else if (field.dataset.task) {
       if (field.checked) draft.checked.add(field.dataset.task);
       else draft.checked.delete(field.dataset.task);

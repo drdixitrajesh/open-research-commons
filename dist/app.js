@@ -173,6 +173,13 @@ const current = () => {
   return { page:params.has('record') ? 'record' : params.get('view') || 'home', params };
 };
 const returnPath = () => window.location.pathname + window.location.search;
+let renderedPath;
+function scrollToPlannerSection() {
+  const section = el(location.hash.slice(1));
+  if (!section?.matches('[data-event-planner] section[id^="planner-"]')) return false;
+  section.scrollIntoView({block:'start'});
+  return true;
+}
 const primary = document.querySelector('meta[name="repository-primary"]')?.content;
 const protectedViews = new Set(['submit','account','review']);
 export const signIn = ({label='signIn',className='button'}={}) => `<a class="${esc(className)}" href="/signin-with-chatgpt?return_to=${encodeURIComponent(returnPath())}" target="_top">${t(label)}</a>`;
@@ -913,7 +920,7 @@ export function go(destination, focus=true) {
     window.location.assign(new URL(target.pathname + target.search + target.hash,primary));
     return;
   }
-  if (target.pathname + target.search !== returnPath()) history.pushState(null,'',target);
+  if (target.pathname + target.search + target.hash !== returnPath() + location.hash) history.pushState(null,'',target);
   return render(focus);
 }
 export function showPreview(r) {
@@ -923,6 +930,8 @@ export function showPreview(r) {
 }
 async function render(focus=false) {
   const {page,params} = current();
+  const path = returnPath();
+  renderedPath = undefined;
   const seq = ++state.nav;
   const requestedLang = params.get('lang') || (params.has('lang') ? 'en' : preference(keyLanguage));
   lang = Object.hasOwn(locales,requestedLang) ? requestedLang : 'en';
@@ -986,8 +995,10 @@ async function render(focus=false) {
   else html = aboutPage();
   if (seq!==state.nav) return;
   el('main').innerHTML = html;
+  renderedPath = path;
   bindPage?.();
   bindWorkflow(page,params);
+  if (page === 'planner' && scrollToPlannerSection()) return;
   if (focus) {
     const results = focus==='results' ? catalogResultTarget() : null;
     if (results) results.scrollIntoView({block:'start'});
@@ -1087,7 +1098,13 @@ document.addEventListener('submit',(e)=>{
   }
   if (form.hasAttribute('data-institution')) { e.preventDefault(); go(url('institutions',Object.fromEntries(new FormData(form)))); }
 });
-window.addEventListener('popstate',()=>render());
+window.addEventListener('popstate',()=>{
+  // Keep the current planner mounted while native fragment history is traversed.
+  if (returnPath() !== renderedPath || current().page !== 'planner') render();
+});
+window.addEventListener('hashchange',()=>{
+  if (returnPath() === renderedPath && current().page === 'planner') scrollToPlannerSection();
+});
 const catalogRequests = new Map();
 function fetchCatalogPage(scope,cursor) {
   const params = new URLSearchParams();

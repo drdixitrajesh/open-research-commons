@@ -171,8 +171,27 @@
   margin-block-end: .28rem;
 }
 
-.planner-conference .field {
+.planner-conference > .planner-meeting-entry {
+  display: flex;
   flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: .5rem .75rem;
+  min-inline-size: 0;
+}
+
+.planner-meeting-entry .field {
+  flex: 1 1 18rem;
+  min-inline-size: 0;
+}
+
+.planner-meeting-entry .planner-feedback {
+  flex-basis: 100%;
+  color: #9c2c2a;
+}
+
+.planner-meeting-entry [hidden] {
+  display: none;
 }
 
 .planner-row {
