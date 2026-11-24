@@ -4,6 +4,8 @@ import {
   subjectLabel, subSubjectOptions, subjectGroupOptions, subjectMatches, t, txt, types, url
 } from './app.js';
 import { bindDashboardLogin, contributorSignIn, dashboardLogin, dashboardSignOut, emailLinkAction, mobileSettings } from './email-login.js';
+import { readPlannerEvent } from './event-planner.js';
+import { plannerClassificationSnapshot } from './planner-classification.js';
 
 const editable = new Set(['draft','changes_requested']);
 const fields = new Map([
@@ -27,7 +29,7 @@ const academicChoices = { 'In progress':'academicInProgress', Submitted:'submitt
 const standardLicenses = ['CC0 1.0','CC BY 4.0','CC BY-SA 4.0','CC BY-ND 4.0','CC BY-NC 4.0','CC BY-NC-SA 4.0','CC BY-NC-ND 4.0'];
 const commonDegrees = ['PhD','DPhil','EdD','EngD','MA','MSc','MPhil','MRes','MBA','MEng'];
 let draft;
-const editing = (params) => (params.get('id') || params.get('type') || '');
+const editing = params => params.get('id') || [params.get('type'),params.get('plannerType')].filter(Boolean).join('/');
 const keyOptions = (names) => names.map(key=>[key,txt(key)]);
 const labeledOptions = (labels) => Object.entries(labels).map(([value,key])=>[value,txt(key)]);
 const val = (record,name) => Array.isArray(record[name]) ? record[name].join(', ') : record[name] ?? '';
@@ -202,6 +204,21 @@ function choices(params) {
 function blank(type) {
   return {type,access:'open',eventStatus:'scheduled',subjectCodes:[],metadata:{},files:[],attachmentIds:[]};
 }
+
+function plannedSubmission(type, plannerType) {
+  const record = blank(type);
+  if (!['event','material'].includes(type) || !['seminar','symposium','workshop','webinar','conference','other'].includes(plannerType)) return record;
+  const plan = readPlannerEvent(plannerType,lang);
+  const { subjects, countries } = state;
+  const classification = plannerClassificationSnapshot(plan.classification,{subjects,countries,language:lang});
+  const { countryCode, country, subjectCode, streamCode, keywords } = classification;
+  Object.assign(record,{countryCode,country,keywords,subjectCodes:[streamCode || subjectCode].filter(Boolean)});
+  if (type === 'material') {
+    return {...record,materialType:'proceedingsVolume',relatedEventTitle:plan.brief.title};
+  }
+  const { title, startDate, endDate, timezone, venue, mode, registration } = plan.brief;
+  return {...record,title,startDate,endDate,timezone,venue,mode,registrationUrl:registration,eventType:plannerType === 'other' ? '' : plannerType};
+}
 function disclosure(key,content,{wide=false,open=false}={}) {
   return `<details class="event-disclosure${wide?' full':''}"${open?' open':''}><summary>${t(key)}</summary>
     <div class="event-disclosure-content">${content}</div></details>`;
@@ -264,7 +281,7 @@ export async function submissionPage(params) {
     } catch { return layout(txt('startSubmission'),`<p class="empty">${t('serviceUnavailable')}</p>`); }
   }
   if (!id && !types[type]) return choices(params);
-  if (draft?.key!==key) draft={key,record:blank(type)};
+  if (draft?.key!==key) draft={key,record:plannedSubmission(type,params.get('plannerType'))};
   const r = draft.record;
   note = draft.note;
   const canWrite = state.session.user && state.session.persistent;

@@ -1,0 +1,233 @@
+.proceedings-builder {
+  max-inline-size: 58rem;
+  min-inline-size: 0;
+}
+
+.proceedings-toolbar,
+.proceedings-heading,
+.proceedings-deposit,
+.proceedings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .65rem 1rem;
+}
+
+.proceedings-toolbar,
+.proceedings-heading,
+.proceedings-deposit {
+  justify-content: space-between;
+}
+
+.proceedings-toolbar,
+.proceedings-deposit {
+  padding: .85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--fog);
+}
+
+.proceedings-toolbar p,
+.proceedings-deposit p {
+  flex: 1 1 16rem;
+  margin: 0;
+}
+
+.proceedings-toolbar .button,
+.proceedings-deposit .button {
+  min-block-size: 44px;
+}
+
+.proceedings-section {
+  margin-block-start: 1.65rem;
+  padding-block-start: 1.25rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.proceedings-heading h2,
+.proceedings-heading h3 {
+  margin: 0;
+}
+
+.proceedings-heading h2 {
+  font-size: clamp(2rem, 6vw, 2.45rem);
+  line-height: 1.12;
+}
+
+.proceedings-heading h3 {
+  font: inherit;
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  color: var(--navy);
+}
+
+.proceedings-heading .text-button {
+  min-block-size: 44px;
+  font-size: .87rem;
+}
+
+.proceedings-actions button:disabled {
+  color: var(--muted);
+  cursor: default;
+  text-decoration: none;
+}
+
+.proceedings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .85rem 1rem;
+  margin-block-start: .8rem;
+}
+
+.proceedings-wide {
+  grid-column: 1 / -1;
+}
+
+.proceedings-grid .field {
+  min-inline-size: 0;
+}
+
+.proceedings-grid .field > :is(input, select, textarea) {
+  min-block-size: 44px;
+  min-inline-size: 0;
+}
+
+.proceedings-grid textarea[data-pro-field="body"] {
+  min-block-size: 9rem;
+}
+
+.proceedings-contribution {
+  margin-block-start: .75rem;
+  padding: .95rem 1rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.proceedings-classification {
+  margin-block-start: 1rem;
+  padding-block-start: .75rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.proceedings-classification h3 {
+  margin-block-end: .35rem;
+}
+
+.proceedings-empty {
+  padding: .7rem 0;
+}
+
+.proceedings-include {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  width: fit-content;
+  margin-block-start: .85rem;
+  padding-block: .6rem;
+  font-weight: 700;
+  min-block-size: 44px;
+}
+
+.proceedings-include input {
+  flex: none;
+  inline-size: 1.12rem;
+  block-size: 1.12rem;
+  margin: .18rem 0 0;
+  accent-color: var(--blue);
+}
+
+.proceedings-preview {
+  margin-block: 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.proceedings-preview summary {
+  display: list-item;
+  min-block-size: 44px;
+  padding: .7rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--blue-deep);
+}
+
+.proceedings-preview[open] summary {
+  border-block-end: 1px solid var(--line);
+}
+
+.proceedings-edition {
+  padding: clamp(1rem, 4vw, 2rem);
+  overflow-wrap: anywhere;
+}
+
+.proceedings-edition h2 {
+  font-size: clamp(1.7rem, 5vw, 2.65rem);
+}
+
+.proceedings-edition h3 {
+  font-size: 1.25rem;
+  margin-block-end: .35rem;
+}
+
+.proceedings-edition section,
+.proceedings-edition nav,
+.proceedings-paper {
+  margin-block-start: 1.2rem;
+  padding-block-start: .8rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.proceedings-edition-meta,
+.proceedings-edition-meta dd {
+  margin: 0;
+}
+
+.proceedings-edition-meta div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) 2fr;
+  gap: .5rem;
+  padding: .2rem 0;
+}
+
+.proceedings-edition-meta dt,
+.proceedings-edition-authors {
+  font-weight: 700;
+}
+
+.proceedings-edition-kind,
+.proceedings-edition-affiliations {
+  color: var(--muted);
+}
+
+.proceedings-manuscript {
+  white-space: pre-wrap;
+  max-inline-size: 72ch;
+}
+
+.proceedings-toc ol {
+  padding-inline-start: 1.5rem;
+}
+
+.proceedings-toc li {
+  margin-block: .35rem;
+}
+
+@media (max-width: 540px) {
+  .proceedings-grid,
+  .proceedings-edition-meta div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .proceedings-edition-meta div {
+    gap: .12rem;
+  }
+
+  .proceedings-toolbar,
+  .proceedings-deposit,
+  .proceedings-contribution {
+    padding: .75rem;
+  }
+}

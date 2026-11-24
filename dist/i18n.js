@@ -16,6 +16,9 @@ skip|Skip to content|मुख्य सामग्री पर जाएँ|I
 home|Home|मुखपृष्ठ|Inicio|Accueil|الرئيسية|Início|首页|Главная
 events|Events|आयोजन|Eventos|Événements|الفعاليات|Eventos|学术活动|Мероприятия
 eventPlanner|Event planner|आयोजन योजना|Planificador de eventos|Planificateur d’événements|مخطط الفعاليات|Planejador de eventos|活动规划|Планировщик мероприятий
+plannerProceedings|Proceedings builder|कार्यवाही संकलन|Editor de actas|Création d’actes|إعداد أعمال الفعالية|Editor de anais|论文集制作|Подготовка сборника
+plannerWebsite|Event website builder|आयोजन वेबसाइट बनाएं|Creador de sitios de eventos|Création du site de l’événement|إنشاء موقع الفعالية|Criador de sites de eventos|活动网站制作|Создание сайта мероприятия
+backToEventPlan|Back to event plan|आयोजन योजना पर लौटें|Volver al plan|Retour à la planification|العودة إلى خطة الفعالية|Voltar ao plano do evento|返回活动规划|К плану мероприятия
 eventsRss|Events RSS feed|आयोजनों की RSS फ़ीड|Fuente RSS de eventos|Flux RSS des événements|خلاصة RSS للفعاليات|Feed RSS de eventos|活动 RSS 订阅|RSS-лента мероприятий
 eventSources|Sources|स्रोत|Fuentes|Sources|المصادر|Fontes|来源|Источники
 eventSourcesNote|Official organizer calendars and RSS feeds. Check the organizer’s page for current dates and registration.|आयोजकों के आधिकारिक कैलेंडर और RSS फ़ीड। नवीनतम तारीखों और पंजीकरण के लिए आयोजक का पृष्ठ देखें।|Calendarios y fuentes RSS oficiales. Consulta al organizador para ver las fechas y la inscripción actualizadas.|Calendriers et flux RSS officiels. Consultez le site de l’organisateur pour les dates et les inscriptions à jour.|التقويمات الرسمية وخلاصات RSS. راجع صفحة المنظّم للاطّلاع على المواعيد والتسجيل.|Calendários e feeds RSS oficiais. Veja datas e inscrição atualizadas na página do organizador.|主办方官方日历和 RSS 订阅源。请在主办方网站查看最新日期及报名信息。|Официальные календари и RSS-ленты. Актуальные даты и регистрация доступны на сайте организатора.

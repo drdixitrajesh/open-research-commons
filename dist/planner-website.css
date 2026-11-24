@@ -1,0 +1,236 @@
+.website-builder {
+  --website-action-gap: .65rem;
+  min-inline-size: 0;
+}
+
+.website-builder-intro {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .35rem 1.2rem;
+  flex-wrap: wrap;
+  margin-block-end: 1.4rem;
+}
+
+.website-builder-intro p {
+  margin: 0;
+}
+
+.website-builder-intro > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem 1.2rem;
+}
+
+.website-builder-preview-link {
+  display: none;
+}
+
+.website-builder-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(18rem, .92fr);
+  align-items: start;
+  gap: 2rem clamp(1.35rem, 3.5vw, 3rem);
+}
+
+.website-builder-editor,
+.website-builder-preview {
+  min-inline-size: 0;
+}
+
+.website-builder-section {
+  border-block-start: 1px solid var(--line);
+  padding-block: 1.2rem 1.4rem;
+}
+
+.website-builder h2 {
+  font-size: clamp(1.75rem, 3vw, 2.65rem);
+  line-height: 1.08;
+  margin-block-end: .65rem;
+}
+
+.website-builder .form-grid label,
+.website-builder-row label {
+  min-inline-size: 0;
+}
+
+.website-builder .field input,
+.website-builder .field select,
+.website-builder .button,
+.website-builder .text-button {
+  min-block-size: 44px;
+}
+
+.website-builder .field [aria-invalid="true"] {
+  border-color: #9c2c2a;
+}
+
+.website-builder-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  min-block-size: 44px;
+  padding-block: .6rem;
+  cursor: pointer;
+}
+
+.website-builder-consent input {
+  flex: none;
+  inline-size: 1rem;
+  block-size: 1rem;
+  margin: .19rem 0 0;
+  accent-color: var(--blue);
+}
+
+.website-builder-section [data-website-import] {
+  margin-block-start: .35rem;
+}
+
+.website-builder-classification .event-taxonomy {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem 1.2rem;
+  margin: 0 0 .75rem;
+  overflow-wrap: anywhere;
+}
+
+.website-builder-classification .event-taxonomy dt {
+  color: var(--muted);
+  font-size: .88rem;
+}
+
+.website-builder-classification .event-taxonomy dd {
+  margin: 0;
+}
+
+.website-builder-row {
+  display: grid;
+  align-items: end;
+  gap: .6rem;
+  border-block-start: 1px solid var(--line);
+  padding-block: .65rem;
+  margin-block-end: .55rem;
+}
+
+.website-builder-row--speakers {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+}
+
+.website-builder-row--agenda {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.website-builder-row--agenda .text-button {
+  justify-self: start;
+}
+
+.website-builder-preview {
+  position: sticky;
+  inset-block-start: 1rem;
+  scroll-margin-block-start: 1rem;
+}
+
+.website-builder-preview h2 {
+  margin-block-end: .3rem;
+}
+
+.website-builder-preview > p {
+  margin-block-end: .75rem;
+}
+
+.website-builder-preview iframe {
+  display: block;
+  inline-size: 100%;
+  block-size: clamp(27rem, 72dvh, 44rem);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.website-builder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--website-action-gap);
+  padding: .9rem 1rem;
+  background: var(--fog);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.website-builder-actions > p,
+.website-builder-actions > label,
+.website-builder-public {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
+.website-builder-public {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .3rem 1rem;
+  padding-block-start: .45rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.website-builder [hidden] {
+  display: none;
+}
+
+.website-builder-error {
+  color: #9c2c2a;
+  font-weight: 700;
+}
+
+.website-builder-existing {
+  margin-block-start: 1rem;
+}
+
+.website-builder-existing summary {
+  color: var(--blue-deep);
+  cursor: pointer;
+  font-weight: 700;
+  padding-block: .45rem;
+}
+
+.website-builder-existing ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.website-builder-existing li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .1rem .75rem;
+  border-block-start: 1px solid var(--line);
+  padding-block: .35rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 850px) {
+  .website-builder-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .website-builder-preview {
+    position: static;
+  }
+  .website-builder-preview-link {
+    display: inline;
+  }
+}
+
+@media (max-width: 490px) {
+  .website-builder .form-grid,
+  .website-builder-classification .event-taxonomy,
+  .website-builder-row--speakers,
+  .website-builder-row--agenda {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .website-builder-row .text-button {
+    justify-self: start;
+  }
+}

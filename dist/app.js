@@ -1,7 +1,10 @@
 import { locales, messages } from './i18n.js';
 import { buildCatalogIndex } from './catalog-search.js';
 import { eventSchedule } from './event-calendar.js';
-import { eventPlannerContent, bindEventPlanner } from './event-planner.js';
+import { eventPlannerContent, bindEventPlanner, readPlannerEvent } from './event-planner.js';
+import { plannerClassificationSnapshot } from './planner-classification.js';
+import { renderProceedings, bindProceedings } from './planner-proceedings.js';
+import { eventWebsiteContent, bindEventWebsite } from './planner-website.js';
 import { groupedSubjects, subjectFields } from './catalog-subjects.js';
 import { callDeadline, countEvents, eventFacets, eventPeriods, indexEvents,
   languageKeys, languageSelection, matchesLanguage, notSpecified, recordLanguageTags } from './event-filters.js';
@@ -44,6 +47,7 @@ export const state = {
   examples: preference(keyExamples) !== 'hide', next:null, nav:0
 };
 const nav = [['home','home'],['events','events'],['planner','eventPlanner'],['proceedings','proceedings'],['theses','theses'],['subjects','subjects'],['countries','countries']];
+const plannerBuilderPages = { 'event-proceedings':'plannerProceedings', 'event-website':'plannerWebsite' };
 export const types = {
   event:['seminar','symposium','conference','workshop','webinar'],
   material:['proceedingsVolume','paper','abstractBook','abstract','presentation','poster','report','recording','supportingMaterial'],
@@ -192,6 +196,20 @@ export async function api(path, options = {}) {
   try { data = await response.json(); } catch { data = {}; }
   if (!response.ok) throw Object.assign(new Error(data.error || 'serviceUnavailable'),{status:response.status,code:data.code,error:data.error,field:data.field});
   return data;
+}
+
+function eventWebsiteActions(type) {
+  if (primary) return { primaryWebsiteUrl:new URL(url('event-website',{type}),primary).href };
+  if (!state.session.persistent) return {};
+  if (!state.session.user) return { signInUrl:url('account') };
+  const save = payload => api('event-websites', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload),
+  });
+  return {
+    publish:(record,{siteId} = {}) => save({ action:'publish', consent:true, siteId, record }),
+    unpublish:siteId => save({ action:'unpublish', siteId }),
+    listPublished:() => api('event-websites?type=' + encodeURIComponent(type)),
+  };
 }
 
 function brand() {
@@ -935,11 +953,12 @@ async function render(focus=false) {
   const seq = ++state.nav;
   const requestedLang = params.get('lang') || (params.has('lang') ? 'en' : preference(keyLanguage));
   lang = Object.hasOwn(locales,requestedLang) ? requestedLang : 'en';
-  chrome(page);
-  document.title = txt('brand') + (page === 'home' ? '' : ' · ' + txt(nav.find(([p])=>p===page)?.[1] || (page==='record'?'details':page)));
+  const plannerBuilder = Object.hasOwn(plannerBuilderPages,page) ? plannerBuilderPages[page] : '';
+  chrome(plannerBuilder ? 'planner' : page);
+  document.title = txt('brand') + (page === 'home' ? '' : ' · ' + txt(plannerBuilder || nav.find(([p])=>p===page)?.[1] || (page==='record'?'details':page)));
   let html, bindPage, streamDefinitions;
   const catalogPage = ['events','proceedings','theses','search'].includes(page);
-  if (!['home','planner','countries','institutions','about'].includes(page)) {
+  if (!plannerBuilder && !['home','planner','countries','institutions','about'].includes(page)) {
     const [, definitions] = await Promise.all([loadClassifications(),catalogPage ? loadDefinitions() : undefined]);
     streamDefinitions = definitions?.for;
     if (seq!==state.nav) return;
@@ -956,10 +975,34 @@ async function render(focus=false) {
     html = r?.status==='publication_pending' ? layout(txt('details'),empty('publication_pending')) : r ? detailsView(r,params) : layout(txt('details'),empty('recordMissing'));
     if (r?.title) document.title = selectedMetadata(r,params.get('metadata') || lang).title + ' · ' + txt('brand');
   } else if (page === 'home') html = homePage();
-  else if (page === 'planner') {
-    const submitUrl = url('submit',{type:'event'});
-    html = layout(txt('eventPlanner'),eventPlannerContent(lang,submitUrl));
-    bindPage = () => bindEventPlanner(el('main'),lang,submitUrl);
+  else if (page === 'planner' || plannerBuilder) {
+    const event = readPlannerEvent(params.get('type') || '',lang);
+    const type = event.type;
+    const {subjects,countries} = state;
+    const plannerUrl = type => url('planner',{type});
+    if (page === 'planner') {
+      const submitUrl = url('submit',{type:'event',plannerType:type});
+      const settings = {
+        type, subjects, countries, plannerUrl,
+        proceedingsUrl:type => url('event-proceedings',{type}),
+        websiteUrl:type => url('event-website',{type}),
+      };
+      html = layout(txt('eventPlanner'),eventPlannerContent(lang,submitUrl,settings));
+      bindPage = () => bindEventPlanner(el('main'),lang,submitUrl,settings);
+    } else {
+      const classification = plannerClassificationSnapshot(event.classification,{subjects,countries,language:lang});
+      if (page === 'event-proceedings') {
+        const settings = {language:lang,eventType:type,event,classification,
+          depositUrl:url('submit',{type:'material',plannerType:type})};
+        const back = `<p>${link('planner','backToEventPlan','class="text-link"',{type})}</p>`;
+        html = layout(txt(plannerBuilder),back + renderProceedings(settings));
+        bindPage = () => bindProceedings(el('main'),settings);
+      } else {
+        const settings = {eventType:type,plannerDraft:event,classification,plannerUrl:plannerUrl(type),...eventWebsiteActions(type)};
+        html = layout(txt(plannerBuilder),eventWebsiteContent(lang,settings));
+        bindPage = () => bindEventWebsite(el('main'),lang,settings);
+      }
+    }
   }
   else if (page === 'subjects') html = await subjectsPage(params);
   else if (page === 'countries') html = countriesPage();

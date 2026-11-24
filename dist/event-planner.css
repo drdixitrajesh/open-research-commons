@@ -7,6 +7,53 @@
   margin-block-end: 1.15rem;
 }
 
+.planner-types {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: .35rem .65rem;
+  margin-block: 0 .85rem;
+  border-block-end: 1px solid var(--line);
+}
+
+.planner-types a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  padding-inline: .7rem;
+  border-block-end: 2px solid transparent;
+  color: var(--navy);
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.planner-types a:hover,
+.planner-types a[aria-current="page"] {
+  color: var(--blue-deep);
+  border-block-end-color: var(--blue);
+}
+
+.planner-types a[aria-current="page"] {
+  background: var(--fog);
+}
+
+.planner-format {
+  margin-block-start: 1.1rem;
+  padding-block-start: .9rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.planner-agenda-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem .7rem;
+}
+
+.planner-agenda-actions [hidden] {
+  display: none;
+}
+
 .planner-toolbar,
 .planner-listing,
 .planner-conference {

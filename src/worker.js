@@ -1,9 +1,11 @@
 import classifications from "../dist/data/anzsrc-classifications.json" with { type: "json" };
 import { ApiError, mintingConfig, normalizeDoi, publishDoi, validDoi, verifyExistingDoi } from "./doi.js";
 import { EmailAuthError, emailAuthEnabled, emailSession, handleEmailAuth, linkedLegacyUser } from "./email-auth.js";
+import { listEventWebsites, writeEventWebsite } from "./event-website-store.js";
 
 const maxUpload = 20 * 1024 * 1024;
 const maxJson = 120 * 1024;
+const maxWebsiteJson = 256 * 1024;
 const activityTypes = new Set(classifications.toa.map(({ code }) => code));
 const objectiveCodes = new Set(classifications.seo.map(({ code }) => code));
 const maxObjectives = 8;
@@ -264,7 +266,7 @@ function sameOrigin(request, url, env) {
   if (origin !== url.origin && origin !== publicOrigin) problem(403, "origin_denied", "Open the website to make this change.");
 }
 
-async function requestJson(request) {
+async function requestJson(request, maximum = maxJson) {
   if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get("Content-Type") || "")) {
     problem(415, "json_required", "Send a JSON request.");
   }
@@ -279,7 +281,7 @@ async function requestJson(request) {
       const chunk = await reader.read();
       if (chunk.done) break;
       length += chunk.value.byteLength;
-      if (length > maxJson) {
+      if (length > maximum) {
         await reader.cancel();
         problem(413, "request_too_large", "The submission is too large.");
       }
@@ -691,6 +693,14 @@ export async function handleApi(request, env, subjects) {
     if (route === "session" && method === "GET" && !id) {
       return json({ user: sessionUser(user), persistent: Boolean(env.DB), files: Boolean(env.DB && env.BUCKET),
         emailAuth: emailAuthEnabled(env), hasNative: Boolean(nativeUser) });
+    }
+    if (route === "event-websites" && !id && ["GET", "POST"].includes(method)) {
+      requireUser(user);
+      const db = requireDb(env);
+      const origin = env.SITE_PUBLIC_URL && URL.canParse(env.SITE_PUBLIC_URL) ? new URL(env.SITE_PUBLIC_URL).origin : undefined;
+      return json(method === "GET"
+        ? await listEventWebsites(db,user,url.searchParams.get("type"),origin)
+        : await writeEventWebsite(db,user,await requestJson(request,maxWebsiteJson),origin));
     }
     if (route === "submissions" && !id && ["GET", "POST"].includes(method)) {
       requireUser(user, url.searchParams.get("queue") === "1");

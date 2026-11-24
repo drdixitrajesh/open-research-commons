@@ -96,6 +96,11 @@ export async function cloudflareResponse(request) {
   const authPath = authPaths.has(url.pathname);
   const ownerView = (url.pathname === '/' || url.pathname === '/index.html') && ownerViews.has(url.searchParams.get('view'));
   const readable = request.method === 'GET' || request.method === 'HEAD';
+  if (url.pathname.startsWith('/event-sites/')) {
+    if (!readable) return methodDenied(request);
+    const publishedSite = new URL(url.pathname + url.search, 'https://conference.softinator.org');
+    return new Response(null, { status:302, headers:{...readHeaders, Location:publishedSite.href} });
+  }
   if (authPath || ownerView) {
     if (!readable) return methodDenied(request);
     if (authPath && (url.searchParams.getAll('return_to').length > 1 ||

@@ -16,6 +16,9 @@ const assets = new Map([
   ['/catalog-search.js','text/javascript; charset=utf-8'],
   ['/catalog-subjects.js','text/javascript; charset=utf-8'],
   ['/event-planner.js','text/javascript; charset=utf-8'], ['/event-planner.css','text/css; charset=utf-8'],
+  ['/planner-classification.js','text/javascript; charset=utf-8'],
+  ['/planner-proceedings.js','text/javascript; charset=utf-8'], ['/planner-proceedings.css','text/css; charset=utf-8'],
+  ['/planner-website.js','text/javascript; charset=utf-8'], ['/planner-website.css','text/css; charset=utf-8'],
   ['/event-filters.js','text/javascript; charset=utf-8'],
   ['/event-calendar.js','text/javascript; charset=utf-8'],
   ['/i18n.js','text/javascript; charset=utf-8'], ['/examples.js','text/javascript; charset=utf-8'],
@@ -37,7 +40,7 @@ const clientPrefix = '/_assets/' + clientDigest;
 const source = `
 ${cloudflare
   ? "import { cloudflareResponse } from './scripts/cloudflare-entry.js';"
-  : "import { handleApi } from './src/worker.js';\nimport { eventsRssResponse, readPublishedEvents } from './src/events-rss.js';"}
+  : "import { handleApi } from './src/worker.js';\nimport { publicEventWebsite } from './src/event-website-store.js';\nimport { eventsRssResponse, readPublishedEvents } from './src/events-rss.js';"}
 import { loadOrganizerSnapshot } from './src/organizer-snapshot.js';
 ${cloudflare ? '' : "import { calendarRecordId, eventCalendarResponse } from './src/event-calendar-response.js';\nimport { examples } from './dist/examples.js';"}
 const assetMap = new Map(${JSON.stringify(entries)});
@@ -56,7 +59,9 @@ const siteLanguages = ['en','hi','es','fr','ar','pt','zh','ru'];
 const originalPage = decoder.decode(body(assetMap.get('/index.html')[1]))
   .replace('src="/app.js"', 'src="' + clientPrefix + '/app.js"')
   .replace('href="/styles.css"', 'href="' + clientPrefix + '/styles.css"')
-  .replace('href="/event-planner.css"', 'href="' + clientPrefix + '/event-planner.css"');
+  .replace('href="/event-planner.css"', 'href="' + clientPrefix + '/event-planner.css"')
+  .replace('href="/planner-proceedings.css"', 'href="' + clientPrefix + '/planner-proceedings.css"')
+  .replace('href="/planner-website.css"', 'href="' + clientPrefix + '/planner-website.css"');
 const pageEsc = (value) => value.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 function landing(url) {
   const language = url.searchParams.get('lang');
@@ -90,6 +95,7 @@ export default {
     ${cloudflare ? "const response = await cloudflareResponse(request, env); if (response) return response;" : "if (url.pathname.startsWith('/api/')) return handleApi(request,env,subjects);"}
     if (!['GET','HEAD'].includes(request.method)) return new Response(null,{status:405,headers:{Allow:'GET, HEAD'}});
     ${cloudflare ? '' : `
+    if (url.pathname.startsWith('/event-sites/')) return publicEventWebsite(request,env.DB);
     const calendarId = calendarRecordId(url.pathname);
     if (calendarId) {
       let record;
