@@ -1,28 +1,5 @@
 [
   {
-    "id": "directory-mit-54505456899967",
-    "type": "event",
-    "eventType": "seminar",
-    "title": "Richard P. Stanley Seminar in Combinatorics",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "Massachusetts Institute of Technology",
-    "startDate": "2026-11-20",
-    "endDate": "2026-11-20",
-    "sourceUrl": "https://calendar.mit.edu/event/richard-p-stanley-seminar-in-combinatorics-6602",
-    "directory": true,
-    "countryCode": "US",
-    "country": "United States",
-    "city": "Cambridge",
-    "mode": "inPerson",
-    "timezone": "America/New_York",
-    "startTime": "13:00",
-    "endTime": "14:50",
-    "subjectCodes": [
-      "490404"
-    ]
-  },
-  {
     "id": "directory-mit-53982984371273",
     "type": "event",
     "eventType": "seminar",
