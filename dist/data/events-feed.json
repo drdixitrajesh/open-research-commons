@@ -1,53 +1,5 @@
 [
   {
-    "id": "directory-mit-53982984371273",
-    "type": "event",
-    "eventType": "seminar",
-    "title": "Algebraic Topology Seminar",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "Massachusetts Institute of Technology",
-    "startDate": "2026-11-23",
-    "endDate": "2026-11-23",
-    "sourceUrl": "https://calendar.mit.edu/event/algebraic-topology-seminar-2194",
-    "directory": true,
-    "countryCode": "US",
-    "country": "United States",
-    "city": "Cambridge",
-    "mode": "inPerson",
-    "timezone": "America/New_York",
-    "startTime": "16:30",
-    "endTime": "17:30",
-    "subjectCodes": [
-      "490412",
-      "490402"
-    ]
-  },
-  {
-    "id": "directory-mps-47018",
-    "type": "event",
-    "title": "PGS: Core-Mantle Coupling and Its Effects on Geodynamo Simulations (Illya Lohay)",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "Max Planck Institute for Solar System Research",
-    "timezone": "Europe/Berlin",
-    "sourceUrl": "https://www.mps.mpg.de/events/47018/3974399",
-    "directory": true,
-    "eventType": "seminar",
-    "startDate": "2026-11-23",
-    "endDate": "2026-11-23",
-    "startTime": "13:00",
-    "endTime": "14:00",
-    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
-    "mode": "inPerson",
-    "countryCode": "DE",
-    "country": "Germany",
-    "city": "Göttingen",
-    "subjectCodes": [
-      "370604"
-    ]
-  },
-  {
     "id": "directory-mit-53737457175325",
     "type": "event",
     "eventType": "seminar",
@@ -345,6 +297,26 @@
     ]
   },
   {
+    "id": "directory-stanford-54613035810879",
+    "type": "event",
+    "eventType": "seminar",
+    "title": "Sustainable Systems Seminar Lunch Series - Integrating Load Flexibility in The Future of The Power Grid",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Stanford University",
+    "startDate": "2026-12-01",
+    "endDate": "2026-12-01",
+    "sourceUrl": "https://events.stanford.edu/event/sustainable-systems-seminar-lunch-ben-mucsi",
+    "directory": true,
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Stanford",
+    "mode": "inPerson",
+    "timezone": "America/Los_Angeles",
+    "startTime": "12:00",
+    "endTime": "13:00"
+  },
+  {
     "id": "directory-stanford-54481993753237",
     "type": "event",
     "eventType": "workshop",
@@ -436,7 +408,7 @@
     ]
   },
   {
-    "id": "directory-mit-53975418085056",
+    "id": "directory-mit-54611944471788",
     "type": "event",
     "eventType": "seminar",
     "title": "Lie Groups Seminar",
@@ -445,7 +417,7 @@
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-02",
     "endDate": "2026-12-02",
-    "sourceUrl": "https://calendar.mit.edu/event/lie-groups-seminar-8276",
+    "sourceUrl": "https://calendar.mit.edu/event/lie-groups-seminar-8595",
     "directory": true,
     "countryCode": "US",
     "country": "United States",
@@ -456,6 +428,29 @@
     "endTime": "17:00",
     "subjectCodes": [
       "490406"
+    ]
+  },
+  {
+    "id": "directory-mit-54606358110160",
+    "type": "event",
+    "eventType": "seminar",
+    "title": "Richard P. Stanley Seminar in Combinatorics",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Massachusetts Institute of Technology",
+    "startDate": "2026-12-02",
+    "endDate": "2026-12-02",
+    "sourceUrl": "https://calendar.mit.edu/event/richard-p-stanley-seminar-in-combinatorics-8883",
+    "directory": true,
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Cambridge",
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:15",
+    "endTime": "17:15",
+    "subjectCodes": [
+      "490404"
     ]
   },
   {
@@ -763,7 +758,7 @@
     ]
   },
   {
-    "id": "directory-mit-53975442771396",
+    "id": "directory-mit-54611933522268",
     "type": "event",
     "eventType": "seminar",
     "title": "Lie Groups Seminar",
@@ -772,7 +767,7 @@
     "institution": "Massachusetts Institute of Technology",
     "startDate": "2026-12-09",
     "endDate": "2026-12-09",
-    "sourceUrl": "https://calendar.mit.edu/event/lie-groups-seminar-8595",
+    "sourceUrl": "https://calendar.mit.edu/event/lie-groups-seminar-8276",
     "directory": true,
     "countryCode": "US",
     "country": "United States",

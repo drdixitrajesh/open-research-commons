@@ -69,5 +69,28 @@
     "subjectCodes": [
       "370604"
     ]
+  },
+  {
+    "id": "directory-mit-53737457175325",
+    "type": "event",
+    "eventType": "seminar",
+    "title": "Symplectic Geometry Seminar",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Massachusetts Institute of Technology",
+    "startDate": "2026-11-24",
+    "endDate": "2026-11-24",
+    "sourceUrl": "https://calendar.mit.edu/event/symplectic-seminar-7655",
+    "directory": true,
+    "countryCode": "US",
+    "country": "United States",
+    "city": "Cambridge",
+    "mode": "inPerson",
+    "timezone": "America/New_York",
+    "startTime": "16:30",
+    "endTime": "17:30",
+    "subjectCodes": [
+      "490402"
+    ]
   }
 ]
