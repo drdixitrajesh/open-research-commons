@@ -1,28 +1,5 @@
 [
   {
-    "id": "directory-mit-53737457175325",
-    "type": "event",
-    "eventType": "seminar",
-    "title": "Symplectic Geometry Seminar",
-    "description": "See the organizer’s event page for the program and participation details.",
-    "metadataLanguage": "en",
-    "institution": "Massachusetts Institute of Technology",
-    "startDate": "2026-11-24",
-    "endDate": "2026-11-24",
-    "sourceUrl": "https://calendar.mit.edu/event/symplectic-seminar-7655",
-    "directory": true,
-    "countryCode": "US",
-    "country": "United States",
-    "city": "Cambridge",
-    "mode": "inPerson",
-    "timezone": "America/New_York",
-    "startTime": "16:30",
-    "endTime": "17:30",
-    "subjectCodes": [
-      "490402"
-    ]
-  },
-  {
     "id": "directory-mps-46732",
     "type": "event",
     "title": "S3 Seminar: Excitation/damping of solar inertial modes (Muneeb Mushtaq)",
@@ -1231,5 +1208,23 @@
       "321502",
       "3202"
     ]
+  },
+  {
+    "id": "directory-ucf-4232680",
+    "type": "event",
+    "title": "Industrial Affiliates Symposium 2027",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "University of Central Florida",
+    "timezone": "America/New_York",
+    "sourceUrl": "https://events.ucf.edu/event/4232680/industrial-affiliates-symposium-2027/",
+    "directory": true,
+    "eventType": "symposium",
+    "startDate": "2027-03-25",
+    "endDate": "2027-03-26",
+    "startTime": "09:00",
+    "endTime": "17:00",
+    "venue": "FAIRWINDS Alumni Center",
+    "mode": "inPerson"
   }
 ]

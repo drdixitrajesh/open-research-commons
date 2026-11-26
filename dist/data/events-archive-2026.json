@@ -92,5 +92,53 @@
     "subjectCodes": [
       "490402"
     ]
+  },
+  {
+    "id": "directory-mps-46732",
+    "type": "event",
+    "title": "S3 Seminar: Excitation/damping of solar inertial modes (Muneeb Mushtaq)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/46732/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-11-25",
+    "endDate": "2026-11-25",
+    "startTime": "14:00",
+    "endTime": "14:40",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "510108"
+    ]
+  },
+  {
+    "id": "directory-mps-46733",
+    "type": "event",
+    "title": "S3 Seminar: The effect of inertial modes on the evolution of the surface magnetic field of the Sun (Noemi Padar)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/46733/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-11-25",
+    "endDate": "2026-11-25",
+    "startTime": "14:45",
+    "endTime": "15:25",
+    "venue": "Max-Planck-Institut für Sonnensystemforschung, Auditorium",
+    "mode": "inPerson",
+    "countryCode": "DE",
+    "country": "Germany",
+    "city": "Göttingen",
+    "subjectCodes": [
+      "510108"
+    ]
   }
 ]
