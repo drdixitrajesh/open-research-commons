@@ -140,5 +140,25 @@
     "subjectCodes": [
       "510108"
     ]
+  },
+  {
+    "id": "directory-mps-47458",
+    "type": "event",
+    "title": "ESPOS: Investigating the effects of spatial and temporal dependence in mean-field dynamos (Jerry Wong)",
+    "description": "See the organizer’s event page for the program and participation details.",
+    "metadataLanguage": "en",
+    "institution": "Max Planck Institute for Solar System Research",
+    "timezone": "Europe/Berlin",
+    "sourceUrl": "https://www.mps.mpg.de/events/47458/3974399",
+    "directory": true,
+    "eventType": "seminar",
+    "startDate": "2026-11-26",
+    "endDate": "2026-11-26",
+    "startTime": "11:00",
+    "endTime": "12:00",
+    "mode": "online",
+    "subjectCodes": [
+      "510108"
+    ]
   }
 ]
